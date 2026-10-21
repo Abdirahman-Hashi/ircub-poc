@@ -39,6 +39,16 @@ Phase 7 copies this list into the README.
   identified by `bulkUploadId`, because channel reconciliation (phase 4) matches on the
   channel's own reference; if "BULK" must be the channel, it is one constant change.
 
+- We assume water payments always quote a bill's control number, so "unallocated payments"
+  do not exist and arrears are simply the unpaid remainder of earlier released bills; if
+  account-level prepayments are needed, `Bill.paymentsApplied` is the field to fill.
+- We assume one bill per account per calendar month covering every reading in the month
+  (consumption summed, previous reading = last reading before the month); if a utility wants
+  bills per reading, the cycle loop changes, not the tariff rules.
+- We assume a reading can be flagged only against the current meter and its direct predecessor,
+  because older generations have different dials; if a longer chain is wanted, the lookup
+  follows `replacesMeterId` recursively.
+
 ## Security
 - We assume the role-level SoD rule (`reversals.capture` ⟂ `reversals.approve`) applies to every
   user including System Administrators, because a superuser exemption would defeat the control;

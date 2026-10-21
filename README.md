@@ -119,6 +119,19 @@ Created by the phase 1 seed. Password for all: `Passw0rd!2026`.
   Reversals. The requester can never approve their own request (`SOD_VIOLATION`).
 - `customer1@ircub.test` sees only their own assessments and payments under My account.
 
+## Water billing (phase 3)
+
+- Water billing → accounts: each account shows its meters, a consumption chart (abnormal
+  readings in red), bills with PDF download and a statement with a running balance.
+- Readings → Capture: pick a meter, enter the value, preview the consumption and the
+  abnormal verdict before saving. Rollover and replacement follow the D13 rules. Readings →
+  Upload CSV: try `docs/samples/meter-readings.sample.csv`.
+- Billing cycles → Run cycle for the current month: the seed leaves three abnormal readings,
+  so three bills are flagged and the release button stays disabled until each is cleared or
+  confirmed with a note. Release renders PDFs and sends SMS/email through the mock gateway;
+  the outbox is at http://localhost:3100/outbox.
+- `customer1@ircub.test` sees their water account, bills (PDF) and statement under My account.
+
 ## Assumptions
 
 Recorded as they are made in `docs/ASSUMPTIONS.md` and copied here in phase 7.

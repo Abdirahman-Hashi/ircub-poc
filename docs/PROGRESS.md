@@ -295,7 +295,96 @@ Nest's `FileInterceptor` needs the runtime package declared).
 - FMIS reversal batches on approval arrive in phase 5.
 
 ## Phase 3 — water billing
-_(pending)_
+
+**Date:** 2026-10-21
+
+**Built**
+- **Schema** (`water_billing` migration): `TariffCategory` + `TariffTier` (`[from, to)` bands,
+  unique per category/from), `WaterAccount` (`WA` + 8 digits), `Meter` (dial digits, initial
+  reading, `replacesMeterId` self-relation), `MeterReading` (unique per meter/date, consumption,
+  abnormal flag + reason, source, upload link), `BillingCycle` (unique period, JSON stats),
+  `Bill` (bill number = control number, ledger, tier breakdown JSON, flag note, PDF path),
+  `Notification`; `Payment.billId` FK. All registered for audit.
+- **Rules** (pure, tested): `validateTiers` (start at 0, contiguous, open-ended last band,
+  non-negative rates), `computeTieredCharge` (boundaries 10/30/60, open band),
+  `computeConsumption` (NORMAL / ROLLOVER `10^maxDigits − prev + cur` / REPLACEMENT from
+  `initialReading`, below-previous rejection), `evaluateAbnormal` (strict > threshold % of the
+  mean of up to N previous months; 200 % not flagged, 201 % flagged; no history → never),
+  `arrearsOf` (unpaid remainder of earlier bills, carried across cycles), period helpers,
+  `buildStatement` (opening balance before the window + running balance).
+- **Tariffs** CRUD (`config.manage`), tier set replaced atomically.
+- **Accounts & meters**: open account (with optional first meter), list with search, disconnect/
+  reconnect, install meter, **replace meter** (old → REPLACED, new carries `replacesMeterId`);
+  payer 360° view now includes water accounts, meters, last reading, bills and the statement.
+- **Readings**: `POST /readings/preview` (previous reading, consumption, abnormal verdict without
+  saving), `POST /readings`, `GET /readings` (account, meter, dates, abnormal, source), and
+  `POST /bulk-uploads/meter-readings` on the shared CSV pipeline (unknown meter, inactive
+  meter, future date, duplicate date, date before previous, below previous, schema), chaining
+  later rows on earlier accepted rows for the same meter.
+- **Billing cycle**: `POST /billing-cycles { period }` — every ACTIVE account in its own
+  transaction; no reading → skipped with reason; bill = tiers + fixed + arrears; abnormal
+  reading → `FLAGGED`; cycle → `REVIEW` with the exception report in `stats`. Flag review
+  `POST /bills/:id/clear-flag|confirm-flag { note }`. `POST /billing-cycles/:id/release`
+  refuses while any bill is flagged, then marks bills RELEASED and enqueues one pg-boss job
+  per bill: render PDF (pdfkit) → SMS + email via the `NotificationSender` → `Notification`
+  rows; `stats.notificationsSent` counts deliveries. RELEASED periods cannot be re-run;
+  DRAFT/REVIEW re-runs delete their drafts (refused once a draft has payments).
+- **Bills & statements**: `GET /bills` (cycle, account, payer, status, flagged, number),
+  `GET /bills/:id`, `GET /bills/:id/pdf` (rendered lazily if missing), statement JSON and PDF
+  per account; customer endpoints `GET /me/bills/:id/pdf` and `GET /me/water-accounts/:id/statement`
+  scoped to the user's own payer. Payment lookup/capture and reversals now resolve bill control
+  numbers and apply to the bill ledger with the same rules as assessments.
+- **Notifications module** with `NOTIFICATION_SENDER` token and an HTTP implementation for the
+  mock gateway; mocks app gained `POST /sms`, `POST /email`, `GET /outbox`.
+- **Seed**: 2 tariff categories (DOMESTIC 0–10/10–30/30–60/60+ at 0.50/0.90/1.40/2.00 USD-eq,
+  COMMERCIAL higher), 120 accounts for 100 payers, 121 meters, 1,561 readings over 13 months
+  with seasonality, 2 rollovers, 1 replacement, 3 abnormal readings in the current month,
+  3 RELEASED cycles (360 bills, 227 paid), current month not run (so the demo can run it and
+  see 3 flagged bills). PDFs are rendered lazily. `docs/samples/meter-readings.sample.csv`.
+- **Web**: tariffs admin (tier editor with inline validation), water accounts list and detail
+  (cards, consumption chart with abnormal bars, meters with replace dialog, bills with PDF,
+  statement with running balance and PDF), readings list with abnormal filter, capture form
+  with previous reading and live preview, CSV upload via `CsvUploader`, billing cycles list with
+  run dialog, cycle page with stats cards, exception report (flagged with clear/confirm notes,
+  skipped with reasons), release button disabled while flagged, released banner with
+  notifications-sent count and outbox link; customer portal water tab with own bills PDF and
+  statement.
+
+**Tests:** 152 total — api unit 97 (+19: tiers incl. boundaries 0/10/30/60/500 and contiguity,
+consumption NORMAL/ROLLOVER/REPLACEMENT and rejection, abnormal at 200 % vs 201 % and <3
+months, arrears across two cycles, periods, running balance, bill ledger mapping), api e2e 42
+(+5: invalid tiers + reading rules, CSV readings with per-row reasons, abnormal → flagged →
+release blocked → cleared → released → PDF + notification row, payment against a bill +
+statement, meter replacement), mocks 4, web 9 (+2: tier editor validation). Lint/typecheck clean.
+
+**Verified manually (headless Chromium):** accounts list, detail with chart/bills/PDF
+download/statement, reading preview, cycles list, run current month → 3 flagged (the seeded
+anomalies) with release disabled, clear all → release → 80 notifications in the mock outbox,
+customer portal water tab. No page errors or 5xx.
+
+**Decisions and deviations (why)**
+- **"Apply unallocated payments" is simplified as the prompt allows:** payments reference a
+  bill's control number directly, so `paymentsApplied` stays 0 and arrears are the unpaid
+  remainder of earlier bills. Recorded in `docs/ASSUMPTIONS.md`.
+- **Consumption for a bill = sum of the period's readings** (previous reading = the one before
+  the period), so two readings in one month bill once.
+- **A reading in the future is rejected** and a reading dated before the latest reading is
+  rejected (`READING_IN_FUTURE`, `VALIDATION_FAILED`), beyond the prompt's rules, because the
+  running-consumption chain would otherwise be ambiguous.
+- **Statement PDFs are generated in memory**; bill PDFs on disk under `STORAGE_DIR/bills`.
+- **Job worker tuned** to batch 10 / 1 s polling: with batch 1 every 2 s a 120-bill release
+  took four minutes to notify.
+- **Mock notification endpoints arrived now** (prompt listed them for phase 4/5) because release
+  needs them.
+
+**Packages added** (rule 11): `pdfkit` + `@types/pdfkit` (D19).
+
+**Open items / limitations**
+- Seeded cycle PDFs and notifications are produced lazily / not at all (only cycles released
+  through the API send notifications).
+- The abnormal check averages readings of the current meter and the one it replaced, not
+  older generations.
+- Running a cycle for all accounts is sequential (~120 transactions); fine for the POC scale.
 
 ## Phase 4 — mocks, payments, FX, retries, channel reconciliation
 _(pending)_
