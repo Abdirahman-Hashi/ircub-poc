@@ -15,6 +15,7 @@ import {
 import { PAYMENT_INCLUDE, toPaymentView } from '../payments/payments.view';
 import { SystemConfigKey } from '../system-config/system-config.keys';
 import { SystemConfigService } from '../system-config/system-config.service';
+import { ACCOUNT_INCLUDE, BILL_INCLUDE, toAccountView, toBillView } from '../water/water.view';
 
 import { PAYERS_API } from './payers.constants';
 import { PAYERS_MESSAGES } from './payers.messages';
@@ -120,16 +121,46 @@ export class PayersService {
         take: PAYERS_API.PROFILE_PAYMENTS,
       }),
     ]);
-    const totals = await this.prisma.assessment.aggregate({
-      where: { payerId: id, status: { not: 'CANCELLED' } },
-      _sum: { amount: true, paidAmount: true },
-    });
-    const assessedTotal = roundMoney(totals._sum.amount ?? 0);
-    const paidTotal = roundMoney(totals._sum.paidAmount ?? 0);
+    const [totals, billTotals, accounts] = await Promise.all([
+      this.prisma.assessment.aggregate({
+        where: { payerId: id, status: { not: 'CANCELLED' } },
+        _sum: { amount: true, paidAmount: true },
+      }),
+      this.prisma.bill.aggregate({
+        where: { payerId: id, status: { in: ['RELEASED', 'PART_PAID', 'PAID'] } },
+        _sum: { totalDue: true, paidAmount: true },
+      }),
+      this.prisma.waterAccount.findMany({
+        where: { payerId: id },
+        include: ACCOUNT_INCLUDE,
+        orderBy: { openedAt: 'asc' },
+      }),
+    ]);
+    const waterAccounts = await Promise.all(
+      accounts.map(async (account) => ({
+        account: toAccountView(account),
+        bills: (
+          await this.prisma.bill.findMany({
+            where: { accountId: account.id },
+            include: BILL_INCLUDE,
+            orderBy: { periodStart: 'desc' },
+            take: PAYERS_API.PROFILE_BILLS,
+          })
+        ).map(toBillView),
+      })),
+    );
+    // Bills carry arrears forward, so only the latest released bill per account is "owed" here;
+    // totals from the aggregate keep the simple assessed/paid picture for the summary cards.
+    const assessedTotal = roundMoney(totals._sum.amount ?? 0).plus(
+      roundMoney(billTotals._sum.totalDue ?? 0),
+    );
+    const paidTotal = roundMoney(totals._sum.paidAmount ?? 0).plus(
+      roundMoney(billTotals._sum.paidAmount ?? 0),
+    );
     return {
       payer: toPayerView(payer),
       assessments: assessments.map(toAssessmentView),
-      waterAccounts: [],
+      waterAccounts,
       payments: payments.map(toPaymentView),
       balances: {
         assessedTotal: assessedTotal.toFixed(),

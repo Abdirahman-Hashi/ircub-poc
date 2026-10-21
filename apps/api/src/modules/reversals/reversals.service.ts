@@ -9,6 +9,7 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { AssessmentsService } from '../assessments/assessments.service';
 import { PaymentsService } from '../payments/payments.service';
 import { PAYMENT_INCLUDE, toPaymentView } from '../payments/payments.view';
+import { BillsService } from '../water/bills/bills.service';
 
 import { REVERSALS_API } from './reversals.constants';
 import { REVERSALS_MESSAGES } from './reversals.messages';
@@ -35,6 +36,7 @@ export class ReversalsService {
     private readonly prisma: PrismaService,
     private readonly payments: PaymentsService,
     private readonly assessments: AssessmentsService,
+    private readonly bills: BillsService,
   ) {}
 
   async create(dto: CreateReversalDto, actorId: string): Promise<ReversalResponseDto> {
@@ -83,6 +85,12 @@ export class ReversalsService {
         await this.assessments.reversePayment(
           tx,
           reversal.payment.assessmentId,
+          toDecimal(reversal.payment.localAmount),
+        );
+      } else if (reversal.payment.billId !== null) {
+        await this.bills.reversePayment(
+          tx,
+          reversal.payment.billId,
           toDecimal(reversal.payment.localAmount),
         );
       }

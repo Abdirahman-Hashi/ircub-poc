@@ -20,6 +20,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { BulkUploadsModule } from './modules/bulk-uploads/bulk-uploads.module';
 import { FxModule } from './modules/fx/fx.module';
 import { HealthModule } from './modules/health/health.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
 import { PayersModule } from './modules/payers/payers.module';
 import { PaymentsModule } from './modules/payments/payments.module';
 import { PermissionsModule } from './modules/permissions/permissions.module';
@@ -30,6 +31,7 @@ import { SelfModule } from './modules/self/self.module';
 import { SodModule } from './modules/sod/sod.module';
 import { SystemConfigModule } from './modules/system-config/system-config.module';
 import { UsersModule } from './modules/users/users.module';
+import { WaterModule } from './modules/water/water.module';
 import { PrismaModule } from './prisma/prisma.module';
 
 @Module({
@@ -72,6 +74,8 @@ import { PrismaModule } from './prisma/prisma.module';
     BulkUploadsModule,
     ReversalsModule,
     SelfModule,
+    NotificationsModule,
+    WaterModule,
   ],
   providers: [
     // Order matters: throttle first, then authenticate, then authorise.

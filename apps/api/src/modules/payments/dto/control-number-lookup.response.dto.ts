@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-import { AssessmentStatus, type ControlNumberLookup, Currency } from '@ircub/shared';
+import { AssessmentStatus, BillStatus, type ControlNumberLookup, Currency } from '@ircub/shared';
 
 import { AssessmentPayerDto } from '../../assessments/dto/assessment.response.dto';
 
@@ -8,8 +8,8 @@ export class ControlNumberLookupResponseDto implements ControlNumberLookup {
   @ApiProperty()
   controlNumber!: string;
 
-  @ApiProperty({ enum: ['ASSESSMENT'] })
-  kind!: 'ASSESSMENT';
+  @ApiProperty({ enum: ['ASSESSMENT', 'BILL'] })
+  kind!: 'ASSESSMENT' | 'BILL';
 
   @ApiProperty({ type: AssessmentPayerDto })
   payer!: AssessmentPayerDto;
@@ -29,6 +29,6 @@ export class ControlNumberLookupResponseDto implements ControlNumberLookup {
   @ApiProperty({ enum: Currency })
   currency!: Currency;
 
-  @ApiProperty({ enum: AssessmentStatus })
-  status!: AssessmentStatus;
+  @ApiProperty({ enum: [...Object.values(AssessmentStatus), ...Object.values(BillStatus)] })
+  status!: AssessmentStatus | BillStatus;
 }

@@ -8,4 +8,5 @@ export const PAYERS_API = {
   /** Payments shown on the 360° profile. */
   PROFILE_PAYMENTS: 20,
   PROFILE_ASSESSMENTS: 100,
+  PROFILE_BILLS: 12,
 } as const;

@@ -1,0 +1,8 @@
+export const STATEMENTS = {
+  DEFAULT_MONTHS: 12,
+  PDF_TITLE: 'IRCUB Water Account Statement',
+  FONT_TITLE: 16,
+  FONT_BODY: 9,
+  MARGIN: 40,
+  COLUMNS: { DATE: 40, KIND: 110, REF: 170, DESC: 270, DEBIT: 400, CREDIT: 470, BALANCE: 540 },
+} as const;

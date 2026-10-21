@@ -339,6 +339,7 @@ export class BulkUploadsService {
       }
       await this.payments.recordConfirmedPayment(tx, {
         assessmentId: assessment.id,
+        billId: null,
         payerId: assessment.payerId,
         controlNumber,
         channel: data.channel,

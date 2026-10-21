@@ -15,7 +15,8 @@ export type PaymentWithRelations = Prisma.PaymentGetPayload<{
 
 /** One confirmed payment to record and apply; used by manual capture and the bulk importer. */
 export interface ConfirmedPaymentInput {
-  readonly assessmentId: string;
+  readonly assessmentId: string | null;
+  readonly billId: string | null;
   readonly payerId: string;
   readonly controlNumber: string;
   readonly channel: PaymentChannel;
