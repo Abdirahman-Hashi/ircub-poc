@@ -1,0 +1,38 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm *)",
+      "Bash(npx prisma *)",
+      "Bash(pnpm --filter * prisma *)",
+      "Bash(node *)",
+      "Bash(npx *)",
+      "Bash(docker compose *)",
+      "Bash(docker *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git status*)",
+      "Bash(git log*)",
+      "Bash(git diff*)",
+      "Bash(git tag *)",
+      "Bash(curl localhost*)",
+      "Bash(curl http://localhost*)",
+      "Bash(ls *)",
+      "Bash(cat *)",
+      "Bash(mkdir *)",
+      "Bash(cp *)",
+      "Bash(mv *)",
+      "Read",
+      "Write",
+      "Edit",
+      "Glob",
+      "Grep"
+    ],
+    "deny": [
+      "Bash(git push --force*)",
+      "Bash(rm -rf /*)",
+      "Read(.env)",
+      "Read(./.env)",
+      "Read(apps/**/.env)"
+    ]
+  }
+}
