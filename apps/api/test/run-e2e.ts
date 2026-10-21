@@ -45,6 +45,7 @@ function run(command: string, args: readonly string[]): void {
 
 console.info(`e2e: using ${databaseUrl.replace(/:\/\/.*@/, '://***@')}`);
 run('pnpm', ['exec', 'prisma', 'migrate', 'deploy']);
+run('pnpm', ['exec', 'prisma', 'db', 'seed']);
 run('pnpm', [
   'exec',
   'jest',
