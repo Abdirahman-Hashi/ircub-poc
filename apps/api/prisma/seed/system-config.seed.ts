@@ -4,13 +4,13 @@ import {
   SystemConfigKey,
 } from '../../src/modules/system-config/system-config.keys';
 
-import type { PrismaClient } from '@prisma/client';
+import type { ExtendedPrismaClient } from '../../src/prisma/prisma.types';
 
 /**
  * Inserts every SystemConfigKey with its typed default. Idempotent: existing rows keep the
  * value an administrator may have changed; only the description is refreshed.
  */
-export async function seedSystemConfig(prisma: PrismaClient): Promise<number> {
+export async function seedSystemConfig(prisma: ExtendedPrismaClient): Promise<number> {
   const keys = Object.values(SystemConfigKey);
   for (const key of keys) {
     await prisma.systemConfig.upsert({
