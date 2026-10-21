@@ -36,6 +36,16 @@ Phase 7 copies this list into the README.
   only that payer's data.
 
 ## Operations
+- We assume the business "day" for jobs, summaries and reconciliation is the UTC calendar date
+  because all services run in one timezone-agnostic container set; if the Ministry needs
+  local-time days, the date helpers in `common/` take a timezone parameter.
+- We assume one API process at a time (pg-boss workers, the in-process SSE event bus, and the
+  30 s SystemConfig cache are all single-instance) because the POC deploys one container; if
+  horizontally scaled, the event bus would move to Postgres LISTEN/NOTIFY and the cache would
+  shrink or move to the database.
+- We assume Node 22 LTS (not 20, which is end-of-life) and NestJS 11 / Prisma 6 satisfy the
+  brief's "modern stack" expectation; if a reviewer requires the exact majors in the phase
+  prompt, only `.nvmrc`, the Dockerfiles and a handful of config imports change.
 - We assume the hosted demo may cold-start (~1 min) because it runs on free tiers; Docker
   Compose is the primary evaluation path.
 - We assume scheduled jobs only need to run while the API is up (no external scheduler).

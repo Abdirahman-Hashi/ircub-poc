@@ -1,0 +1,71 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/events": {
+      "get": {
+        "operationId": "SseController_events",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Server-Sent Events stream (payment updates, alerts, batches)",
+        "tags": [
+          "events"
+        ]
+      }
+    },
+    "/health": {
+      "get": {
+        "operationId": "HealthController_liveness",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Always ok while the process runs"
+          }
+        },
+        "summary": "Liveness probe — process is up",
+        "tags": [
+          "health"
+        ]
+      }
+    },
+    "/ready": {
+      "get": {
+        "operationId": "HealthController_readiness",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "All checks up"
+          },
+          "503": {
+            "description": "At least one check down"
+          }
+        },
+        "summary": "Readiness probe — database and job queue reachable",
+        "tags": [
+          "health"
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "IRCUB API",
+    "description": "Integrated Revenue Collection & Utility Billing Platform — proof of concept API. Errors follow { statusCode, code, message, details?, requestId }.",
+    "version": "1.0.0",
+    "contact": {}
+  },
+  "tags": [],
+  "servers": [],
+  "components": {
+    "securitySchemes": {
+      "bearer": {
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "type": "http"
+      }
+    },
+    "schemas": {}
+  }
+}
