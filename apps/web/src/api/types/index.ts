@@ -37,6 +37,21 @@ export type {
   SseEnvelope,
   SystemConfigEntryView,
   UserSummary,
+  BillView,
+  BillingCycleView,
+  BillingCycleStats,
+  MeterReadingView,
+  MeterView,
+  NotificationView,
+  PayerWaterSummary,
+  ReadingPreview,
+  SkippedAccount,
+  StatementLine,
+  StatementView,
+  TariffCategoryView,
+  TariffTierView,
+  TierLine,
+  WaterAccountView,
 } from '@ircub/shared';
 
 export type { UserListParams } from './admin.types';

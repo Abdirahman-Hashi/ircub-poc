@@ -21,5 +21,5 @@ export function MyProfilePage(): ReactElement {
       </Alert>
     );
   }
-  return <ProfileView profile={profile.data} canRegister={false} />;
+  return <ProfileView profile={profile.data} canRegister={false} portal />;
 }

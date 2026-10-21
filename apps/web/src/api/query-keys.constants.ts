@@ -19,4 +19,15 @@ export const QUERY_KEYS = {
   reversals: (params: unknown) => ['reversals', params] as const,
   me: ['auth', 'me'] as const,
   myProfile: ['me', 'profile'] as const,
+  tariffs: ['tariffs'] as const,
+  waterAccounts: (params: unknown) => ['water-accounts', params] as const,
+  waterAccount: (id: string) => ['water-accounts', 'detail', id] as const,
+  readings: (params: unknown) => ['readings', params] as const,
+  billingCycles: (params: unknown) => ['billing-cycles', params] as const,
+  billingCycle: (id: string) => ['billing-cycles', 'detail', id] as const,
+  bills: (params: unknown) => ['bills', params] as const,
+  statement: (accountId: string, params: unknown) =>
+    ['water-accounts', 'statement', accountId, params] as const,
+  myStatement: (accountId: string) => ['me', 'statement', accountId] as const,
+  notifications: (params: unknown) => ['notifications', params] as const,
 } as const;

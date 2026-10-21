@@ -1,19 +1,27 @@
 import { Badge, Button, Card, Group, SimpleGrid, Stack, Table, Tabs, Text } from '@mantine/core';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useParams } from '@tanstack/react-router';
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+  useQuery as useStatementQuery,
+} from '@tanstack/react-query';
+import { useParams, Link } from '@tanstack/react-router';
 
 import { PayerStatus, PERMISSIONS } from '@ircub/shared';
 
 import { getPayerProfile, reactivatePayer, suspendPayer } from '../../api/payers.api';
 import { QUERY_KEYS } from '../../api/query-keys.constants';
+import { getBillPdf, getMyBillPdf, getMyStatement, getStatement } from '../../api/water.api';
+import { ROUTES } from '../../app/routes.constants';
 import { MoneyText } from '../../components/MoneyText';
 import { PageHeader } from '../../components/PageHeader';
 import { StatusBadge } from '../../components/StatusBadge';
 import { useCan } from '../../lib/auth';
 import { formatDate, formatDateTime } from '../../lib/format';
 import { notifyError, notifySuccess } from '../../lib/notify';
+import { BillsTable, StatementTable } from '../water/WaterAccountDetailPage';
 
-import type { PayerProfile } from '../../api/types';
+import type { BillView, PayerProfile, StatementView } from '../../api/types';
 import type { ReactElement } from 'react';
 
 const LOCAL_CURRENCY_FALLBACK = 'SOS';
@@ -61,11 +69,13 @@ export function ProfileView({
   canRegister,
   onToggle,
   toggling,
+  portal,
 }: {
   readonly profile: PayerProfile;
   readonly canRegister: boolean;
   readonly onToggle?: () => void;
   readonly toggling?: boolean;
+  readonly portal?: boolean;
 }): ReactElement {
   const { payer, balances } = profile;
   const currency = profile.assessments[0]?.currency ?? LOCAL_CURRENCY_FALLBACK;
@@ -146,7 +156,20 @@ export function ProfileView({
           </Table>
         </Tabs.Panel>
         <Tabs.Panel value="water" pt="md">
-          <Text c="dimmed">Water accounts are added in the water billing module.</Text>
+          {profile.waterAccounts.length === 0 ? (
+            <Text c="dimmed">No water accounts.</Text>
+          ) : (
+            <Stack>
+              {profile.waterAccounts.map((summary) => (
+                <WaterAccountSection
+                  key={summary.account.id}
+                  summary={summary}
+                  portal={portal === true}
+                  currency={currency}
+                />
+              ))}
+            </Stack>
+          )}
         </Tabs.Panel>
         <Tabs.Panel value="payments" pt="md">
           <Table withTableBorder striped>
@@ -200,6 +223,67 @@ export function ProfileView({
         </Tabs.Panel>
       </Tabs>
     </Stack>
+  );
+}
+
+function WaterAccountSection({
+  summary,
+  portal,
+  currency,
+}: {
+  readonly summary: PayerProfile['waterAccounts'][number];
+  readonly portal: boolean;
+  readonly currency: string;
+}): ReactElement {
+  const statement = useStatementQuery<StatementView>({
+    queryKey: portal
+      ? QUERY_KEYS.myStatement(summary.account.id)
+      : QUERY_KEYS.statement(summary.account.id, {}),
+    queryFn: () =>
+      portal ? getMyStatement(summary.account.id) : getStatement(summary.account.id, {}),
+  });
+  const activeMeter = summary.account.meters.find((m) => m.status === 'ACTIVE');
+  return (
+    <Card withBorder>
+      <Stack>
+        <Group justify="space-between">
+          <div>
+            <Text fw={600}>
+              {portal ? (
+                <Text span ff="monospace">
+                  {summary.account.accountNumber}
+                </Text>
+              ) : (
+                <Link to={ROUTES.WATER_ACCOUNT_DETAIL} params={{ accountId: summary.account.id }}>
+                  {summary.account.accountNumber}
+                </Link>
+              )}
+              <Text span c="dimmed">
+                {' '}
+                · {summary.account.serviceAddress} · {summary.account.tariffCategory.name}
+              </Text>
+            </Text>
+            <Text size="sm" c="dimmed">
+              Meter {activeMeter?.serial ?? '—'} · last reading{' '}
+              {activeMeter?.lastReading?.readingValue ?? '—'}
+            </Text>
+          </div>
+          <Group gap="xs">
+            <Text size="sm">Outstanding</Text>
+            <MoneyText amount={summary.account.outstanding} currency={currency} fw={700} />
+          </Group>
+        </Group>
+        <BillsTable
+          bills={summary.bills}
+          onPdf={
+            portal
+              ? (bill: BillView) => getMyBillPdf(bill.id)
+              : (bill: BillView) => getBillPdf(bill.id)
+          }
+        />
+        {statement.data !== undefined && <StatementTable statement={statement.data} />}
+      </Stack>
+    </Card>
   );
 }
 

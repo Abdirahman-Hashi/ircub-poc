@@ -25,6 +25,14 @@ import { NewAssessmentPage } from '../features/revenue/NewAssessmentPage';
 import { RevenueTypesPage } from '../features/revenue/RevenueTypesPage';
 import { ReversalsPage } from '../features/reversals/ReversalsPage';
 import { MyProfilePage } from '../features/self/MyProfilePage';
+import { BillingCycleDetailPage } from '../features/water/BillingCycleDetailPage';
+import { BillingCyclesPage } from '../features/water/BillingCyclesPage';
+import { NewReadingPage } from '../features/water/NewReadingPage';
+import { ReadingsPage } from '../features/water/ReadingsPage';
+import { TariffsPage } from '../features/water/TariffsPage';
+import { UploadReadingsPage } from '../features/water/UploadReadingsPage';
+import { WaterAccountDetailPage } from '../features/water/WaterAccountDetailPage';
+import { WaterAccountsPage } from '../features/water/WaterAccountsPage';
 
 import { AppShellLayout } from './AppShell';
 import { RequireAuth, RequirePermission } from './route-guards';
@@ -98,7 +106,14 @@ const routeTree = rootRoute.addChildren([
       page(ROUTES.PAYMENT_CAPTURE, guarded(PERMISSIONS.PAYMENTS_CAPTURE, CapturePaymentPage)),
       page(ROUTES.BULK_UPLOADS, guarded(PERMISSIONS.BULK_UPLOADS_CREATE, BulkUploadPage)),
       page(ROUTES.REVERSALS, guarded(PERMISSIONS.PAYMENTS_VIEW, ReversalsPage)),
-      page(ROUTES.WATER, guarded(PERMISSIONS.BILLS_VIEW, placeholder('Water billing'))),
+      page(ROUTES.WATER, guarded(PERMISSIONS.BILLS_VIEW, WaterAccountsPage)),
+      page(ROUTES.WATER_READINGS, guarded(PERMISSIONS.BILLS_VIEW, ReadingsPage)),
+      page(ROUTES.WATER_READINGS_NEW, guarded(PERMISSIONS.METERS_READ, NewReadingPage)),
+      page(ROUTES.WATER_READINGS_UPLOAD, guarded(PERMISSIONS.METERS_READ, UploadReadingsPage)),
+      page(ROUTES.WATER_CYCLES, guarded(PERMISSIONS.BILLS_VIEW, BillingCyclesPage)),
+      page(ROUTES.WATER_CYCLE_DETAIL, guarded(PERMISSIONS.BILLS_VIEW, BillingCycleDetailPage)),
+      page(ROUTES.WATER_TARIFFS, guarded(PERMISSIONS.CONFIG_MANAGE, TariffsPage)),
+      page(ROUTES.WATER_ACCOUNT_DETAIL, guarded(PERMISSIONS.BILLS_VIEW, WaterAccountDetailPage)),
       page(ROUTES.FMIS, guarded(PERMISSIONS.FMIS_VIEW, placeholder('FMIS'))),
       page(ROUTES.AUDIT, guarded(PERMISSIONS.AUDIT_VIEW, placeholder('Audit log'))),
       page(ROUTES.ME, guarded(PERMISSIONS.SELF_VIEW, MyProfilePage)),
