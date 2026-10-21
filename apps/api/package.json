@@ -2,10 +2,11 @@
   "name": "api",
   "version": "0.1.0",
   "private": true,
-  "description": "IRCUB API — NestJS backend",
+  "description": "IRCUB API \u2014 NestJS backend",
   "author": "Abdirahman Hashi",
   "scripts": {
     "build": "nest build",
+    "postinstall": "prisma generate",
     "dev": "nest start --watch",
     "start": "node dist/main",
     "typecheck": "tsc -p tsconfig.json --noEmit",
