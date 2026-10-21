@@ -6,17 +6,27 @@ import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { THROTTLE } from './app.constants';
 import { JwtAuthGuard } from './common/auth/jwt-auth.guard';
 import { PermissionsGuard } from './common/auth/permissions.guard';
+import { CsvModule } from './common/csv/csv.module';
 import { GlobalExceptionFilter } from './common/errors/global-exception.filter';
+import { IdsModule } from './common/ids/ids.module';
 import { JobsModule } from './common/jobs/jobs.module';
 import { LoggingModule } from './common/logging/logging.module';
 import { SseModule } from './common/sse/sse.module';
 import { AppConfigModule } from './config/app-config.module';
 import { AppConfigService } from './config/app-config.service';
+import { AssessmentsModule } from './modules/assessments/assessments.module';
 import { AuditModule } from './modules/audit/audit.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { BulkUploadsModule } from './modules/bulk-uploads/bulk-uploads.module';
+import { FxModule } from './modules/fx/fx.module';
 import { HealthModule } from './modules/health/health.module';
+import { PayersModule } from './modules/payers/payers.module';
+import { PaymentsModule } from './modules/payments/payments.module';
 import { PermissionsModule } from './modules/permissions/permissions.module';
+import { RevenueTypesModule } from './modules/revenue-types/revenue-types.module';
+import { ReversalsModule } from './modules/reversals/reversals.module';
 import { RolesModule } from './modules/roles/roles.module';
+import { SelfModule } from './modules/self/self.module';
 import { SodModule } from './modules/sod/sod.module';
 import { SystemConfigModule } from './modules/system-config/system-config.module';
 import { UsersModule } from './modules/users/users.module';
@@ -52,6 +62,16 @@ import { PrismaModule } from './prisma/prisma.module';
     RolesModule,
     UsersModule,
     AuditModule,
+    IdsModule,
+    CsvModule,
+    FxModule,
+    PayersModule,
+    RevenueTypesModule,
+    AssessmentsModule,
+    PaymentsModule,
+    BulkUploadsModule,
+    ReversalsModule,
+    SelfModule,
   ],
   providers: [
     // Order matters: throttle first, then authenticate, then authorise.
