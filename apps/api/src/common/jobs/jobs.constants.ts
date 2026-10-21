@@ -5,7 +5,7 @@ export const JOBS = {
   /** Seconds pg-boss waits for in-flight handlers on shutdown. */
   STOP_TIMEOUT_MS: 10_000,
   /** How often workers poll a queue when idle. */
-  POLLING_INTERVAL_SECONDS: 2,
-  /** Jobs fetched per poll; 1 keeps handlers simple and failures isolated. */
-  BATCH_SIZE: 1,
+  POLLING_INTERVAL_SECONDS: 1,
+  /** Jobs fetched per poll; handlers run sequentially within a batch so failures stay isolated. */
+  BATCH_SIZE: 10,
 } as const;
