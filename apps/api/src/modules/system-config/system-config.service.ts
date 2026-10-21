@@ -1,5 +1,8 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { HttpStatus, Injectable, Logger } from '@nestjs/common';
 
+import { ErrorCode } from '@ircub/shared';
+
+import { AppException } from '../../common/errors/app.exception';
 import { PrismaService } from '../../prisma/prisma.service';
 
 import { SYSTEM_CONFIG } from './system-config.constants';
@@ -9,6 +12,7 @@ import {
   SystemConfigKey,
   type SystemConfigValues,
 } from './system-config.keys';
+import { SYSTEM_CONFIG_MESSAGES } from './system-config.messages';
 
 import type { CachedConfigValue, SystemConfigEntry } from './system-config.types';
 
@@ -30,7 +34,9 @@ export class SystemConfigService {
       return cached.value as SystemConfigValues[K];
     }
 
-    const row = await this.prisma.systemConfig.findUnique({ where: { key } });
+    // Widened on purpose: Prisma's `Exact<>` typing rejects the generic K inside `where`.
+    const lookupKey: string = key;
+    const row = await this.prisma.systemConfig.findUnique({ where: { key: lookupKey } });
     const value = this.coerce(key, row?.value);
     this.cache.set(key, { value, expiresAt: Date.now() + SYSTEM_CONFIG.CACHE_TTL_MS });
     return value;
@@ -52,6 +58,49 @@ export class SystemConfigService {
       update: { value, ...(updatedById === undefined ? {} : { updatedById }) },
     });
     this.cache.delete(key);
+  }
+
+  /** Admin path: validates the key and the value's primitive type, then sets and returns the entry. */
+  async setValidated(
+    rawKey: string,
+    value: unknown,
+    updatedById: string,
+  ): Promise<SystemConfigEntry> {
+    const key = Object.values(SystemConfigKey).find(
+      (candidate) => (candidate as string) === rawKey,
+    );
+    if (key === undefined) {
+      throw new AppException(
+        ErrorCode.NOT_FOUND,
+        SYSTEM_CONFIG_MESSAGES.UNKNOWN_KEY,
+        HttpStatus.NOT_FOUND,
+        { key: rawKey },
+      );
+    }
+    const expected = typeof SYSTEM_CONFIG_DEFAULTS[key];
+    if (typeof value !== expected) {
+      throw new AppException(
+        ErrorCode.VALIDATION_FAILED,
+        SYSTEM_CONFIG_MESSAGES.WRONG_TYPE,
+        HttpStatus.BAD_REQUEST,
+        {
+          key,
+          expected,
+          actual: typeof value,
+        },
+      );
+    }
+    await this.set(key, value as SystemConfigValues[typeof key], updatedById);
+    const entry = (await this.list()).find((candidate) => candidate.key === key);
+    if (entry === undefined) {
+      throw new AppException(
+        ErrorCode.NOT_FOUND,
+        SYSTEM_CONFIG_MESSAGES.UNKNOWN_KEY,
+        HttpStatus.NOT_FOUND,
+        { key },
+      );
+    }
+    return entry;
   }
 
   async list(): Promise<SystemConfigEntry[]> {

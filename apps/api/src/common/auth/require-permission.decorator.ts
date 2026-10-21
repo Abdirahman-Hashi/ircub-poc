@@ -5,8 +5,8 @@ import type { PermissionCode } from '@ircub/shared';
 import { AUTH_METADATA } from './auth.constants';
 
 /**
- * Declares the permission a handler needs. The PermissionsGuard (phase 1) reads it;
- * until then the decorator only documents intent in Swagger-adjacent code.
+ * Declares the permission(s) a handler needs; the caller must hold all of them.
+ * Read by `PermissionsGuard`.
  */
-export const RequirePermission = (code: PermissionCode): CustomDecorator =>
-  SetMetadata(AUTH_METADATA.REQUIRED_PERMISSION, code);
+export const RequirePermission = (...codes: readonly PermissionCode[]): CustomDecorator =>
+  SetMetadata(AUTH_METADATA.REQUIRED_PERMISSIONS, codes);

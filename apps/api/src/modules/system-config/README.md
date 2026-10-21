@@ -11,6 +11,7 @@ cash GL code, local currency) stored in the `system_config` table and read throu
 - Values are cached for `SYSTEM_CONFIG.CACHE_TTL_MS` (30 s); `set()` invalidates the key.
 - Business code never reads a threshold from a literal — always `systemConfig.get(SystemConfigKey.X)`.
 
-**Endpoints.** None yet; phase 1 adds `GET/PUT /config` behind `config.manage` (audited).
+**Endpoints** (`config.manage`): `GET /config` (every key with value, default, description),
+`PUT /config/:key { value }` (type-checked against the default; audited with the actor).
 
 **Testing.** Unit: `system-config.service.spec.ts` (fallback on missing/mistyped row, cache TTL).
