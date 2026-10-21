@@ -13,6 +13,7 @@ import { FAKER_SEED, SEED_LOG_LEVELS } from './seed/seed.constants';
 import { seedSodRules } from './seed/sod.seed';
 import { seedSystemConfig } from './seed/system-config.seed';
 import { seedUsers } from './seed/users.seed';
+import { seedTariffs, seedWaterDemo } from './seed/water.seed';
 
 /**
  * Entry point for `prisma db seed`. Deterministic (fixed faker seed) and idempotent: every
@@ -35,6 +36,8 @@ async function main(): Promise<void> {
     console.info(`seed: revenue types ${await seedRevenueTypes(prisma)}`);
     console.info(`seed: fx rates ${await seedFxRate(prisma)}`);
     console.info(`seed: demo data ${await seedDemoData(prisma)}`);
+    console.info(`seed: tariffs ${await seedTariffs(prisma)}`);
+    console.info(`seed: water demo ${await seedWaterDemo(prisma)}`);
   } finally {
     await base.$disconnect();
   }

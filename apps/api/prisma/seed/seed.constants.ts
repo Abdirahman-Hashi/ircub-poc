@@ -41,3 +41,54 @@ export const DEMO = {
   CUSTOMER_EMAIL: 'customer1@ircub.test',
   WATER_TYPE_CODE: 'WATER',
 } as const;
+
+/** Water demo data (D24): sizes, tariffs in USD-equivalent, and seasonality per month (Jan..Dec). */
+export const WATER_DEMO = {
+  PAYERS: 100,
+  ACCOUNTS: 120,
+  COMMERCIAL_EVERY: 5,
+  MONTHS: 12,
+  RELEASED_CYCLES: 3,
+  ACCOUNT_PREFIX: 'WA',
+  ACCOUNT_DIGITS: 8,
+  METER_PREFIX: 'MTR-',
+  METER_DIGITS: 6,
+  METER_DIGITS_ON_DIAL: 6,
+  DECIMAL_RADIX: 10,
+  ROLLOVERS: 2,
+  ABNORMAL: 3,
+  ABNORMAL_MULTIPLIER: 3.5,
+  ABNORMAL_THRESHOLD_PCT: 200,
+  ABNORMAL_HISTORY_MONTHS: 3,
+  REPLACEMENT_INITIAL: 100,
+  REPLACEMENT_CONSUMPTION: 18,
+  PAID_RATIO: 0.6,
+  DUE_DAYS: 30,
+  WATER_OFFICER_EMAIL: 'water@ircub.test',
+  /** Dry season (Jan–Mar, Jul–Sep) uses more water than the rainy months. */
+  SEASONALITY: [1.25, 1.3, 1.2, 0.9, 0.8, 0.85, 1.1, 1.2, 1.15, 0.9, 0.85, 1.0],
+  TARIFFS: [
+    {
+      code: 'DOMESTIC',
+      name: 'Domestic',
+      fixedChargeUsd: '2.00',
+      tiersUsd: [
+        { from: 0, to: 10, rateUsd: '0.50' },
+        { from: 10, to: 30, rateUsd: '0.90' },
+        { from: 30, to: 60, rateUsd: '1.40' },
+        { from: 60, to: null, rateUsd: '2.00' },
+      ],
+    },
+    {
+      code: 'COMMERCIAL',
+      name: 'Commercial',
+      fixedChargeUsd: '8.00',
+      tiersUsd: [
+        { from: 0, to: 20, rateUsd: '1.20' },
+        { from: 20, to: 100, rateUsd: '1.80' },
+        { from: 100, to: 300, rateUsd: '2.40' },
+        { from: 300, to: null, rateUsd: '3.00' },
+      ],
+    },
+  ],
+} as const;
