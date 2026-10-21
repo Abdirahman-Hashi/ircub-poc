@@ -34,13 +34,34 @@ export async function apiFetch<T>(path: string, init: ApiRequestInit = {}): Prom
   return (await response.json()) as T;
 }
 
+/** For downloads: returns the raw body as a Blob (refresh-and-retry still applies). */
+export async function apiFetchBlob(path: string, init: ApiRequestInit = {}): Promise<Blob> {
+  const response = await send(path, init);
+  if (
+    response.status === HTTP.UNAUTHORIZED &&
+    init.skipRefresh !== true &&
+    (await refreshAccessToken())
+  ) {
+    return apiFetchBlob(path, { ...init, skipRefresh: true });
+  }
+  if (!response.ok) {
+    throw new ApiError(await parseError(response));
+  }
+  return response.blob();
+}
+
+/** Multipart upload: the body is sent as-is (no JSON header). */
+export async function apiUpload<T>(path: string, form: FormData): Promise<T> {
+  return apiFetch<T>(path, { method: HTTP.METHOD_POST, rawBody: form });
+}
+
 /** For endpoints that answer 204 No Content. */
 export async function apiFetchVoid(path: string, init: ApiRequestInit = {}): Promise<void> {
   await apiFetch<undefined>(path, init);
 }
 
 async function send(path: string, init: ApiRequestInit): Promise<Response> {
-  const { body, skipAuth: _skipAuth, skipRefresh: _skipRefresh, headers, ...rest } = init;
+  const { body, rawBody, skipAuth: _skipAuth, skipRefresh: _skipRefresh, headers, ...rest } = init;
   const requestHeaders = new Headers(headers);
   const token = getAccessToken();
 
@@ -55,7 +76,11 @@ async function send(path: string, init: ApiRequestInit): Promise<Response> {
     ...rest,
     headers: requestHeaders,
     credentials: 'include',
-    ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+    ...(rawBody !== undefined
+      ? { body: rawBody }
+      : body === undefined
+        ? {}
+        : { body: JSON.stringify(body) }),
   });
 }
 

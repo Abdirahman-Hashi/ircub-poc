@@ -1,10 +1,22 @@
 /** TanStack Query keys, namespaced per feature. */
 export const QUERY_KEYS = {
   health: ['health'] as const,
-  me: ['auth', 'me'] as const,
   users: (params: unknown) => ['users', params] as const,
   roles: ['roles'] as const,
   permissions: ['permissions'] as const,
   sodRules: ['sod-rules'] as const,
   config: ['config'] as const,
+  payers: (params: unknown) => ['payers', params] as const,
+  payer: (id: string) => ['payers', 'profile', id] as const,
+  duplicates: (params: unknown) => ['payers', 'duplicates', params] as const,
+  revenueTypes: (includeInactive: boolean) => ['revenue-types', includeInactive] as const,
+  assessments: (params: unknown) => ['assessments', params] as const,
+  assessment: (id: string) => ['assessments', 'detail', id] as const,
+  payments: (params: unknown) => ['payments', params] as const,
+  lookup: (controlNumber: string) => ['payments', 'lookup', controlNumber] as const,
+  bulkUploads: (params: unknown) => ['bulk-uploads', params] as const,
+  bulkUpload: (id: string) => ['bulk-uploads', 'detail', id] as const,
+  reversals: (params: unknown) => ['reversals', params] as const,
+  me: ['auth', 'me'] as const,
+  myProfile: ['me', 'profile'] as const,
 } as const;

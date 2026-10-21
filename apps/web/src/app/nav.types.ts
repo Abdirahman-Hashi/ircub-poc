@@ -1,11 +1,11 @@
 import type { PermissionCode } from '@ircub/shared';
 
-import type { RoutePath } from './routes.constants';
+import type { StaticRoutePath } from './routes.constants';
 import type { Icon } from '@tabler/icons-react';
 
 export interface NavItem {
   readonly label: string;
-  readonly to: RoutePath;
+  readonly to: StaticRoutePath;
   readonly icon: Icon;
   /** Shown only when the user holds this permission; the server still enforces it. */
   readonly permission: PermissionCode;

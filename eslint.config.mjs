@@ -193,6 +193,8 @@ export default tseslint.config(
     plugins: { 'react-hooks': reactHooks },
     rules: {
       ...reactHooks.configs['recommended-latest'].rules,
+      // React Compiler rule; the app is not compiled with it, and react-hook-form's register spread trips it.
+      'react-hooks/incompatible-library': 'off',
     },
   },
 

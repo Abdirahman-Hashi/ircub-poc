@@ -1,7 +1,10 @@
 import {
   IconBuildingBank,
+  IconArrowBackUp,
   IconCash,
   IconChartBar,
+  IconFileUpload,
+  IconListDetails,
   IconDroplet,
   IconFileInvoice,
   IconHistory,
@@ -31,6 +34,24 @@ export const NAV_ITEMS: readonly NavItem[] = [
     permission: PERMISSIONS.ASSESSMENTS_VIEW,
   },
   { label: 'Payments', to: ROUTES.PAYMENTS, icon: IconCash, permission: PERMISSIONS.PAYMENTS_VIEW },
+  {
+    label: 'Reversals',
+    to: ROUTES.REVERSALS,
+    icon: IconArrowBackUp,
+    permission: PERMISSIONS.PAYMENTS_VIEW,
+  },
+  {
+    label: 'Bulk upload',
+    to: ROUTES.BULK_UPLOADS,
+    icon: IconFileUpload,
+    permission: PERMISSIONS.BULK_UPLOADS_CREATE,
+  },
+  {
+    label: 'Revenue types',
+    to: ROUTES.REVENUE_TYPES,
+    icon: IconListDetails,
+    permission: PERMISSIONS.REVENUE_TYPES_MANAGE,
+  },
   {
     label: 'Water billing',
     to: ROUTES.WATER,

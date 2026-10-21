@@ -11,10 +11,8 @@ describe('filterNav', () => {
     const held = new Set<PermissionCode>([PERMISSIONS.PAYERS_VIEW, PERMISSIONS.PAYMENTS_VIEW]);
     const visible = filterNav(NAV_ITEMS, (code) => held.has(code));
 
-    expect(visible.map((item) => item.permission)).toEqual([
-      PERMISSIONS.PAYERS_VIEW,
-      PERMISSIONS.PAYMENTS_VIEW,
-    ]);
+    // Payments and Reversals both need payments.view, so three items are visible.
+    expect(visible.map((item) => item.label)).toEqual(['Payers', 'Payments', 'Reversals']);
   });
 
   it('shows nothing to a user with no permissions', () => {

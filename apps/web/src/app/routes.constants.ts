@@ -11,8 +11,16 @@ export const ROUTES = {
   ADMIN_CONFIG: '/admin/config',
   DASHBOARD: '/dashboard',
   PAYERS: '/payers',
+  PAYER_NEW: '/payers/new',
+  PAYER_DUPLICATES: '/payers/duplicates',
+  PAYER_DETAIL: '/payers/$payerId',
+  REVENUE_TYPES: '/revenue-types',
   ASSESSMENTS: '/assessments',
+  ASSESSMENT_NEW: '/assessments/new',
   PAYMENTS: '/payments',
+  PAYMENT_CAPTURE: '/payments/capture',
+  BULK_UPLOADS: '/bulk-uploads',
+  REVERSALS: '/reversals',
   WATER: '/water',
   FMIS: '/fmis',
   AUDIT: '/audit',
@@ -20,3 +28,6 @@ export const ROUTES = {
 } as const;
 
 export type RoutePath = (typeof ROUTES)[keyof typeof ROUTES];
+
+/** Routes without path parameters — the only ones a nav item may point at. */
+export type StaticRoutePath = Exclude<RoutePath, `${string}$${string}`>;

@@ -1,5 +1,5 @@
 import type { CanFn, NavItem } from './nav.types';
-import type { RoutePath } from './routes.constants';
+import type { StaticRoutePath } from './routes.constants';
 
 const PATH_SEPARATOR = '/';
 
@@ -9,7 +9,7 @@ export function filterNav(items: readonly NavItem[], can: CanFn): readonly NavIt
 }
 
 /** A nav item is active for its own path and every path under the same top-level section. */
-export function isNavActive(pathname: string, to: RoutePath): boolean {
+export function isNavActive(pathname: string, to: StaticRoutePath): boolean {
   const section = (path: string): string | undefined => path.split(PATH_SEPARATOR)[1];
   return section(pathname) === section(to);
 }
