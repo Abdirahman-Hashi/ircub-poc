@@ -1,0 +1,68 @@
+/**
+ * Stable, machine-readable error codes returned in every API error body as `code`.
+ *
+ * `AppException` (apps/api/src/common/errors) only accepts values from this enum, so a
+ * new failure mode means a new entry here first. The web app switches on these codes;
+ * the `message` field is for humans and may change freely.
+ */
+export enum ErrorCode {
+  // ── Generic ──────────────────────────────────────────────────────────────────
+  INTERNAL_ERROR = 'INTERNAL_ERROR',
+  VALIDATION_FAILED = 'VALIDATION_FAILED',
+  NOT_FOUND = 'NOT_FOUND',
+  UNAUTHENTICATED = 'UNAUTHENTICATED',
+  FORBIDDEN = 'FORBIDDEN',
+  RATE_LIMITED = 'RATE_LIMITED',
+  CONFLICT = 'CONFLICT',
+
+  // ── Auth & access control (phase 1) ──────────────────────────────────────────
+  INVALID_CREDENTIALS = 'INVALID_CREDENTIALS',
+  ACCOUNT_LOCKED = 'ACCOUNT_LOCKED',
+  PASSWORD_POLICY_VIOLATION = 'PASSWORD_POLICY_VIOLATION',
+  PASSWORD_REUSED = 'PASSWORD_REUSED',
+  MFA_REQUIRED = 'MFA_REQUIRED',
+  MFA_INVALID = 'MFA_INVALID',
+  REFRESH_TOKEN_INVALID = 'REFRESH_TOKEN_INVALID',
+  REFRESH_TOKEN_REUSED = 'REFRESH_TOKEN_REUSED',
+  SOD_VIOLATION = 'SOD_VIOLATION',
+  SYSTEM_ROLE_IMMUTABLE = 'SYSTEM_ROLE_IMMUTABLE',
+  AUDIT_CHAIN_BROKEN = 'AUDIT_CHAIN_BROKEN',
+
+  // ── Registry, assessments, uploads (phase 2) ─────────────────────────────────
+  DUPLICATE_PAYER = 'DUPLICATE_PAYER',
+  INVALID_TIN = 'INVALID_TIN',
+  INVALID_CONTROL_NUMBER = 'INVALID_CONTROL_NUMBER',
+  ASSESSMENT_NOT_PAYABLE = 'ASSESSMENT_NOT_PAYABLE',
+  OVERPAYMENT = 'OVERPAYMENT',
+  REVERSAL_ALREADY_DECIDED = 'REVERSAL_ALREADY_DECIDED',
+  PAYMENT_NOT_REVERSIBLE = 'PAYMENT_NOT_REVERSIBLE',
+  CSV_INVALID = 'CSV_INVALID',
+  CSV_TOO_MANY_ROWS = 'CSV_TOO_MANY_ROWS',
+  UNSUPPORTED_FILE_TYPE = 'UNSUPPORTED_FILE_TYPE',
+
+  // ── Water billing (phase 3) ──────────────────────────────────────────────────
+  READING_BELOW_PREVIOUS = 'READING_BELOW_PREVIOUS',
+  READING_DUPLICATE_DATE = 'READING_DUPLICATE_DATE',
+  METER_NOT_ACTIVE = 'METER_NOT_ACTIVE',
+  BILLING_CYCLE_EXISTS = 'BILLING_CYCLE_EXISTS',
+  BILLING_CYCLE_INVALID_STATE = 'BILLING_CYCLE_INVALID_STATE',
+  BILLING_CYCLE_HAS_FLAGGED_BILLS = 'BILLING_CYCLE_HAS_FLAGGED_BILLS',
+  TARIFF_NOT_CONFIGURED = 'TARIFF_NOT_CONFIGURED',
+
+  // ── Payments, FX, channels (phase 4) ─────────────────────────────────────────
+  CHANNEL_UNAVAILABLE = 'CHANNEL_UNAVAILABLE',
+  INVALID_SIGNATURE = 'INVALID_SIGNATURE',
+  FX_RATE_UNAVAILABLE = 'FX_RATE_UNAVAILABLE',
+  UNSUPPORTED_CURRENCY = 'UNSUPPORTED_CURRENCY',
+  DUPLICATE_PAYMENT = 'DUPLICATE_PAYMENT',
+  PAYMENT_INVALID_STATE = 'PAYMENT_INVALID_STATE',
+
+  // ── FMIS (phase 5) ───────────────────────────────────────────────────────────
+  DUPLICATE_POSTING = 'DUPLICATE_POSTING',
+  GL_MAPPING_MISSING = 'GL_MAPPING_MISSING',
+  JOURNAL_UNBALANCED = 'JOURNAL_UNBALANCED',
+  FMIS_UNAVAILABLE = 'FMIS_UNAVAILABLE',
+
+  // ── Dashboard (phase 6) ──────────────────────────────────────────────────────
+  INSUFFICIENT_HISTORY = 'INSUFFICIENT_HISTORY',
+}
