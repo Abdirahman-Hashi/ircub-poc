@@ -1,0 +1,181 @@
+// IRCUB POC — Prisma schema.
+//
+// Phase 0 contains only the foundation: enums mirrored from packages/shared/src/enums.ts,
+// the SystemConfig table (runtime-tunable business parameters) and the ControlNumber
+// sequence (docs/DECISIONS.md D10). Business models arrive with their phase, each as a new
+// migration; migrations are never edited after commit (standards §6).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums (keep in sync with @ircub/shared enums.ts) ────────────────────────
+
+enum Currency {
+  SOS
+  USD
+}
+
+enum PayerType {
+  INDIVIDUAL
+  BUSINESS
+}
+
+enum PayerStatus {
+  ACTIVE
+  SUSPENDED
+}
+
+enum AssessmentStatus {
+  PENDING
+  PART_PAID
+  PAID
+  CANCELLED
+}
+
+enum PaymentChannel {
+  CASH
+  BANK
+  MOBILE_MONEY
+  BULK
+}
+
+enum PaymentStatus {
+  INITIATED
+  PENDING
+  CONFIRMED
+  FAILED
+  PERMANENTLY_FAILED
+  REVERSED
+}
+
+enum ReversalStatus {
+  PENDING_APPROVAL
+  APPROVED
+  REJECTED
+}
+
+enum BulkUploadKind {
+  REVENUE_TRANSACTIONS
+  METER_READINGS
+}
+
+enum ReadingType {
+  NORMAL
+  ROLLOVER
+  REPLACEMENT
+}
+
+enum ReadingSource {
+  MANUAL
+  CSV
+}
+
+enum MeterStatus {
+  ACTIVE
+  REPLACED
+  FAULTY
+}
+
+enum WaterAccountStatus {
+  ACTIVE
+  DISCONNECTED
+}
+
+enum BillingCycleStatus {
+  DRAFT
+  REVIEW
+  RELEASED
+}
+
+enum BillStatus {
+  DRAFT
+  FLAGGED
+  RELEASED
+  PART_PAID
+  PAID
+}
+
+enum NotificationChannel {
+  SMS
+  EMAIL
+}
+
+enum NotificationStatus {
+  QUEUED
+  SENT
+  FAILED
+}
+
+enum ReconciliationLineStatus {
+  MATCHED
+  MISSING_IN_IRCUB
+  MISSING_IN_CHANNEL
+  AMOUNT_MISMATCH
+}
+
+enum JournalBatchKind {
+  COLLECTIONS
+  REVERSAL
+}
+
+enum JournalBatchStatus {
+  PENDING
+  POSTED
+  FAILED
+  REVERSED
+}
+
+enum FmisReconciliationStatus {
+  MATCHED
+  MISMATCH
+  MISSING_IN_FMIS
+}
+
+enum AlertType {
+  COLLECTION_DROP
+  REVERSAL_SPIKE
+  PAYMENT_PERMANENTLY_FAILED
+  FMIS_BATCH_FAILED
+  ABNORMAL_CONSUMPTION
+}
+
+enum AlertSeverity {
+  INFO
+  WARNING
+  CRITICAL
+}
+
+enum ControlNumberPurpose {
+  ASSESSMENT
+  BILL
+}
+
+// ─── Foundation models ───────────────────────────────────────────────────────
+
+/// Runtime-tunable business parameters (standards §1). Keys and typed defaults live in
+/// apps/api/src/modules/system-config/system-config.keys.ts; the seed inserts the defaults.
+model SystemConfig {
+  key         String   @id
+  value       Json
+  description String?
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  updatedById String?  @map("updated_by_id")
+
+  @@map("system_config")
+}
+
+/// Single sequence shared by assessments and bills so a control number is unique across both
+/// (D10). The row id becomes the 10-digit body; two mod-97 check digits are appended.
+model ControlNumber {
+  id        BigInt               @id @default(autoincrement())
+  purpose   ControlNumberPurpose
+  createdAt DateTime             @default(now()) @map("created_at")
+
+  @@map("control_number")
+}
