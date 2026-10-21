@@ -149,6 +149,16 @@ supervisor 19, water 14 incl. inherited officer permissions, officer 11, auditor
 assigning Revenue Supervisor to officer@ → `403 SOD_VIOLATION`; auditor's `GET /audit/verify` →
 `{ ok: true, checked: 152 }`; OpenAPI export has 28 paths.
 
+**Verified manually (UI, headless Chromium walkthrough):** login error message, admin home
+with role badge, nav per role (admin 9 items, officer 4, customer 1), users table and create
+user with one-time password modal, permission matrix with 11 inherited (checked, disabled)
+permissions on Water Billing Officer, saving `reversals.capture` on Revenue Supervisor shows
+the `SOD_VIOLATION` toast, SoD rules and config pages, MFA enrolment renders the QR code,
+change-password page, logout, officer at `/admin/users` → `/403`, session survives a hard
+reload. No page errors or 5xx responses. Finding fixed on the spot: the per-IP throttle on
+`/auth/refresh` (30/min) tripped after a handful of hard reloads; raised to 120/min and login to
+20/min because limits are per source address and offices share one behind NAT.
+
 **Deviations and decisions (why)**
 - **Role/permission mapping.** The phase prompt's three statements (Supervisor inherits Officer,
   the seeded rule `reversals.capture ⟂ reversals.approve`, "Administrator holds everything")

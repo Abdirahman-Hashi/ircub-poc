@@ -54,8 +54,12 @@ export const TEMP_PASSWORD_POOLS = {
   SYMBOL: '!@#$%&*?',
 } as const;
 
-/** Stricter throttle for credential endpoints (standards §5). */
+/**
+ * Per-IP throttle for credential endpoints (standards §5). Limits are per source address, and
+ * an office behind one NAT shares an address, so refresh (called on every hard reload) is
+ * generous; brute-force protection on login comes mainly from the per-account lockout.
+ */
 export const AUTH_THROTTLE = {
-  LOGIN: { ttl: 60_000, limit: 10 },
-  REFRESH: { ttl: 60_000, limit: 30 },
+  LOGIN: { ttl: 60_000, limit: 20 },
+  REFRESH: { ttl: 60_000, limit: 120 },
 } as const;
