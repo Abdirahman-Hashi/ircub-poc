@@ -336,6 +336,8 @@ model Payer {
   users          User[]
   assessments    Assessment[]
   payments       Payment[]
+  waterAccounts  WaterAccount[]
+  bills          Bill[]
   duplicateFlags DuplicateFlag[] @relation("FlaggedPayer")
   matchedBy      DuplicateFlag[] @relation("MatchedPayer")
 
@@ -424,7 +426,6 @@ model Payment {
   id                  String         @id @default(uuid()) @db.Uuid
   controlNumber       String         @map("control_number")
   assessmentId        String?        @map("assessment_id") @db.Uuid
-  /// Bill FK added in phase 3.
   billId              String?        @map("bill_id") @db.Uuid
   payerId             String         @map("payer_id") @db.Uuid
   channel             PaymentChannel
@@ -446,6 +447,7 @@ model Payment {
   updatedAt           DateTime       @updatedAt @map("updated_at")
 
   assessment Assessment? @relation(fields: [assessmentId], references: [id], onDelete: Restrict)
+  bill       Bill?       @relation(fields: [billId], references: [id], onDelete: Restrict)
   payer      Payer       @relation(fields: [payerId], references: [id], onDelete: Restrict)
   bulkUpload BulkUpload? @relation(fields: [bulkUploadId], references: [id], onDelete: SetNull)
   reversals  Reversal[]
@@ -454,6 +456,7 @@ model Payment {
   @@unique([channel, channelTxnRef])
   @@index([payerId])
   @@index([assessmentId])
+  @@index([billId])
   @@index([controlNumber])
   @@index([status])
   @@index([channel])
@@ -496,8 +499,9 @@ model BulkUpload {
   uploadedById String         @map("uploaded_by_id") @db.Uuid
   createdAt    DateTime       @default(now()) @map("created_at")
 
-  uploadedBy User      @relation(fields: [uploadedById], references: [id], onDelete: Restrict)
+  uploadedBy User           @relation(fields: [uploadedById], references: [id], onDelete: Restrict)
   payments   Payment[]
+  readings   MeterReading[]
 
   @@index([kind, createdAt])
   @@map("bulk_upload")
@@ -514,6 +518,190 @@ model FxRate {
 
   @@index([base, quote, asOf])
   @@map("fx_rate")
+}
+
+// ─── Water utility billing (phase 3, D13, D14, D19, D20) ─────────────────────
+
+model TariffCategory {
+  id          String   @id @default(uuid()) @db.Uuid
+  code        String   @unique
+  name        String
+  /// Monthly service charge added to every bill, local currency.
+  fixedCharge Decimal  @map("fixed_charge") @db.Decimal(18, 2)
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  tiers    TariffTier[]
+  accounts WaterAccount[]
+
+  @@map("tariff_category")
+}
+
+/// Inclusive-exclusive unit band `[fromUnit, toUnit)`; `toUnit` null = open-ended (D14).
+model TariffTier {
+  id          String  @id @default(uuid()) @db.Uuid
+  categoryId  String  @map("category_id") @db.Uuid
+  fromUnit    Int     @map("from_unit")
+  toUnit      Int?    @map("to_unit")
+  ratePerUnit Decimal @map("rate_per_unit") @db.Decimal(18, 2)
+
+  category TariffCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@unique([categoryId, fromUnit])
+  @@map("tariff_tier")
+}
+
+model WaterAccount {
+  id               String             @id @default(uuid()) @db.Uuid
+  /// `WA` + 8 digits (D10).
+  accountNumber    String             @unique @map("account_number")
+  payerId          String             @map("payer_id") @db.Uuid
+  tariffCategoryId String             @map("tariff_category_id") @db.Uuid
+  serviceAddress   String             @map("service_address")
+  status           WaterAccountStatus @default(ACTIVE)
+  openedAt         DateTime           @default(now()) @map("opened_at")
+  createdAt        DateTime           @default(now()) @map("created_at")
+  updatedAt        DateTime           @updatedAt @map("updated_at")
+
+  payer          Payer          @relation(fields: [payerId], references: [id], onDelete: Restrict)
+  tariffCategory TariffCategory @relation(fields: [tariffCategoryId], references: [id], onDelete: Restrict)
+  meters         Meter[]
+  bills          Bill[]
+
+  @@index([payerId])
+  @@index([status])
+  @@map("water_account")
+}
+
+model Meter {
+  id              String      @id @default(uuid()) @db.Uuid
+  serial          String      @unique
+  accountId       String      @map("account_id") @db.Uuid
+  /// Digits on the dial; a reading below the previous one is a rollover past 10^maxDigits (D13).
+  maxDigits       Int         @default(6) @map("max_digits")
+  initialReading  Int         @default(0) @map("initial_reading")
+  installedAt     DateTime    @default(now()) @map("installed_at")
+  status          MeterStatus @default(ACTIVE)
+  replacesMeterId String?     @map("replaces_meter_id") @db.Uuid
+  createdAt       DateTime    @default(now()) @map("created_at")
+  updatedAt       DateTime    @updatedAt @map("updated_at")
+
+  account    WaterAccount   @relation(fields: [accountId], references: [id], onDelete: Restrict)
+  replaces   Meter?         @relation("MeterReplacement", fields: [replacesMeterId], references: [id], onDelete: SetNull)
+  replacedBy Meter[]        @relation("MeterReplacement")
+  readings   MeterReading[]
+
+  @@index([accountId])
+  @@index([status])
+  @@map("meter")
+}
+
+model MeterReading {
+  id             String        @id @default(uuid()) @db.Uuid
+  meterId        String        @map("meter_id") @db.Uuid
+  readingDate    DateTime      @map("reading_date") @db.Date
+  readingValue   Int           @map("reading_value")
+  type           ReadingType   @default(NORMAL)
+  /// Units consumed since the previous reading, computed by `computeConsumption` (D13).
+  consumption    Int
+  source         ReadingSource @default(MANUAL)
+  capturedById   String        @map("captured_by_id") @db.Uuid
+  bulkUploadId   String?       @map("bulk_upload_id") @db.Uuid
+  abnormal       Boolean       @default(false)
+  abnormalReason String?       @map("abnormal_reason")
+  createdAt      DateTime      @default(now()) @map("created_at")
+
+  meter      Meter       @relation(fields: [meterId], references: [id], onDelete: Cascade)
+  bulkUpload BulkUpload? @relation(fields: [bulkUploadId], references: [id], onDelete: SetNull)
+
+  @@unique([meterId, readingDate])
+  @@index([readingDate])
+  @@index([abnormal])
+  @@map("meter_reading")
+}
+
+model BillingCycle {
+  id           String             @id @default(uuid()) @db.Uuid
+  /// `YYYY-MM`; one cycle per calendar month.
+  period       String             @unique
+  status       BillingCycleStatus @default(DRAFT)
+  runById      String             @map("run_by_id") @db.Uuid
+  runAt        DateTime           @default(now()) @map("run_at")
+  releasedById String?            @map("released_by_id") @db.Uuid
+  releasedAt   DateTime?          @map("released_at")
+  /// Exception report: `{ accounts, billed, flagged, skipped: [{ accountNumber, reason }], totalBilled }`.
+  stats        Json
+  createdAt    DateTime           @default(now()) @map("created_at")
+  updatedAt    DateTime           @updatedAt @map("updated_at")
+
+  bills Bill[]
+
+  @@map("billing_cycle")
+}
+
+model Bill {
+  id                String     @id @default(uuid()) @db.Uuid
+  /// Control number from the shared sequence (purpose BILL); what the customer pays against.
+  billNumber        String     @unique @map("bill_number")
+  cycleId           String     @map("cycle_id") @db.Uuid
+  accountId         String     @map("account_id") @db.Uuid
+  payerId           String     @map("payer_id") @db.Uuid
+  periodStart       DateTime   @map("period_start") @db.Date
+  periodEnd         DateTime   @map("period_end") @db.Date
+  previousReading   Int        @map("previous_reading")
+  currentReading    Int        @map("current_reading")
+  consumption       Int
+  /// `[{ from, to, units, rate, amount }]` as computed by the tariff rules.
+  tierBreakdown     Json       @map("tier_breakdown")
+  consumptionCharge Decimal    @map("consumption_charge") @db.Decimal(18, 2)
+  fixedCharge       Decimal    @map("fixed_charge") @db.Decimal(18, 2)
+  arrears           Decimal    @default(0) @db.Decimal(18, 2)
+  paymentsApplied   Decimal    @default(0) @map("payments_applied") @db.Decimal(18, 2)
+  totalDue          Decimal    @map("total_due") @db.Decimal(18, 2)
+  paidAmount        Decimal    @default(0) @map("paid_amount") @db.Decimal(18, 2)
+  currency          Currency   @default(SOS)
+  status            BillStatus @default(DRAFT)
+  flagged           Boolean    @default(false)
+  flagReason        String?    @map("flag_reason")
+  flagNote          String?    @map("flag_note")
+  pdfPath           String?    @map("pdf_path")
+  dueDate           DateTime   @map("due_date") @db.Date
+  releasedAt        DateTime?  @map("released_at")
+  createdAt         DateTime   @default(now()) @map("created_at")
+  updatedAt         DateTime   @updatedAt @map("updated_at")
+
+  cycle    BillingCycle @relation(fields: [cycleId], references: [id], onDelete: Cascade)
+  account  WaterAccount @relation(fields: [accountId], references: [id], onDelete: Restrict)
+  payer    Payer        @relation(fields: [payerId], references: [id], onDelete: Restrict)
+  payments Payment[]
+
+  @@index([cycleId])
+  @@index([accountId])
+  @@index([payerId])
+  @@index([status])
+  @@index([flagged])
+  @@index([dueDate])
+  @@map("bill")
+}
+
+/// Outbound SMS / email, sent through the NotificationSender (mock in the POC, D20).
+model Notification {
+  id          String              @id @default(uuid()) @db.Uuid
+  channel     NotificationChannel
+  to          String
+  subject     String?
+  body        String
+  status      NotificationStatus  @default(QUEUED)
+  relatedType String?             @map("related_type")
+  relatedId   String?             @map("related_id")
+  sentAt      DateTime?           @map("sent_at")
+  error       String?
+  createdAt   DateTime            @default(now()) @map("created_at")
+
+  @@index([relatedType, relatedId])
+  @@index([status])
+  @@map("notification")
 }
 
 // ─── Audit (D8) ──────────────────────────────────────────────────────────────

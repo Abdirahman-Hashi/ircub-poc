@@ -11,6 +11,7 @@ export const CSV_TEMPLATES = {
   METER_READINGS: {
     fileName: 'meter-readings-template.csv',
     columns: ['meter_serial', 'reading_date', 'reading_value', 'type'],
+    optionalColumns: [] as readonly string[],
   },
   CHANNEL_STATEMENT: {
     fileName: 'channel-statement.csv',

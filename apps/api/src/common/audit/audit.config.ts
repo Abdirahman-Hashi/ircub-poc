@@ -22,4 +22,12 @@ export const AUDITED_MODELS: AuditedModelMap = {
   Reversal: {},
   BulkUpload: {},
   FxRate: {},
+  TariffCategory: {},
+  TariffTier: {},
+  WaterAccount: {},
+  Meter: {},
+  MeterReading: {},
+  BillingCycle: {},
+  Bill: {},
+  Notification: {},
 };

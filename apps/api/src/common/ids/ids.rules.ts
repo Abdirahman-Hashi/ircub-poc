@@ -1,4 +1,4 @@
-import { CONTROL_NUMBER, TIN } from '@ircub/shared';
+import { CONTROL_NUMBER, TIN, WATER_ACCOUNT_NUMBER } from '@ircub/shared';
 
 import { IDS } from './ids.constants';
 
@@ -87,4 +87,25 @@ export function isValidControlNumber(value: string): boolean {
 /** Accepts user input with spaces or dashes (`1234 5678 9012`) and returns the bare digits. */
 export function normaliseControlNumber(input: string): string {
   return input.replace(/[\s-]/g, '');
+}
+
+/** Water account number = `WA` + 8 digits (D10); random body, uniqueness checked by the service. */
+export function generateWaterAccountBody(randomDigit: RandomDigit): string {
+  let body = '';
+  for (let i = 0; i < WATER_ACCOUNT_NUMBER.BODY_DIGITS; i += 1) {
+    body += String(randomDigit());
+  }
+  return body;
+}
+
+export function formatWaterAccountNumber(body: string): string {
+  return `${WATER_ACCOUNT_NUMBER.PREFIX}${body}`;
+}
+
+export function isValidWaterAccountNumber(value: string): boolean {
+  return (
+    value.startsWith(WATER_ACCOUNT_NUMBER.PREFIX) &&
+    value.length === WATER_ACCOUNT_NUMBER.PREFIX.length + WATER_ACCOUNT_NUMBER.BODY_DIGITS &&
+    DIGITS_ONLY.test(value.slice(WATER_ACCOUNT_NUMBER.PREFIX.length))
+  );
 }

@@ -9,7 +9,13 @@ import { AppException } from '../errors/app.exception';
 
 import { IDS } from './ids.constants';
 import { IDS_MESSAGES } from './ids.messages';
-import { formatControlNumber, formatTin, generateTinBody } from './ids.rules';
+import {
+  formatControlNumber,
+  formatTin,
+  formatWaterAccountNumber,
+  generateTinBody,
+  generateWaterAccountBody,
+} from './ids.rules';
 
 import type { TransactionClient } from '../../prisma/prisma.types';
 import type { ControlNumberPurpose } from '@prisma/client';
@@ -36,6 +42,27 @@ export class IdsService {
     throw new AppException(
       ErrorCode.INTERNAL_ERROR,
       IDS_MESSAGES.TIN_EXHAUSTED,
+      HttpStatus.INTERNAL_SERVER_ERROR,
+    );
+  }
+
+  async generateWaterAccountNumber(): Promise<string> {
+    for (let attempt = 0; attempt < IDS.TIN_GENERATE_ATTEMPTS; attempt += 1) {
+      const accountNumber = formatWaterAccountNumber(
+        generateWaterAccountBody(() => randomInt(IDS.DECIMAL_RADIX)),
+      );
+      if (
+        (await this.prisma.waterAccount.findUnique({
+          where: { accountNumber },
+          select: { id: true },
+        })) === null
+      ) {
+        return accountNumber;
+      }
+    }
+    throw new AppException(
+      ErrorCode.INTERNAL_ERROR,
+      IDS_MESSAGES.ACCOUNT_NUMBER_EXHAUSTED,
       HttpStatus.INTERNAL_SERVER_ERROR,
     );
   }

@@ -1,5 +1,7 @@
+import type { PayerWaterSummary } from './water.types';
 import type {
   AssessmentStatus,
+  BillStatus,
   BulkUploadKind,
   Currency,
   DuplicateFlagStatus,
@@ -104,11 +106,11 @@ export interface PayerBalances {
   readonly outstanding: MoneyString;
 }
 
-/** 360° view (brief Module 2). `waterAccounts` is filled in phase 3. */
+/** 360° view (brief Module 2) including water accounts and bills (Module 4). */
 export interface PayerProfile {
   readonly payer: PayerView;
   readonly assessments: readonly AssessmentView[];
-  readonly waterAccounts: readonly unknown[];
+  readonly waterAccounts: readonly PayerWaterSummary[];
   readonly payments: readonly PaymentView[];
   readonly balances: PayerBalances;
 }
@@ -156,12 +158,12 @@ export interface BulkUploadView {
 /** `POST /payments/capture/lookup` — what the cashier sees before capturing. */
 export interface ControlNumberLookup {
   readonly controlNumber: string;
-  readonly kind: 'ASSESSMENT';
+  readonly kind: 'ASSESSMENT' | 'BILL';
   readonly payer: Pick<PayerView, 'id' | 'tin' | 'name'>;
   readonly description: string;
   readonly amount: MoneyString;
   readonly paidAmount: MoneyString;
   readonly outstanding: MoneyString;
   readonly currency: Currency;
-  readonly status: AssessmentStatus;
+  readonly status: AssessmentStatus | BillStatus;
 }

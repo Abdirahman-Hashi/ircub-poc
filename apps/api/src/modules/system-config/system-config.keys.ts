@@ -21,6 +21,8 @@ export enum SystemConfigKey {
   ABNORMAL_CONSUMPTION_THRESHOLD_PCT = 'ABNORMAL_CONSUMPTION_THRESHOLD_PCT',
   ABNORMAL_CONSUMPTION_HISTORY_MONTHS = 'ABNORMAL_CONSUMPTION_HISTORY_MONTHS',
   BILL_DUE_DAYS = 'BILL_DUE_DAYS',
+  BILL_NOTIFICATION_SMS = 'BILL_NOTIFICATION_SMS',
+  BILL_NOTIFICATION_EMAIL = 'BILL_NOTIFICATION_EMAIL',
 
   PAYMENT_STATUS_RETRY_LIMIT = 'PAYMENT_STATUS_RETRY_LIMIT',
   PAYMENT_STATUS_CHECK_DELAY_SECONDS = 'PAYMENT_STATUS_CHECK_DELAY_SECONDS',
@@ -51,6 +53,8 @@ export interface SystemConfigValues {
   [SystemConfigKey.ABNORMAL_CONSUMPTION_THRESHOLD_PCT]: number;
   [SystemConfigKey.ABNORMAL_CONSUMPTION_HISTORY_MONTHS]: number;
   [SystemConfigKey.BILL_DUE_DAYS]: number;
+  [SystemConfigKey.BILL_NOTIFICATION_SMS]: boolean;
+  [SystemConfigKey.BILL_NOTIFICATION_EMAIL]: boolean;
 
   [SystemConfigKey.PAYMENT_STATUS_RETRY_LIMIT]: number;
   [SystemConfigKey.PAYMENT_STATUS_CHECK_DELAY_SECONDS]: number;
@@ -81,6 +85,8 @@ export const SYSTEM_CONFIG_DEFAULTS: Readonly<SystemConfigValues> = {
   [SystemConfigKey.ABNORMAL_CONSUMPTION_THRESHOLD_PCT]: 200,
   [SystemConfigKey.ABNORMAL_CONSUMPTION_HISTORY_MONTHS]: 3,
   [SystemConfigKey.BILL_DUE_DAYS]: 30,
+  [SystemConfigKey.BILL_NOTIFICATION_SMS]: true,
+  [SystemConfigKey.BILL_NOTIFICATION_EMAIL]: true,
 
   [SystemConfigKey.PAYMENT_STATUS_RETRY_LIMIT]: 3,
   [SystemConfigKey.PAYMENT_STATUS_CHECK_DELAY_SECONDS]: 60,
@@ -116,6 +122,8 @@ export const SYSTEM_CONFIG_DESCRIPTIONS: Readonly<Record<SystemConfigKey, string
   [SystemConfigKey.ABNORMAL_CONSUMPTION_HISTORY_MONTHS]:
     'Number of previous monthly consumptions averaged for the abnormal check.',
   [SystemConfigKey.BILL_DUE_DAYS]: 'Days after bill release until the bill is due.',
+  [SystemConfigKey.BILL_NOTIFICATION_SMS]: 'Send an SMS to the payer when a bill is released.',
+  [SystemConfigKey.BILL_NOTIFICATION_EMAIL]: 'Send an email to the payer when a bill is released.',
 
   [SystemConfigKey.PAYMENT_STATUS_RETRY_LIMIT]:
     'Status-check attempts before a pending payment is marked permanently failed.',
