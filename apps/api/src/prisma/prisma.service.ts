@@ -1,17 +1,38 @@
 import { Injectable, Logger, type OnModuleDestroy, type OnModuleInit } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 
+import { applyAuditExtension } from '../common/audit/audit.extension';
 import { AppConfigService } from '../config/app-config.service';
 
 import { PRISMA_LOG_LEVELS } from './prisma.constants';
 
+import type { ExtendedPrismaClient, PrismaClientOptions } from './prisma.types';
+
 /**
- * Single PrismaClient for the process. Connects eagerly on module init so a bad
- * DATABASE_URL fails the boot instead of the first request, and disconnects on shutdown
- * (main.ts enables shutdown hooks). Phase 1 wraps this client with the audit extension.
+ * The class trick below gives `PrismaService` the *extended* client type (with the audit
+ * extension applied) while staying a plain class Nest can inject by reference.
+ */
+class AuditedPrismaClient extends PrismaClient {
+  constructor(options: PrismaClientOptions) {
+    super(options);
+    return applyAuditExtension(this) as this;
+  }
+}
+
+const TypedAuditedPrismaClient = AuditedPrismaClient as unknown as new (
+  options: PrismaClientOptions,
+) => ExtendedPrismaClient;
+
+/**
+ * Single PrismaClient for the process, with the audit extension applied (every mutation of
+ * a model in `audit.config.ts` is chained into `audit_log`). Connects eagerly so a bad
+ * DATABASE_URL fails the boot instead of the first request.
  */
 @Injectable()
-export class PrismaService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
+export class PrismaService
+  extends TypedAuditedPrismaClient
+  implements OnModuleInit, OnModuleDestroy
+{
   private readonly logger = new Logger(PrismaService.name);
 
   constructor(config: AppConfigService) {

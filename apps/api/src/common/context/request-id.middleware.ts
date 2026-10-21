@@ -8,8 +8,9 @@ import type { NextFunction, Request, Response } from 'express';
 
 /**
  * Reuses the client's `x-request-id` or generates one, echoes it on the response and opens
- * the AsyncLocalStorage context for the rest of the request. Registered with `app.use()`
- * in app.setup.ts so it runs before the HTTP logger and every Nest middleware.
+ * the AsyncLocalStorage context (request id, ip, user agent) for the rest of the request.
+ * Registered with `app.use()` in app.setup.ts so it runs before the HTTP logger and every
+ * Nest middleware.
  */
 export function requestIdMiddleware(req: Request, res: Response, next: NextFunction): void {
   const incoming = req.header(API.REQUEST_ID_HEADER);
@@ -18,7 +19,10 @@ export function requestIdMiddleware(req: Request, res: Response, next: NextFunct
   req.headers[API.REQUEST_ID_HEADER] = requestId;
   res.setHeader(API.REQUEST_ID_HEADER, requestId);
 
-  requestContextStorage.run({ requestId }, () => {
-    next();
-  });
+  requestContextStorage.run(
+    { requestId, ip: req.ip ?? null, userAgent: req.header('user-agent') ?? null },
+    () => {
+      next();
+    },
+  );
 }
