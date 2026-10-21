@@ -1,6 +1,6 @@
 # IRCUB — Integrated Revenue Collection & Utility Billing Platform (POC)
 
-[![CI](https://github.com/OWNER/REPO/actions/workflows/ci.yml/badge.svg)](https://github.com/OWNER/REPO/actions/workflows/ci.yml)
+[![CI](https://github.com/Abdirahman-Hashi/ircub-poc/actions/workflows/ci.yml/badge.svg)](https://github.com/Abdirahman-Hashi/ircub-poc/actions/workflows/ci.yml)
 
 **Author and distributor:** Abdirahman Hashi
 

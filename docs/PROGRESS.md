@@ -81,7 +81,7 @@ for the Prisma CLI and the e2e runner), `pino`/`pino-http`/`pino-pretty` (peers 
 `@testing-library/jest-dom` (Vitest DOM environment).
 
 **Open items / limitations**
-- CI badge in README points at `OWNER/REPO`; replace once the GitHub remote exists.
+- CI badge points at the GitHub repository (added after phase 1).
 - Mocks app returns Nest's default validation error shape (no global filter); it is not part
   of the IRCUB API contract. Revisit in phase 4 if the API ever surfaces mock errors verbatim.
 - pnpm 12 requires build-script approval (`allowBuilds` in `pnpm-workspace.yaml`); listed packages
