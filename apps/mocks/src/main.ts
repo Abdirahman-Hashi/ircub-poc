@@ -18,6 +18,7 @@ async function bootstrap(): Promise<void> {
   const swagger = new DocumentBuilder()
     .setTitle(MOCKS_APP.NAME)
     .setDescription(MOCKS_APP.DESCRIPTION)
+    .setContact(MOCKS_APP.AUTHOR, '', '')
     .build();
   SwaggerModule.setup(MOCKS_APP.SWAGGER_PATH, app, SwaggerModule.createDocument(app, swagger));
 

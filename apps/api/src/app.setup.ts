@@ -37,6 +37,7 @@ export function buildOpenApiDocument(app: INestApplication): OpenAPIObject {
   const builder = new DocumentBuilder()
     .setTitle(APP.NAME)
     .setDescription(APP.DESCRIPTION)
+    .setContact(APP.AUTHOR, '', '')
     .addBearerAuth({ type: 'http', scheme: 'bearer', bearerFormat: 'JWT' }, SWAGGER.BEARER_SCHEME)
     .build();
   return SwaggerModule.createDocument(app, builder);

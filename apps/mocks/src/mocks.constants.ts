@@ -2,6 +2,7 @@ import { Currency } from '@ircub/shared';
 
 export const MOCKS_APP = {
   NAME: 'IRCUB Mock External Services',
+  AUTHOR: 'Abdirahman Hashi',
   DESCRIPTION:
     'Stand-ins for FX rates, bank, mobile money, FMIS and SMS/email. In-memory only; ' +
     'POST /__reset clears state.',

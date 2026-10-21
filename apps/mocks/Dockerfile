@@ -18,6 +18,9 @@ RUN pnpm --filter @ircub/shared build \
  && pnpm --filter mocks --prod deploy --legacy /out/mocks
 
 FROM ${NODE_IMAGE} AS runtime
+LABEL org.opencontainers.image.authors="Abdirahman Hashi" \
+      org.opencontainers.image.vendor="Abdirahman Hashi" \
+      org.opencontainers.image.title="ircub-mocks"
 RUN apk add --no-cache dumb-init
 ENV NODE_ENV=production
 WORKDIR /app

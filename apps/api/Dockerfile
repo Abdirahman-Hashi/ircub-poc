@@ -23,6 +23,9 @@ RUN pnpm --filter @ircub/shared build \
 
 # ── runtime ─────────────────────────────────────────────────────────────────
 FROM ${NODE_IMAGE} AS runtime
+LABEL org.opencontainers.image.authors="Abdirahman Hashi" \
+      org.opencontainers.image.vendor="Abdirahman Hashi" \
+      org.opencontainers.image.title="ircub-api"
 RUN apk add --no-cache openssl dumb-init
 ENV NODE_ENV=production
 WORKDIR /app

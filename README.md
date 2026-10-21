@@ -2,6 +2,8 @@
 
 [![CI](https://github.com/OWNER/REPO/actions/workflows/ci.yml/badge.svg)](https://github.com/OWNER/REPO/actions/workflows/ci.yml)
 
+**Author and distributor:** Abdirahman Hashi
+
 A proof of concept for a Federal Member State revenue platform: payer registry, assessments
 with control numbers, water metering and tiered billing, multi-channel payments in SOS and
 USD, reconciliation against bank, mobile money and the FMIS general ledger, and an executive
@@ -102,5 +104,5 @@ Collected per phase in `docs/PROGRESS.md` and consolidated here in phase 7.
 Claude Code (Anthropic) was used throughout this project for scaffolding, boilerplate,
 test writing, documentation drafts and as a pair-programming assistant, driven by the
 phase prompts in `.claude/commands/` and the rules in `CLAUDE.md`. Every line was reviewed
-by the candidate, who takes responsibility for the design decisions (`docs/DECISIONS.md`),
+by the candidate, Abdirahman Hashi, who takes responsibility for the design decisions (`docs/DECISIONS.md`),
 the code and its trade-offs, and can explain any part of it.

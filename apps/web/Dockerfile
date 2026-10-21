@@ -20,6 +20,9 @@ RUN pnpm --filter @ircub/shared build && pnpm --filter web build
 
 # Unprivileged nginx listens on 8080 and runs as uid 101.
 FROM nginxinc/nginx-unprivileged:1.27-alpine AS runtime
+LABEL org.opencontainers.image.authors="Abdirahman Hashi" \
+      org.opencontainers.image.vendor="Abdirahman Hashi" \
+      org.opencontainers.image.title="ircub-web"
 COPY apps/web/nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=build /repo/apps/web/dist /usr/share/nginx/html
 EXPOSE 8080

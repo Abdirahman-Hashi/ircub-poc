@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "description": "Enums, permission codes, error codes, constants and contract types shared by api, web and mocks",
+  "author": "Abdirahman Hashi",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "files": [

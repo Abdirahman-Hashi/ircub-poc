@@ -3,7 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "IRCUB web — React SPA",
+  "description": "IRCUB web \u2014 React SPA",
+  "author": "Abdirahman Hashi",
   "scripts": {
     "dev": "vite",
     "build": "tsc -p tsconfig.json --noEmit && vite build",

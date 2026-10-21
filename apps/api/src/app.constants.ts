@@ -2,6 +2,7 @@ import type { ValidationPipeOptions } from '@nestjs/common';
 
 export const APP = {
   NAME: 'IRCUB API',
+  AUTHOR: 'Abdirahman Hashi',
   DESCRIPTION:
     'Integrated Revenue Collection & Utility Billing Platform — proof of concept API. ' +
     'Errors follow { statusCode, code, message, details?, requestId }.',

@@ -2,7 +2,8 @@
   "name": "ircub-poc",
   "version": "0.1.0",
   "private": true,
-  "description": "Integrated Revenue Collection & Utility Billing Platform — proof of concept",
+  "description": "Integrated Revenue Collection & Utility Billing Platform \u2014 proof of concept",
+  "author": "Abdirahman Hashi",
   "packageManager": "pnpm@12.11.2",
   "engines": {
     "node": ">=22.12.0",
