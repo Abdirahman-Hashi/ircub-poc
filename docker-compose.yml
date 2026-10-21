@@ -1,0 +1,75 @@
+# Full stack: postgres, api, mocks, web (nginx). `docker compose up --build`
+# Web: http://localhost:8080  ·  API: http://localhost:3000/docs  ·  Mocks: http://localhost:3100/docs
+name: ircub
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ircub
+      POSTGRES_PASSWORD: ircub
+      POSTGRES_DB: ircub
+    ports:
+      # Override with POSTGRES_PORT in .env when 5432 is taken on the host.
+      - '${POSTGRES_PORT:-5432}:5432'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ircub -d ircub']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      DATABASE_URL: postgresql://ircub:ircub@postgres:5432/ircub?schema=public
+      JWT_SECRET: ${JWT_SECRET:-compose-only-jwt-secret-change-me-32chars!}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-compose-only-refresh-secret-change-me-32c!}
+      JWT_ACCESS_TTL: ${JWT_ACCESS_TTL:-900}
+      JWT_REFRESH_TTL: ${JWT_REFRESH_TTL:-604800}
+      MOCKS_BASE_URL: http://mocks:3100
+      MOCK_SHARED_SECRET: ${MOCK_SHARED_SECRET:-compose-only-shared-secret}
+      API_PUBLIC_URL: http://api:3000
+      CORS_ORIGIN: http://localhost:8080,http://localhost:5173
+      STORAGE_DIR: /app/storage
+    ports:
+      - '3000:3000'
+    volumes:
+      - storage:/app/storage
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mocks:
+        condition: service_started
+
+  mocks:
+    build:
+      context: .
+      dockerfile: apps/mocks/Dockerfile
+    environment:
+      NODE_ENV: production
+      MOCKS_PORT: 3100
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      MOCK_SHARED_SECRET: ${MOCK_SHARED_SECRET:-compose-only-shared-secret}
+      MOCK_CALLBACK_DELAY_MS: ${MOCK_CALLBACK_DELAY_MS:-3000}
+    ports:
+      - '3100:3100'
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    ports:
+      - '8080:8080'
+    depends_on:
+      - api
+
+volumes:
+  pgdata:
+  storage:
