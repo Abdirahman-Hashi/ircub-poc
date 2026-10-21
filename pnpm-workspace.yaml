@@ -1,0 +1,14 @@
+packages:
+  - 'apps/*'
+  - 'packages/*'
+
+# pnpm >= 10 blocks postinstall scripts unless the package is listed here.
+# Each entry is a dependency that genuinely needs its build step.
+allowBuilds:
+  '@parcel/watcher': true
+  '@prisma/client': true
+  '@prisma/engines': true
+  '@scarf/scarf': false
+  esbuild: true
+  prisma: true
+  unrs-resolver: true
