@@ -41,7 +41,7 @@ export const NAV_ITEMS: readonly NavItem[] = [
   { label: 'Audit log', to: ROUTES.AUDIT, icon: IconHistory, permission: PERMISSIONS.AUDIT_VIEW },
   {
     label: 'Administration',
-    to: ROUTES.ADMIN,
+    to: ROUTES.ADMIN_USERS,
     icon: IconSettings,
     permission: PERMISSIONS.USERS_MANAGE,
   },

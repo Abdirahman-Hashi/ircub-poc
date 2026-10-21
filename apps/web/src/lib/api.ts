@@ -34,6 +34,11 @@ export async function apiFetch<T>(path: string, init: ApiRequestInit = {}): Prom
   return (await response.json()) as T;
 }
 
+/** For endpoints that answer 204 No Content. */
+export async function apiFetchVoid(path: string, init: ApiRequestInit = {}): Promise<void> {
+  await apiFetch<undefined>(path, init);
+}
+
 async function send(path: string, init: ApiRequestInit): Promise<Response> {
   const { body, skipAuth: _skipAuth, skipRefresh: _skipRefresh, headers, ...rest } = init;
   const requestHeaders = new Headers(headers);
@@ -79,4 +84,18 @@ async function parseError(response: Response): Promise<ErrorResponse> {
       message: response.statusText,
     };
   }
+}
+
+/** Builds `?a=1&b=x` from an object, skipping undefined/empty values. */
+export function toQueryString(params: object): string {
+  const query = new URLSearchParams();
+  for (const [key, value] of Object.entries(params as Record<string, unknown>)) {
+    if (typeof value === 'string' && value.length > 0) {
+      query.set(key, value);
+    } else if (typeof value === 'number' || typeof value === 'boolean') {
+      query.set(key, String(value));
+    }
+  }
+  const text = query.toString();
+  return text.length > 0 ? `?${text}` : '';
 }

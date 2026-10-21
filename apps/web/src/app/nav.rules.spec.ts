@@ -3,7 +3,8 @@ import { describe, expect, it } from 'vitest';
 import { PERMISSIONS, type PermissionCode } from '@ircub/shared';
 
 import { NAV_ITEMS } from './nav';
-import { filterNav } from './nav.rules';
+import { filterNav, isNavActive } from './nav.rules';
+import { ROUTES } from './routes.constants';
 
 describe('filterNav', () => {
   it('shows only the items whose permission the user holds', () => {
@@ -23,5 +24,13 @@ describe('filterNav', () => {
   it('preserves the declared order', () => {
     const visible = filterNav(NAV_ITEMS, () => true);
     expect(visible).toEqual(NAV_ITEMS);
+  });
+});
+
+describe('isNavActive', () => {
+  it('matches the item path and its sub-paths by top-level section', () => {
+    expect(isNavActive('/admin/roles', ROUTES.ADMIN_USERS)).toBe(true);
+    expect(isNavActive('/payers/123', ROUTES.PAYERS)).toBe(true);
+    expect(isNavActive('/payments', ROUTES.PAYERS)).toBe(false);
   });
 });

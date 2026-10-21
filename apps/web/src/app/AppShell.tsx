@@ -1,31 +1,40 @@
 import {
   AppShell as MantineAppShell,
   Burger,
-  Button,
   Group,
+  Menu,
   NavLink,
   Text,
   Title,
+  UnstyledButton,
 } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
-import { IconLogout } from '@tabler/icons-react';
-import { Link, Outlet, useRouterState } from '@tanstack/react-router';
+import { IconChevronDown, IconKey, IconLogout, IconShieldLock } from '@tabler/icons-react';
+import { Link, Outlet, useNavigate, useRouterState } from '@tanstack/react-router';
 
 import { useAuth } from '../lib/auth';
 
 import { NAV_ITEMS } from './nav';
-import { filterNav } from './nav.rules';
+import { filterNav, isNavActive } from './nav.rules';
+import { ROUTES } from './routes.constants';
 
 import type { ReactElement } from 'react';
 
 const NAVBAR_WIDTH = 240;
 const HEADER_HEIGHT = 56;
+const ICON_SIZE = 16;
 
 export function AppShellLayout(): ReactElement {
   const [opened, { toggle }] = useDisclosure();
   const { user, can, logout } = useAuth();
+  const navigate = useNavigate();
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const items = filterNav(NAV_ITEMS, can);
+
+  const onLogout = async (): Promise<void> => {
+    await logout();
+    await navigate({ to: ROUTES.LOGIN });
+  };
 
   return (
     <MantineAppShell
@@ -39,19 +48,40 @@ export function AppShellLayout(): ReactElement {
             <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" />
             <Title order={4}>IRCUB</Title>
           </Group>
-          <Group gap="sm">
-            <Text size="sm" c="dimmed">
-              {user?.displayName ?? 'Not signed in'}
-            </Text>
-            <Button
-              variant="subtle"
-              size="xs"
-              leftSection={<IconLogout size={16} />}
-              onClick={() => void logout()}
-            >
-              Log out
-            </Button>
-          </Group>
+          <Menu shadow="md" width={220}>
+            <Menu.Target>
+              <UnstyledButton>
+                <Group gap="xs">
+                  <Text size="sm">{user?.fullName ?? 'Account'}</Text>
+                  <IconChevronDown size={ICON_SIZE} />
+                </Group>
+              </UnstyledButton>
+            </Menu.Target>
+            <Menu.Dropdown>
+              <Menu.Label>{user?.email}</Menu.Label>
+              <Menu.Item
+                component={Link}
+                to={ROUTES.ACCOUNT_PASSWORD}
+                leftSection={<IconKey size={ICON_SIZE} />}
+              >
+                Change password
+              </Menu.Item>
+              <Menu.Item
+                component={Link}
+                to={ROUTES.ACCOUNT_MFA}
+                leftSection={<IconShieldLock size={ICON_SIZE} />}
+              >
+                Two-factor authentication
+              </Menu.Item>
+              <Menu.Divider />
+              <Menu.Item
+                leftSection={<IconLogout size={ICON_SIZE} />}
+                onClick={() => void onLogout()}
+              >
+                Log out
+              </Menu.Item>
+            </Menu.Dropdown>
+          </Menu>
         </Group>
       </MantineAppShell.Header>
 
@@ -63,7 +93,7 @@ export function AppShellLayout(): ReactElement {
             to={item.to}
             label={item.label}
             leftSection={<item.icon size={18} />}
-            active={pathname.startsWith(item.to)}
+            active={isNavActive(pathname, item.to)}
           />
         ))}
       </MantineAppShell.Navbar>
