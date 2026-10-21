@@ -6,6 +6,7 @@ export const CSV_TEMPLATES = {
   REVENUE_TRANSACTIONS: {
     fileName: 'revenue-transactions-template.csv',
     columns: ['control_number', 'amount', 'currency', 'channel', 'channel_txn_ref', 'paid_at'],
+    optionalColumns: ['captured_by_email'],
   },
   METER_READINGS: {
     fileName: 'meter-readings-template.csv',

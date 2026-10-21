@@ -37,6 +37,26 @@ export const PayerStatus = {
 } as const;
 export type PayerStatus = (typeof PayerStatus)[keyof typeof PayerStatus];
 
+export const DuplicateMatchField = {
+  PHONE: 'PHONE',
+  EMAIL: 'EMAIL',
+  NATIONAL_ID: 'NATIONAL_ID',
+} as const;
+export type DuplicateMatchField = (typeof DuplicateMatchField)[keyof typeof DuplicateMatchField];
+
+export const DuplicateFlagStatus = {
+  PENDING: 'PENDING',
+  CONFIRMED: 'CONFIRMED',
+  DISMISSED: 'DISMISSED',
+} as const;
+export type DuplicateFlagStatus = (typeof DuplicateFlagStatus)[keyof typeof DuplicateFlagStatus];
+
+export const RateType = {
+  FIXED: 'FIXED',
+  PERCENT: 'PERCENT',
+} as const;
+export type RateType = (typeof RateType)[keyof typeof RateType];
+
 export const AssessmentStatus = {
   PENDING: 'PENDING',
   PART_PAID: 'PART_PAID',

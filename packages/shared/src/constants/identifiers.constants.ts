@@ -22,6 +22,12 @@ export const WATER_ACCOUNT_NUMBER = {
   BODY_DIGITS: 8,
 } as const;
 
+/** Phone numbers are stored in E.164; a local number without country code gets this prefix. */
+export const PHONE = {
+  E164_PATTERN: /^\+[1-9][0-9]{6,14}$/,
+  TRUNK_PREFIX: '0',
+} as const;
+
 export const METER = {
   DEFAULT_MAX_DIGITS: 6,
   DEFAULT_INITIAL_READING: 0,

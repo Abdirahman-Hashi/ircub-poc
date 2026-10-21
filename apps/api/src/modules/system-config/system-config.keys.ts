@@ -15,6 +15,8 @@ export enum SystemConfigKey {
   LOGIN_LOCKOUT_MINUTES = 'LOGIN_LOCKOUT_MINUTES',
 
   CSV_MAX_ROWS = 'CSV_MAX_ROWS',
+  PHONE_DEFAULT_COUNTRY_CODE = 'PHONE_DEFAULT_COUNTRY_CODE',
+  ASSESSMENT_DEFAULT_DUE_DAYS = 'ASSESSMENT_DEFAULT_DUE_DAYS',
 
   ABNORMAL_CONSUMPTION_THRESHOLD_PCT = 'ABNORMAL_CONSUMPTION_THRESHOLD_PCT',
   ABNORMAL_CONSUMPTION_HISTORY_MONTHS = 'ABNORMAL_CONSUMPTION_HISTORY_MONTHS',
@@ -43,6 +45,8 @@ export interface SystemConfigValues {
   [SystemConfigKey.LOGIN_LOCKOUT_MINUTES]: number;
 
   [SystemConfigKey.CSV_MAX_ROWS]: number;
+  [SystemConfigKey.PHONE_DEFAULT_COUNTRY_CODE]: string;
+  [SystemConfigKey.ASSESSMENT_DEFAULT_DUE_DAYS]: number;
 
   [SystemConfigKey.ABNORMAL_CONSUMPTION_THRESHOLD_PCT]: number;
   [SystemConfigKey.ABNORMAL_CONSUMPTION_HISTORY_MONTHS]: number;
@@ -71,6 +75,8 @@ export const SYSTEM_CONFIG_DEFAULTS: Readonly<SystemConfigValues> = {
   [SystemConfigKey.LOGIN_LOCKOUT_MINUTES]: 15,
 
   [SystemConfigKey.CSV_MAX_ROWS]: 10_000,
+  [SystemConfigKey.PHONE_DEFAULT_COUNTRY_CODE]: '+252',
+  [SystemConfigKey.ASSESSMENT_DEFAULT_DUE_DAYS]: 30,
 
   [SystemConfigKey.ABNORMAL_CONSUMPTION_THRESHOLD_PCT]: 200,
   [SystemConfigKey.ABNORMAL_CONSUMPTION_HISTORY_MONTHS]: 3,
@@ -100,6 +106,10 @@ export const SYSTEM_CONFIG_DESCRIPTIONS: Readonly<Record<SystemConfigKey, string
     'Minutes an account stays locked after too many failures.',
 
   [SystemConfigKey.CSV_MAX_ROWS]: 'Maximum rows accepted in one bulk upload.',
+  [SystemConfigKey.PHONE_DEFAULT_COUNTRY_CODE]:
+    'Country code prepended to phone numbers entered without one (E.164).',
+  [SystemConfigKey.ASSESSMENT_DEFAULT_DUE_DAYS]:
+    'Days after creation an assessment falls due when no due date is given.',
 
   [SystemConfigKey.ABNORMAL_CONSUMPTION_THRESHOLD_PCT]:
     'Consumption above this percentage of the trailing average is flagged as abnormal.',

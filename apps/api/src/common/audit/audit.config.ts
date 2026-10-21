@@ -14,4 +14,12 @@ export const AUDITED_MODELS: AuditedModelMap = {
   UserRole: { idFields: ['userId', 'roleId'] },
   SodRule: {},
   SystemConfig: { idFields: ['key'] },
+  Payer: {},
+  DuplicateFlag: {},
+  RevenueType: {},
+  Assessment: {},
+  Payment: {},
+  Reversal: {},
+  BulkUpload: {},
+  FxRate: {},
 };

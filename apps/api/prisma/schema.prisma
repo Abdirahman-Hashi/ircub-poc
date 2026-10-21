@@ -42,6 +42,23 @@ enum PayerStatus {
   SUSPENDED
 }
 
+enum DuplicateMatchField {
+  PHONE
+  EMAIL
+  NATIONAL_ID
+}
+
+enum DuplicateFlagStatus {
+  PENDING
+  CONFIRMED
+  DISMISSED
+}
+
+enum RateType {
+  FIXED
+  PERCENT
+}
+
 enum AssessmentStatus {
   PENDING
   PART_PAID
@@ -181,14 +198,16 @@ model User {
   passwordChangedAt DateTime   @default(now()) @map("password_changed_at")
   failedLoginCount  Int        @default(0) @map("failed_login_count")
   lockedUntil       DateTime?  @map("locked_until")
-  /// Links a Taxpayer/Customer user to their payer record (FK added in phase 2).
+  /// Links a Taxpayer/Customer user to their payer record (self-service scope).
   payerId           String?    @map("payer_id") @db.Uuid
   createdAt         DateTime   @default(now()) @map("created_at")
   updatedAt         DateTime   @updatedAt @map("updated_at")
 
+  payer           Payer?            @relation(fields: [payerId], references: [id], onDelete: SetNull)
   roles           UserRole[]
   passwordHistory PasswordHistory[]
   refreshTokens   RefreshToken[]
+  bulkUploads     BulkUpload[]
 
   @@index([status])
   @@map("user")
@@ -292,6 +311,209 @@ model SodRule {
 
   @@unique([permissionACode, permissionBCode])
   @@map("sod_rule")
+}
+
+// ─── Registry & revenue (phase 2, D9–D12) ────────────────────────────────────
+
+model Payer {
+  id             String      @id @default(uuid()) @db.Uuid
+  /// `TIN` + 9 digits + mod-11 check digit (D10), generated server-side.
+  tin            String      @unique
+  type           PayerType
+  name           String
+  nationalId     String?     @map("national_id")
+  registrationNo String?     @map("registration_no")
+  /// Stored normalised (E.164) so duplicate detection is an exact match.
+  phone          String
+  /// Stored lower-cased.
+  email          String?
+  address        String?
+  status         PayerStatus @default(ACTIVE)
+  createdById    String      @map("created_by_id") @db.Uuid
+  createdAt      DateTime    @default(now()) @map("created_at")
+  updatedAt      DateTime    @updatedAt @map("updated_at")
+
+  users          User[]
+  assessments    Assessment[]
+  payments       Payment[]
+  duplicateFlags DuplicateFlag[] @relation("FlaggedPayer")
+  matchedBy      DuplicateFlag[] @relation("MatchedPayer")
+
+  @@index([name])
+  @@index([phone])
+  @@index([email])
+  @@index([nationalId])
+  @@index([status, type])
+  @@map("payer")
+}
+
+/// A possible duplicate found at registration; reviewed by a supervisor.
+model DuplicateFlag {
+  id             String              @id @default(uuid()) @db.Uuid
+  payerId        String              @map("payer_id") @db.Uuid
+  matchedPayerId String              @map("matched_payer_id") @db.Uuid
+  matchField     DuplicateMatchField @map("match_field")
+  status         DuplicateFlagStatus @default(PENDING)
+  reviewedById   String?             @map("reviewed_by_id") @db.Uuid
+  reviewedAt     DateTime?           @map("reviewed_at")
+  note           String?
+  createdAt      DateTime            @default(now()) @map("created_at")
+
+  payer        Payer @relation("FlaggedPayer", fields: [payerId], references: [id], onDelete: Cascade)
+  matchedPayer Payer @relation("MatchedPayer", fields: [matchedPayerId], references: [id], onDelete: Cascade)
+
+  @@unique([payerId, matchedPayerId, matchField])
+  @@index([status])
+  @@index([matchedPayerId])
+  @@map("duplicate_flag")
+}
+
+model RevenueType {
+  id          String   @id @default(uuid()) @db.Uuid
+  code        String   @unique
+  name        String
+  rateType    RateType @map("rate_type")
+  /// FIXED: amount in local currency. PERCENT: percentage of baseAmount.
+  rate        Decimal  @db.Decimal(18, 2)
+  /// General ledger code used by FMIS posting (phase 5 adds dated mappings).
+  glCode      String   @map("gl_code")
+  active      Boolean  @default(true)
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  assessments Assessment[]
+
+  @@index([active])
+  @@map("revenue_type")
+}
+
+model Assessment {
+  id            String           @id @default(uuid()) @db.Uuid
+  /// 12 digits, last two mod-97 check digits, unique across assessments and bills (D10).
+  controlNumber String           @unique @map("control_number")
+  payerId       String           @map("payer_id") @db.Uuid
+  revenueTypeId String           @map("revenue_type_id") @db.Uuid
+  /// e.g. `2026`, `2026-Q1`, `2026-03` — free text the revenue type dictates.
+  period        String?
+  baseAmount    Decimal?         @map("base_amount") @db.Decimal(18, 2)
+  amount        Decimal          @db.Decimal(18, 2)
+  currency      Currency         @default(SOS)
+  dueDate       DateTime         @map("due_date")
+  status        AssessmentStatus @default(PENDING)
+  paidAmount    Decimal          @default(0) @map("paid_amount") @db.Decimal(18, 2)
+  createdById   String           @map("created_by_id") @db.Uuid
+  notes         String?
+  createdAt     DateTime         @default(now()) @map("created_at")
+  updatedAt     DateTime         @updatedAt @map("updated_at")
+
+  payer       Payer       @relation(fields: [payerId], references: [id], onDelete: Restrict)
+  revenueType RevenueType @relation(fields: [revenueTypeId], references: [id], onDelete: Restrict)
+  payments    Payment[]
+
+  @@index([payerId])
+  @@index([revenueTypeId])
+  @@index([status])
+  @@index([createdAt])
+  @@index([dueDate])
+  @@index([amount])
+  @@map("assessment")
+}
+
+model Payment {
+  id                  String         @id @default(uuid()) @db.Uuid
+  controlNumber       String         @map("control_number")
+  assessmentId        String?        @map("assessment_id") @db.Uuid
+  /// Bill FK added in phase 3.
+  billId              String?        @map("bill_id") @db.Uuid
+  payerId             String         @map("payer_id") @db.Uuid
+  channel             PaymentChannel
+  channelTxnRef       String?        @map("channel_txn_ref")
+  amount              Decimal        @db.Decimal(18, 2)
+  currency            Currency
+  /// Rate from `currency` to local currency at capture time; 1 for local payments (D9).
+  fxRate              Decimal        @default(1) @map("fx_rate") @db.Decimal(18, 6)
+  fxRateAt            DateTime?      @map("fx_rate_at")
+  localAmount         Decimal        @map("local_amount") @db.Decimal(18, 2)
+  status              PaymentStatus
+  statusCheckAttempts Int            @default(0) @map("status_check_attempts")
+  paidAt              DateTime?      @map("paid_at")
+  capturedById        String?        @map("captured_by_id") @db.Uuid
+  bulkUploadId        String?        @map("bulk_upload_id") @db.Uuid
+  callbackPayload     Json?          @map("callback_payload")
+  failureReason       String?        @map("failure_reason")
+  createdAt           DateTime       @default(now()) @map("created_at")
+  updatedAt           DateTime       @updatedAt @map("updated_at")
+
+  assessment Assessment? @relation(fields: [assessmentId], references: [id], onDelete: Restrict)
+  payer      Payer       @relation(fields: [payerId], references: [id], onDelete: Restrict)
+  bulkUpload BulkUpload? @relation(fields: [bulkUploadId], references: [id], onDelete: SetNull)
+  reversals  Reversal[]
+
+  /// Duplicate channel callbacks and duplicate bulk rows are no-ops at the database (D11).
+  @@unique([channel, channelTxnRef])
+  @@index([payerId])
+  @@index([assessmentId])
+  @@index([controlNumber])
+  @@index([status])
+  @@index([channel])
+  @@index([createdAt])
+  @@index([paidAt])
+  @@index([localAmount])
+  @@map("payment")
+}
+
+model Reversal {
+  id           String         @id @default(uuid()) @db.Uuid
+  paymentId    String         @map("payment_id") @db.Uuid
+  reason       String
+  capturedById String         @map("captured_by_id") @db.Uuid
+  status       ReversalStatus @default(PENDING_APPROVAL)
+  approvedById String?        @map("approved_by_id") @db.Uuid
+  decidedAt    DateTime?      @map("decided_at")
+  decisionNote String?        @map("decision_note")
+  createdAt    DateTime       @default(now()) @map("created_at")
+  updatedAt    DateTime       @updatedAt @map("updated_at")
+
+  payment Payment @relation(fields: [paymentId], references: [id], onDelete: Restrict)
+
+  @@index([paymentId])
+  @@index([status])
+  @@index([capturedById])
+  @@map("reversal")
+}
+
+/// One row per upload: the file is kept on disk for the audit trail, the summary in JSON (D12).
+model BulkUpload {
+  id           String         @id @default(uuid()) @db.Uuid
+  kind         BulkUploadKind
+  fileName     String         @map("file_name")
+  storedPath   String         @map("stored_path")
+  totalRows    Int            @map("total_rows")
+  accepted     Int
+  rejected     Int
+  summary      Json
+  uploadedById String         @map("uploaded_by_id") @db.Uuid
+  createdAt    DateTime       @default(now()) @map("created_at")
+
+  uploadedBy User      @relation(fields: [uploadedById], references: [id], onDelete: Restrict)
+  payments   Payment[]
+
+  @@index([kind, createdAt])
+  @@map("bulk_upload")
+}
+
+/// Exchange-rate history (D9). Phase 4 refreshes it from the mock FX API.
+model FxRate {
+  id     String   @id @default(uuid()) @db.Uuid
+  base   Currency
+  quote  Currency
+  rate   Decimal  @db.Decimal(18, 6)
+  asOf   DateTime @map("as_of")
+  source String
+
+  @@index([base, quote, asOf])
+  @@map("fx_rate")
 }
 
 // ─── Audit (D8) ──────────────────────────────────────────────────────────────
