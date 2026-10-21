@@ -43,4 +43,14 @@ export const PATHS = {
   RATES: 'rates',
   RESET: '__reset',
   SCENARIO: '__scenario',
+  SMS: 'sms',
+  EMAIL: 'email',
+  OUTBOX: 'outbox',
+} as const;
+
+export const NOTIFICATION_CHANNEL = {
+  SMS: 'SMS',
+  EMAIL: 'EMAIL',
+  ACCEPTED: 'accepted',
+  MESSAGE_PREFIX: 'msg-',
 } as const;

@@ -6,6 +6,7 @@ import { MocksConfigService } from './config/mocks-config.service';
 import { ControlModule } from './control/control.module';
 import { HealthModule } from './health/health.module';
 import { MOCKS_APP } from './mocks.constants';
+import { NotificationsModule } from './notifications/notifications.module';
 import { RatesModule } from './rates/rates.module';
 import { StoreModule } from './store/store.module';
 
@@ -29,6 +30,7 @@ import { StoreModule } from './store/store.module';
     HealthModule,
     ControlModule,
     RatesModule,
+    NotificationsModule,
   ],
 })
 export class AppModule {}
