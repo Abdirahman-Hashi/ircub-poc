@@ -4,7 +4,10 @@ import { PrismaClient } from '@prisma/client';
 
 import { applyAuditExtension } from '../src/common/audit/audit.extension';
 
+import { seedDemoData } from './seed/demo-data.seed';
+import { seedFxRate } from './seed/fx.seed';
 import { seedPermissions } from './seed/permissions.seed';
+import { seedRevenueTypes } from './seed/revenue-types.seed';
 import { seedRoles } from './seed/roles.seed';
 import { FAKER_SEED, SEED_LOG_LEVELS } from './seed/seed.constants';
 import { seedSodRules } from './seed/sod.seed';
@@ -15,7 +18,7 @@ import { seedUsers } from './seed/users.seed';
  * Entry point for `prisma db seed`. Deterministic (fixed faker seed) and idempotent: every
  * seeder upserts, so re-running refreshes reference data without duplicating it. The audit
  * extension is applied so seed mutations are chained into the audit log as actor SYSTEM.
- * Order matters: permissions → roles → users → SoD rule.
+ * Order matters: permissions → roles → users → SoD rule → revenue types → FX → demo data.
  */
 async function main(): Promise<void> {
   // The audit writer logs every appended row at debug level; keep seed output readable.
@@ -29,6 +32,9 @@ async function main(): Promise<void> {
     console.info(`seed: roles ${await seedRoles(prisma)}`);
     console.info(`seed: users ${await seedUsers(prisma)}`);
     console.info(`seed: sod rules ${await seedSodRules(prisma)}`);
+    console.info(`seed: revenue types ${await seedRevenueTypes(prisma)}`);
+    console.info(`seed: fx rates ${await seedFxRate(prisma)}`);
+    console.info(`seed: demo data ${await seedDemoData(prisma)}`);
   } finally {
     await base.$disconnect();
   }

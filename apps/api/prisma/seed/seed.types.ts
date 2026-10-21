@@ -15,3 +15,12 @@ export interface UserSeed {
   readonly fullName: string;
   readonly roleCodes: readonly RoleCode[];
 }
+
+export interface RevenueTypeSeed {
+  readonly code: string;
+  readonly name: string;
+  readonly rateType: import('@ircub/shared').RateType;
+  readonly rate: string;
+  readonly glCode: string;
+  readonly description: string;
+}
