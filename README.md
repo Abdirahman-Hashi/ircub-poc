@@ -105,6 +105,20 @@ Created by the phase 1 seed. Password for all: `Passw0rd!2026`.
   recomputes the chain. Production hardening (least-privilege database role with INSERT +
   SELECT only on `audit_log`) is documented in the migration SQL.
 
+## Registry and revenue collection (phase 2)
+
+- Register a payer (Payers → Register): the TIN is generated; a matching phone, email or
+  national ID raises a duplicate warning that supervisors review under Payers → Duplicate review.
+- Create an assessment (Assessments → New): the amount previews from the revenue type
+  (fixed amount or percentage of a base) and the 12-digit control number is allocated on save.
+- Capture a payment (Payments → Capture): look up the control number, enter the amount in SOS
+  or USD (converted at the stored rate); over-payments are rejected.
+- Bulk upload (Bulk upload): try `docs/samples/revenue-transactions.sample.csv` — the dry run
+  reports 16 accepted and 4 rejected rows with reasons before anything is saved.
+- Reversals: an officer requests one from a payment row; a supervisor approves it under
+  Reversals. The requester can never approve their own request (`SOD_VIOLATION`).
+- `customer1@ircub.test` sees only their own assessments and payments under My account.
+
 ## Assumptions
 
 Recorded as they are made in `docs/ASSUMPTIONS.md` and copied here in phase 7.

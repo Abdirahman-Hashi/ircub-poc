@@ -28,6 +28,17 @@ Phase 7 copies this list into the README.
 - We assume the FMIS accepts a JSON journal batch `{ batchId, date, lines: [{ glCode, debit,
   credit, currency, reference }] }` and returns `{ fmisReference }`; it is a mock.
 
+- We assume a TIN check digit of "10" is simply not issued (the body is regenerated) because
+  the brief asks for a single check digit; if an alphabetic check character (ISBN-style `X`)
+  is preferred, only `ids.rules.ts` changes.
+- We assume phone numbers without a country code are local Somali numbers (`+252`) because
+  the case study is a Federal Member State; the code is a `SystemConfig` value.
+- We assume a bulk-upload row that would over-pay an assessment is rejected rather than
+  capped, because partial acceptance of a row would silently change the uploader's intent.
+- We assume a bulk file keeps each row's real channel (cash/bank/mobile money) and is
+  identified by `bulkUploadId`, because channel reconciliation (phase 4) matches on the
+  channel's own reference; if "BULK" must be the channel, it is one constant change.
+
 ## Security
 - We assume the role-level SoD rule (`reversals.capture` ⟂ `reversals.approve`) applies to every
   user including System Administrators, because a superuser exemption would defeat the control;

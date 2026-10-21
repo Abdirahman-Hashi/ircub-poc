@@ -1221,6 +1221,1920 @@
           "audit"
         ]
       }
+    },
+    "/fx/latest": {
+      "get": {
+        "operationId": "FxController_latest",
+        "parameters": [
+          {
+            "name": "base",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "example": "USD",
+              "type": "string",
+              "enum": [
+                "SOS",
+                "USD"
+              ]
+            }
+          },
+          {
+            "name": "quote",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "example": "SOS",
+              "type": "string",
+              "enum": [
+                "SOS",
+                "USD"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FxRateResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Latest stored rate for a pair",
+        "tags": [
+          "fx"
+        ]
+      }
+    },
+    "/fx/history": {
+      "get": {
+        "operationId": "FxController_history",
+        "parameters": [
+          {
+            "name": "base",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "example": "USD",
+              "type": "string",
+              "enum": [
+                "SOS",
+                "USD"
+              ]
+            }
+          },
+          {
+            "name": "quote",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "example": "SOS",
+              "type": "string",
+              "enum": [
+                "SOS",
+                "USD"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/FxRateResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Recent stored rates for a pair (newest first)",
+        "tags": [
+          "fx"
+        ]
+      }
+    },
+    "/payers": {
+      "get": {
+        "operationId": "PayersController_list",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "maximum": 100,
+              "default": 25,
+              "type": "number"
+            }
+          },
+          {
+            "name": "sort",
+            "required": false,
+            "in": "query",
+            "description": "`field:asc` or `field:desc`",
+            "schema": {
+              "example": "createdAt:desc",
+              "type": "string"
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Matches name, TIN or phone",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "type",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "INDIVIDUAL",
+                "BUSINESS"
+              ]
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "ACTIVE",
+                "SUSPENDED"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PayerResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Search payers by name, TIN or phone",
+        "tags": [
+          "payers"
+        ]
+      },
+      "post": {
+        "operationId": "PayersController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePayerDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegisteredPayerResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Register a payer; generates the TIN and returns duplicate warnings",
+        "tags": [
+          "payers"
+        ]
+      }
+    },
+    "/payers/duplicates": {
+      "get": {
+        "operationId": "PayersController_duplicates",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "maximum": 100,
+              "default": 25,
+              "type": "number"
+            }
+          },
+          {
+            "name": "sort",
+            "required": false,
+            "in": "query",
+            "description": "`field:asc` or `field:desc`",
+            "schema": {
+              "example": "createdAt:desc",
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": "PENDING",
+              "type": "string",
+              "enum": [
+                "PENDING",
+                "CONFIRMED",
+                "DISMISSED"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DuplicateFlagResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Duplicate review queue",
+        "tags": [
+          "payers"
+        ]
+      }
+    },
+    "/payers/duplicates/{id}/review": {
+      "post": {
+        "operationId": "PayersController_review",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewDuplicateDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DuplicateFlagResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Confirm or dismiss a duplicate flag",
+        "tags": [
+          "payers"
+        ]
+      }
+    },
+    "/payers/{id}": {
+      "get": {
+        "operationId": "PayersController_profile",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PayerProfileResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "360° profile: payer, assessments, payments, balances",
+        "tags": [
+          "payers"
+        ]
+      },
+      "patch": {
+        "operationId": "PayersController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePayerDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegisteredPayerResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Edit a payer; re-runs duplicate detection",
+        "tags": [
+          "payers"
+        ]
+      }
+    },
+    "/payers/{id}/suspend": {
+      "post": {
+        "operationId": "PayersController_suspend",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PayerResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Suspend: no new assessments or captures",
+        "tags": [
+          "payers"
+        ]
+      }
+    },
+    "/payers/{id}/reactivate": {
+      "post": {
+        "operationId": "PayersController_reactivate",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PayerResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Reactivate a suspended payer",
+        "tags": [
+          "payers"
+        ]
+      }
+    },
+    "/revenue-types": {
+      "get": {
+        "operationId": "RevenueTypesController_list",
+        "parameters": [
+          {
+            "name": "includeInactive",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": false,
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RevenueTypeResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Revenue types (active by default)",
+        "tags": [
+          "revenue-types"
+        ]
+      },
+      "post": {
+        "operationId": "RevenueTypesController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRevenueTypeDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RevenueTypeResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a revenue type",
+        "tags": [
+          "revenue-types"
+        ]
+      }
+    },
+    "/revenue-types/{id}": {
+      "get": {
+        "operationId": "RevenueTypesController_get",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RevenueTypeResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "One revenue type",
+        "tags": [
+          "revenue-types"
+        ]
+      },
+      "patch": {
+        "operationId": "RevenueTypesController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateRevenueTypeDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RevenueTypeResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Edit a revenue type (rate changes affect new assessments only)",
+        "tags": [
+          "revenue-types"
+        ]
+      },
+      "delete": {
+        "operationId": "RevenueTypesController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RevenueTypeResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete if unused, otherwise deactivate (returns the deactivated row)",
+        "tags": [
+          "revenue-types"
+        ]
+      }
+    },
+    "/assessments": {
+      "get": {
+        "operationId": "AssessmentsController_list",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "maximum": 100,
+              "default": 25,
+              "type": "number"
+            }
+          },
+          {
+            "name": "sort",
+            "required": false,
+            "in": "query",
+            "description": "`field:asc` or `field:desc`",
+            "schema": {
+              "example": "createdAt:desc",
+              "type": "string"
+            }
+          },
+          {
+            "name": "payerId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "tin",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "TIN1234567890",
+              "type": "string"
+            }
+          },
+          {
+            "name": "revenueTypeId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "amountMin",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "1000.00",
+              "type": "string"
+            }
+          },
+          {
+            "name": "amountMax",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "50000.00",
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "PENDING",
+                "PART_PAID",
+                "PAID",
+                "CANCELLED"
+              ]
+            }
+          },
+          {
+            "name": "dateFrom",
+            "required": false,
+            "in": "query",
+            "description": "createdAt ≥",
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "name": "dateTo",
+            "required": false,
+            "in": "query",
+            "description": "createdAt ≤",
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "name": "dueFrom",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "name": "dueTo",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "name": "controlNumber",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AssessmentResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List with advanced filters (payer, type, amount range, status, dates, control number)",
+        "tags": [
+          "assessments"
+        ]
+      },
+      "post": {
+        "operationId": "AssessmentsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAssessmentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssessmentResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create an assessment; amount from the revenue type rate, control number generated",
+        "tags": [
+          "assessments"
+        ]
+      }
+    },
+    "/assessments/export.csv": {
+      "get": {
+        "operationId": "AssessmentsController_export",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "maximum": 100,
+              "default": 25,
+              "type": "number"
+            }
+          },
+          {
+            "name": "sort",
+            "required": false,
+            "in": "query",
+            "description": "`field:asc` or `field:desc`",
+            "schema": {
+              "example": "createdAt:desc",
+              "type": "string"
+            }
+          },
+          {
+            "name": "payerId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "tin",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "TIN1234567890",
+              "type": "string"
+            }
+          },
+          {
+            "name": "revenueTypeId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "amountMin",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "1000.00",
+              "type": "string"
+            }
+          },
+          {
+            "name": "amountMax",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "50000.00",
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "PENDING",
+                "PART_PAID",
+                "PAID",
+                "CANCELLED"
+              ]
+            }
+          },
+          {
+            "name": "dateFrom",
+            "required": false,
+            "in": "query",
+            "description": "createdAt ≥",
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "name": "dateTo",
+            "required": false,
+            "in": "query",
+            "description": "createdAt ≤",
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "name": "dueFrom",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "name": "dueTo",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "name": "controlNumber",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Export the filtered list as CSV",
+        "tags": [
+          "assessments"
+        ]
+      }
+    },
+    "/assessments/{id}": {
+      "get": {
+        "operationId": "AssessmentsController_get",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssessmentDetailResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Assessment with its payments",
+        "tags": [
+          "assessments"
+        ]
+      }
+    },
+    "/assessments/{id}/cancel": {
+      "post": {
+        "operationId": "AssessmentsController_cancel",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssessmentResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Cancel an unpaid assessment",
+        "tags": [
+          "assessments"
+        ]
+      }
+    },
+    "/payments": {
+      "get": {
+        "operationId": "PaymentsController_list",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "maximum": 100,
+              "default": 25,
+              "type": "number"
+            }
+          },
+          {
+            "name": "sort",
+            "required": false,
+            "in": "query",
+            "description": "`field:asc` or `field:desc`",
+            "schema": {
+              "example": "createdAt:desc",
+              "type": "string"
+            }
+          },
+          {
+            "name": "payerId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "revenueTypeId",
+            "required": false,
+            "in": "query",
+            "description": "Via the assessment",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "amountMin",
+            "required": false,
+            "in": "query",
+            "description": "Local amount ≥",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "amountMax",
+            "required": false,
+            "in": "query",
+            "description": "Local amount ≤",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "channel",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "CASH",
+                "BANK",
+                "MOBILE_MONEY",
+                "BULK"
+              ]
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "INITIATED",
+                "PENDING",
+                "CONFIRMED",
+                "FAILED",
+                "PERMANENTLY_FAILED",
+                "REVERSED"
+              ]
+            }
+          },
+          {
+            "name": "currency",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "SOS",
+                "USD"
+              ]
+            }
+          },
+          {
+            "name": "dateFrom",
+            "required": false,
+            "in": "query",
+            "description": "paidAt ≥",
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "name": "dateTo",
+            "required": false,
+            "in": "query",
+            "description": "paidAt ≤",
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "name": "controlNumber",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "bulkUploadId",
+            "required": false,
+            "in": "query",
+            "description": "Payments created by one bulk upload",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PaymentResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List payments with filters (payer, revenue type, amount, channel, status, currency, dates)",
+        "tags": [
+          "payments"
+        ]
+      }
+    },
+    "/payments/capture/lookup": {
+      "get": {
+        "operationId": "PaymentsController_lookup",
+        "parameters": [
+          {
+            "name": "controlNumber",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "example": "000000012395",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ControlNumberLookupResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Resolve a control number to the payer and outstanding amount",
+        "tags": [
+          "payments"
+        ]
+      }
+    },
+    "/payments/{id}": {
+      "get": {
+        "operationId": "PaymentsController_get",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "One payment",
+        "tags": [
+          "payments"
+        ]
+      }
+    },
+    "/payments/capture": {
+      "post": {
+        "operationId": "PaymentsController_capture",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CapturePaymentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentResponseDto"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "OVERPAYMENT"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Record a cash / bank / mobile-money payment against a control number",
+        "tags": [
+          "payments"
+        ]
+      }
+    },
+    "/bulk-uploads/template.csv": {
+      "get": {
+        "operationId": "BulkUploadsController_template",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Download the revenue-transactions CSV template",
+        "tags": [
+          "bulk-uploads"
+        ]
+      }
+    },
+    "/bulk-uploads/revenue-transactions": {
+      "post": {
+        "operationId": "BulkUploadsController_importRevenueTransactions",
+        "parameters": [
+          {
+            "name": "dryRun",
+            "required": false,
+            "in": "query",
+            "description": "Validate every row and report, but persist nothing",
+            "schema": {
+              "default": false,
+              "type": "boolean"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CsvSummaryResponseDto"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "CSV_INVALID | CSV_TOO_MANY_ROWS"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Import revenue transactions from CSV; `?dryRun=true` validates without saving",
+        "tags": [
+          "bulk-uploads"
+        ]
+      }
+    },
+    "/bulk-uploads": {
+      "get": {
+        "operationId": "BulkUploadsController_list",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "maximum": 100,
+              "default": 25,
+              "type": "number"
+            }
+          },
+          {
+            "name": "sort",
+            "required": false,
+            "in": "query",
+            "description": "`field:asc` or `field:desc`",
+            "schema": {
+              "example": "createdAt:desc",
+              "type": "string"
+            }
+          },
+          {
+            "name": "kind",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "REVENUE_TRANSACTIONS",
+                "METER_READINGS"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BulkUploadResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Past uploads",
+        "tags": [
+          "bulk-uploads"
+        ]
+      }
+    },
+    "/bulk-uploads/{id}": {
+      "get": {
+        "operationId": "BulkUploadsController_get",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BulkUploadResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Upload with its full summary and rejected rows",
+        "tags": [
+          "bulk-uploads"
+        ]
+      }
+    },
+    "/reversals": {
+      "get": {
+        "operationId": "ReversalsController_list",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "maximum": 100,
+              "default": 25,
+              "type": "number"
+            }
+          },
+          {
+            "name": "sort",
+            "required": false,
+            "in": "query",
+            "description": "`field:asc` or `field:desc`",
+            "schema": {
+              "example": "createdAt:desc",
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "PENDING_APPROVAL",
+                "APPROVED",
+                "REJECTED"
+              ]
+            }
+          },
+          {
+            "name": "payerId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "capturedById",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "dateFrom",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "name": "dateTo",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ReversalResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Reversal queue with filters",
+        "tags": [
+          "reversals"
+        ]
+      },
+      "post": {
+        "operationId": "ReversalsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateReversalDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReversalResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Request a reversal of a confirmed payment",
+        "tags": [
+          "reversals"
+        ]
+      }
+    },
+    "/reversals/{id}": {
+      "get": {
+        "operationId": "ReversalsController_get",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReversalResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "One reversal",
+        "tags": [
+          "reversals"
+        ]
+      }
+    },
+    "/reversals/{id}/approve": {
+      "post": {
+        "operationId": "ReversalsController_approve",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DecideReversalDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReversalResponseDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "SOD_VIOLATION"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Approve: payment → REVERSED, assessment ledger reduced (SoD: not the capturer)",
+        "tags": [
+          "reversals"
+        ]
+      }
+    },
+    "/reversals/{id}/reject": {
+      "post": {
+        "operationId": "ReversalsController_reject",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DecideReversalDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReversalResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Reject a reversal request (SoD: not the capturer)",
+        "tags": [
+          "reversals"
+        ]
+      }
+    },
+    "/me": {
+      "get": {
+        "operationId": "SelfController_profile",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PayerProfileResponseDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User is not linked to a payer"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "My payer profile: assessments, payments and balances",
+        "tags": [
+          "self"
+        ]
+      }
     }
   },
   "info": {
@@ -1257,6 +3171,8 @@
               "LOGIN_MAX_FAILED_ATTEMPTS",
               "LOGIN_LOCKOUT_MINUTES",
               "CSV_MAX_ROWS",
+              "PHONE_DEFAULT_COUNTRY_CODE",
+              "ASSESSMENT_DEFAULT_DUE_DAYS",
               "ABNORMAL_CONSUMPTION_THRESHOLD_PCT",
               "ABNORMAL_CONSUMPTION_HISTORY_MONTHS",
               "BILL_DUE_DAYS",
@@ -2324,6 +4240,1140 @@
           "ok",
           "checked"
         ]
+      },
+      "FxRateResponseDto": {
+        "type": "object",
+        "properties": {
+          "base": {
+            "type": "string",
+            "enum": [
+              "SOS",
+              "USD"
+            ]
+          },
+          "quote": {
+            "type": "string",
+            "enum": [
+              "SOS",
+              "USD"
+            ]
+          },
+          "rate": {
+            "type": "string",
+            "example": "571.500000",
+            "description": "Decimal string, 6 dp"
+          },
+          "asOf": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "source": {
+            "type": "string",
+            "example": "mock-fx-api"
+          }
+        },
+        "required": [
+          "base",
+          "quote",
+          "rate",
+          "asOf",
+          "source"
+        ]
+      },
+      "PayerResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "tin": {
+            "type": "string",
+            "example": "TIN1234567890"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "INDIVIDUAL",
+              "BUSINESS"
+            ]
+          },
+          "name": {
+            "type": "string"
+          },
+          "nationalId": {
+            "type": "object",
+            "nullable": true
+          },
+          "registrationNo": {
+            "type": "object",
+            "nullable": true
+          },
+          "phone": {
+            "type": "string",
+            "example": "+252612345678"
+          },
+          "email": {
+            "type": "object",
+            "nullable": true
+          },
+          "address": {
+            "type": "object",
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ACTIVE",
+              "SUSPENDED"
+            ]
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "tin",
+          "type",
+          "name",
+          "phone",
+          "status",
+          "createdAt"
+        ]
+      },
+      "DuplicateFlagResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "payer": {
+            "$ref": "#/components/schemas/PayerResponseDto"
+          },
+          "matchedPayer": {
+            "$ref": "#/components/schemas/PayerResponseDto"
+          },
+          "matchField": {
+            "type": "string",
+            "enum": [
+              "PHONE",
+              "EMAIL",
+              "NATIONAL_ID"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "CONFIRMED",
+              "DISMISSED"
+            ]
+          },
+          "note": {
+            "type": "object",
+            "nullable": true
+          },
+          "reviewedAt": {
+            "type": "object",
+            "nullable": true
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "payer",
+          "matchedPayer",
+          "matchField",
+          "status",
+          "createdAt"
+        ]
+      },
+      "ReviewDuplicateDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "CONFIRMED",
+              "DISMISSED"
+            ]
+          },
+          "note": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "AssessmentPayerDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "tin": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "tin",
+          "name"
+        ]
+      },
+      "AssessmentRevenueTypeDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "code",
+          "name"
+        ]
+      },
+      "AssessmentResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "controlNumber": {
+            "type": "string",
+            "example": "000000012395"
+          },
+          "payer": {
+            "$ref": "#/components/schemas/AssessmentPayerDto"
+          },
+          "revenueType": {
+            "$ref": "#/components/schemas/AssessmentRevenueTypeDto"
+          },
+          "period": {
+            "type": "object",
+            "nullable": true
+          },
+          "baseAmount": {
+            "type": "object",
+            "nullable": true,
+            "example": "2000000.00"
+          },
+          "amount": {
+            "type": "string",
+            "example": "10000.00"
+          },
+          "currency": {
+            "type": "string",
+            "enum": [
+              "SOS",
+              "USD"
+            ]
+          },
+          "dueDate": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "PART_PAID",
+              "PAID",
+              "CANCELLED"
+            ]
+          },
+          "paidAmount": {
+            "type": "string",
+            "example": "4000.00"
+          },
+          "outstanding": {
+            "type": "string",
+            "example": "6000.00"
+          },
+          "notes": {
+            "type": "object",
+            "nullable": true
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "controlNumber",
+          "payer",
+          "revenueType",
+          "amount",
+          "currency",
+          "dueDate",
+          "status",
+          "paidAmount",
+          "outstanding",
+          "createdAt"
+        ]
+      },
+      "PaymentResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "controlNumber": {
+            "type": "string"
+          },
+          "assessmentId": {
+            "type": "object",
+            "format": "uuid",
+            "nullable": true
+          },
+          "billId": {
+            "type": "object",
+            "format": "uuid",
+            "nullable": true
+          },
+          "payer": {
+            "$ref": "#/components/schemas/AssessmentPayerDto"
+          },
+          "revenueType": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AssessmentRevenueTypeDto"
+              }
+            ]
+          },
+          "channel": {
+            "type": "string",
+            "enum": [
+              "CASH",
+              "BANK",
+              "MOBILE_MONEY",
+              "BULK"
+            ]
+          },
+          "channelTxnRef": {
+            "type": "object",
+            "nullable": true
+          },
+          "amount": {
+            "type": "string",
+            "example": "100.00"
+          },
+          "currency": {
+            "type": "string",
+            "enum": [
+              "SOS",
+              "USD"
+            ]
+          },
+          "fxRate": {
+            "type": "string",
+            "example": "571.500000"
+          },
+          "localAmount": {
+            "type": "string",
+            "example": "57150.00"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "INITIATED",
+              "PENDING",
+              "CONFIRMED",
+              "FAILED",
+              "PERMANENTLY_FAILED",
+              "REVERSED"
+            ]
+          },
+          "paidAt": {
+            "type": "object",
+            "nullable": true
+          },
+          "capturedById": {
+            "type": "object",
+            "format": "uuid",
+            "nullable": true
+          },
+          "bulkUploadId": {
+            "type": "object",
+            "format": "uuid",
+            "nullable": true
+          },
+          "failureReason": {
+            "type": "object",
+            "nullable": true
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "controlNumber",
+          "payer",
+          "channel",
+          "amount",
+          "currency",
+          "fxRate",
+          "localAmount",
+          "status",
+          "createdAt"
+        ]
+      },
+      "PayerBalancesDto": {
+        "type": "object",
+        "properties": {
+          "assessedTotal": {
+            "type": "string",
+            "example": "125000.00"
+          },
+          "paidTotal": {
+            "type": "string",
+            "example": "80000.00"
+          },
+          "outstanding": {
+            "type": "string",
+            "example": "45000.00"
+          }
+        },
+        "required": [
+          "assessedTotal",
+          "paidTotal",
+          "outstanding"
+        ]
+      },
+      "PayerProfileResponseDto": {
+        "type": "object",
+        "properties": {
+          "payer": {
+            "$ref": "#/components/schemas/PayerResponseDto"
+          },
+          "assessments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AssessmentResponseDto"
+            }
+          },
+          "waterAccounts": {
+            "description": "Filled in phase 3",
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "payments": {
+            "description": "Most recent 20",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PaymentResponseDto"
+            }
+          },
+          "balances": {
+            "$ref": "#/components/schemas/PayerBalancesDto"
+          }
+        },
+        "required": [
+          "payer",
+          "assessments",
+          "waterAccounts",
+          "payments",
+          "balances"
+        ]
+      },
+      "CreatePayerDto": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "INDIVIDUAL",
+              "BUSINESS"
+            ]
+          },
+          "name": {
+            "type": "string",
+            "example": "Hodan Trading Co."
+          },
+          "nationalId": {
+            "type": "string"
+          },
+          "registrationNo": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string",
+            "example": "+252612345678",
+            "description": "Normalised to E.164 on save"
+          },
+          "email": {
+            "type": "string"
+          },
+          "address": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "name",
+          "phone"
+        ]
+      },
+      "RegisteredPayerResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "tin": {
+            "type": "string",
+            "example": "TIN1234567890"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "INDIVIDUAL",
+              "BUSINESS"
+            ]
+          },
+          "name": {
+            "type": "string"
+          },
+          "nationalId": {
+            "type": "object",
+            "nullable": true
+          },
+          "registrationNo": {
+            "type": "object",
+            "nullable": true
+          },
+          "phone": {
+            "type": "string",
+            "example": "+252612345678"
+          },
+          "email": {
+            "type": "object",
+            "nullable": true
+          },
+          "address": {
+            "type": "object",
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ACTIVE",
+              "SUSPENDED"
+            ]
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "warnings": {
+            "description": "Possible duplicates raised by this registration",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DuplicateFlagResponseDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "tin",
+          "type",
+          "name",
+          "phone",
+          "status",
+          "createdAt",
+          "warnings"
+        ]
+      },
+      "UpdatePayerDto": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "INDIVIDUAL",
+              "BUSINESS"
+            ]
+          },
+          "name": {
+            "type": "string",
+            "example": "Hodan Trading Co."
+          },
+          "nationalId": {
+            "type": "string"
+          },
+          "registrationNo": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string",
+            "example": "+252612345678",
+            "description": "Normalised to E.164 on save"
+          },
+          "email": {
+            "type": "string"
+          },
+          "address": {
+            "type": "string"
+          }
+        }
+      },
+      "RevenueTypeResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "code": {
+            "type": "string",
+            "example": "BUSINESS_LICENCE"
+          },
+          "name": {
+            "type": "string"
+          },
+          "rateType": {
+            "type": "string",
+            "enum": [
+              "FIXED",
+              "PERCENT"
+            ]
+          },
+          "rate": {
+            "type": "string",
+            "example": "150000.00"
+          },
+          "glCode": {
+            "type": "string",
+            "example": "4010"
+          },
+          "active": {
+            "type": "boolean"
+          },
+          "description": {
+            "type": "object",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "code",
+          "name",
+          "rateType",
+          "rate",
+          "glCode",
+          "active"
+        ]
+      },
+      "CreateRevenueTypeDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "example": "BUSINESS_LICENCE"
+          },
+          "name": {
+            "type": "string",
+            "example": "Business licence"
+          },
+          "rateType": {
+            "type": "string",
+            "enum": [
+              "FIXED",
+              "PERCENT"
+            ]
+          },
+          "rate": {
+            "type": "string",
+            "example": "150000.00",
+            "description": "FIXED: local amount. PERCENT: percentage of the base amount."
+          },
+          "glCode": {
+            "type": "string",
+            "example": "4010"
+          },
+          "description": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "name",
+          "rateType",
+          "rate",
+          "glCode"
+        ]
+      },
+      "UpdateRevenueTypeDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Business licence"
+          },
+          "rateType": {
+            "type": "string",
+            "enum": [
+              "FIXED",
+              "PERCENT"
+            ]
+          },
+          "rate": {
+            "type": "string",
+            "example": "150000.00",
+            "description": "FIXED: local amount. PERCENT: percentage of the base amount."
+          },
+          "glCode": {
+            "type": "string",
+            "example": "4010"
+          },
+          "description": {
+            "type": "string"
+          },
+          "active": {
+            "type": "boolean"
+          }
+        }
+      },
+      "AssessmentDetailResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "controlNumber": {
+            "type": "string",
+            "example": "000000012395"
+          },
+          "payer": {
+            "$ref": "#/components/schemas/AssessmentPayerDto"
+          },
+          "revenueType": {
+            "$ref": "#/components/schemas/AssessmentRevenueTypeDto"
+          },
+          "period": {
+            "type": "object",
+            "nullable": true
+          },
+          "baseAmount": {
+            "type": "object",
+            "nullable": true,
+            "example": "2000000.00"
+          },
+          "amount": {
+            "type": "string",
+            "example": "10000.00"
+          },
+          "currency": {
+            "type": "string",
+            "enum": [
+              "SOS",
+              "USD"
+            ]
+          },
+          "dueDate": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "PART_PAID",
+              "PAID",
+              "CANCELLED"
+            ]
+          },
+          "paidAmount": {
+            "type": "string",
+            "example": "4000.00"
+          },
+          "outstanding": {
+            "type": "string",
+            "example": "6000.00"
+          },
+          "notes": {
+            "type": "object",
+            "nullable": true
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "payments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PaymentResponseDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "controlNumber",
+          "payer",
+          "revenueType",
+          "amount",
+          "currency",
+          "dueDate",
+          "status",
+          "paidAmount",
+          "outstanding",
+          "createdAt",
+          "payments"
+        ]
+      },
+      "CreateAssessmentDto": {
+        "type": "object",
+        "properties": {
+          "payerId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "revenueTypeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "baseAmount": {
+            "type": "string",
+            "example": "2000000.00",
+            "description": "Required for PERCENT revenue types"
+          },
+          "period": {
+            "type": "string",
+            "example": "2026"
+          },
+          "dueDate": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Defaults to ASSESSMENT_DEFAULT_DUE_DAYS from today"
+          },
+          "notes": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "payerId",
+          "revenueTypeId"
+        ]
+      },
+      "ControlNumberLookupResponseDto": {
+        "type": "object",
+        "properties": {
+          "controlNumber": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "ASSESSMENT"
+            ]
+          },
+          "payer": {
+            "$ref": "#/components/schemas/AssessmentPayerDto"
+          },
+          "description": {
+            "type": "string",
+            "example": "Business licence · 2026"
+          },
+          "amount": {
+            "type": "string"
+          },
+          "paidAmount": {
+            "type": "string"
+          },
+          "outstanding": {
+            "type": "string"
+          },
+          "currency": {
+            "type": "string",
+            "enum": [
+              "SOS",
+              "USD"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "PART_PAID",
+              "PAID",
+              "CANCELLED"
+            ]
+          }
+        },
+        "required": [
+          "controlNumber",
+          "kind",
+          "payer",
+          "description",
+          "amount",
+          "paidAmount",
+          "outstanding",
+          "currency",
+          "status"
+        ]
+      },
+      "CapturePaymentDto": {
+        "type": "object",
+        "properties": {
+          "controlNumber": {
+            "type": "string",
+            "example": "000000012395"
+          },
+          "amount": {
+            "type": "string",
+            "example": "2500.00"
+          },
+          "currency": {
+            "type": "string",
+            "enum": [
+              "SOS",
+              "USD"
+            ]
+          },
+          "channel": {
+            "type": "string",
+            "enum": [
+              "CASH",
+              "BANK",
+              "MOBILE_MONEY"
+            ]
+          },
+          "channelTxnRef": {
+            "type": "string",
+            "description": "Required for BANK and MOBILE_MONEY"
+          },
+          "paidAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Defaults to now"
+          }
+        },
+        "required": [
+          "controlNumber",
+          "amount",
+          "currency",
+          "channel"
+        ]
+      },
+      "CsvRejectedRowDto": {
+        "type": "object",
+        "properties": {
+          "row": {
+            "type": "number",
+            "description": "1-based line number; the header is line 1"
+          },
+          "field": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string",
+            "example": "OVERPAYMENT"
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "row",
+          "reason",
+          "message"
+        ]
+      },
+      "CsvSummaryResponseDto": {
+        "type": "object",
+        "properties": {
+          "totalRows": {
+            "type": "number"
+          },
+          "accepted": {
+            "type": "number"
+          },
+          "rejected": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CsvRejectedRowDto"
+            }
+          },
+          "dryRun": {
+            "type": "boolean"
+          },
+          "uploadId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Absent on dry run"
+          }
+        },
+        "required": [
+          "totalRows",
+          "accepted",
+          "rejected",
+          "dryRun"
+        ]
+      },
+      "BulkUploadResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "REVENUE_TRANSACTIONS",
+              "METER_READINGS"
+            ]
+          },
+          "fileName": {
+            "type": "string"
+          },
+          "totalRows": {
+            "type": "number"
+          },
+          "accepted": {
+            "type": "number"
+          },
+          "rejected": {
+            "type": "number"
+          },
+          "uploadedById": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "summary": {
+            "description": "Included on the detail endpoint",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CsvSummaryResponseDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "fileName",
+          "totalRows",
+          "accepted",
+          "rejected",
+          "uploadedById",
+          "createdAt"
+        ]
+      },
+      "ReversalResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "payment": {
+            "$ref": "#/components/schemas/PaymentResponseDto"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "capturedById": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "capturedByEmail": {
+            "type": "object",
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING_APPROVAL",
+              "APPROVED",
+              "REJECTED"
+            ]
+          },
+          "approvedById": {
+            "type": "object",
+            "format": "uuid",
+            "nullable": true
+          },
+          "decidedAt": {
+            "type": "object",
+            "nullable": true
+          },
+          "decisionNote": {
+            "type": "object",
+            "nullable": true
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "payment",
+          "reason",
+          "capturedById",
+          "status",
+          "createdAt"
+        ]
+      },
+      "CreateReversalDto": {
+        "type": "object",
+        "properties": {
+          "paymentId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "reason": {
+            "type": "string",
+            "example": "Captured against the wrong control number"
+          }
+        },
+        "required": [
+          "paymentId",
+          "reason"
+        ]
+      },
+      "DecideReversalDto": {
+        "type": "object",
+        "properties": {
+          "note": {
+            "type": "string"
+          }
+        }
       }
     }
   }

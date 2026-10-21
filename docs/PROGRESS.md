@@ -194,7 +194,105 @@ reload. No page errors or 5xx responses. Finding fixed on the spot: the per-IP t
   phases.
 
 ## Phase 2 — registry, revenue types, assessments, bulk upload
-_(pending)_
+
+**Date:** 2026-10-21
+
+**Built**
+- **Schema** (`registry_revenue` migration): `Payer` (TIN unique, normalised phone/email,
+  status), `DuplicateFlag` (unique per pair+field), `RevenueType` (FIXED/PERCENT, GL code),
+  `Assessment` (control number unique, ledger `paidAmount`/`status`, indexes on every filter
+  column), `Payment` (amount/currency/fxRate/fxRateAt/localAmount, `@@unique([channel,
+  channelTxnRef])`, `bulkUploadId`), `Reversal`, `BulkUpload` (file path + JSON summary),
+  `FxRate` history, `User.payerId` FK. New shared enums: `DuplicateMatchField`,
+  `DuplicateFlagStatus`, `RateType`. All registered in `audit.config.ts`.
+- **Identifiers** (`common/ids`, D10): TIN = `TIN` + 9 digits + mod-11 check (bodies whose check
+  would be 10 are never issued); control number = 10-digit shared sequence + 2 ISO 7064 MOD
+  97-10 check digits, allocated inside the creating transaction. Pure rules + validators.
+- **Money/FX** (`common/money`, `modules/fx`, D9): decimal.js, HALF_EVEN to 2 dp at the end,
+  rates to 6 dp; `FxService.toLocal` uses the latest stored rate (`FX_RATE_UNAVAILABLE` if
+  none); `GET /fx/latest|history`.
+- **CSV pipeline** (`common/csv`, D12): csv-parse streaming → header check → zod row schema →
+  business `validateRow` with a shared mutable context → `persist` in one transaction;
+  per-row rejections with line, field, reason, message; `dryRun` runs everything but persist.
+- **Payers**: `POST/GET/PATCH /payers`, 360° `GET /payers/:id` (assessments, payments,
+  balances; water accounts placeholder), suspend/reactivate, duplicate detection on
+  create/update (exact match on E.164 phone, lower-cased email, national id → `DuplicateFlag`
+  rows returned as `warnings`), review queue + `POST /payers/duplicates/:id/review`.
+- **Revenue types** CRUD; delete deactivates when assessments reference the type.
+- **Assessments**: amount from FIXED rate or PERCENT × base; control number in the same
+  transaction; advanced filters (payer/TIN, type, amount range, status, created range, due
+  range, control number) + `export.csv` with the same filters; detail with payments; cancel
+  when unpaid; ledger methods `applyPayment`/`reversePayment` with `FOR UPDATE` row lock and
+  `OVERPAYMENT` rejection.
+- **Payments**: `GET /payments/capture/lookup` (payer + outstanding), `POST /payments/capture`
+  (cash/bank/mobile money, reference required for non-cash, duplicate reference →
+  `DUPLICATE_PAYMENT`, USD converted at the stored rate), list filters (payer, revenue type via
+  assessment, local amount range, channel, status, currency, paid-at range, control number,
+  bulkUploadId). `recordConfirmedPayment` is the single apply path reused by the importer.
+- **Bulk uploader**: `POST /bulk-uploads/revenue-transactions?dryRun` (multipart, 5 MB cap,
+  CSV MIME/extension check), validation order: schema → check digits → assessment exists &
+  payable → amount > 0 → reference required for non-cash → reference unique in file and DB →
+  capturer exists → FX available → amount ≤ outstanding *after earlier rows*; accepted rows
+  become CONFIRMED payments through the capture path; file stored under
+  `STORAGE_DIR/uploads/<id>.csv`; `GET /bulk-uploads[/:id]`, `template.csv`.
+- **Reversals**: capture (CONFIRMED only, one pending per payment), approve/reject with the
+  hard SoD rule `capturedById === deciderId → 403 SOD_VIOLATION` regardless of permissions;
+  approval reverses the payment and the assessment ledger in one transaction.
+- **Self-service**: `GET /me` returns the profile of the payer linked to the user.
+- **Seed**: 6 revenue types (incl. `WATER` GL carrier), 1 FX rate, 200 payers (5 deliberate
+  duplicates, flagged), 1,500 assessments over 12 months (first 20 reserved unpaid for the
+  sample CSV), 900 CONFIRMED payments (15 % USD, mixed channels), 10 reversals (4 approved,
+  3 rejected, 3 pending), `customer1@` linked to a payer. Demo data is skipped when payers
+  already exist, so re-seeding stays fast and idempotent. `docs/samples/revenue-transactions.sample.csv`
+  (20 rows: 16 valid, 4 invalid — bad check digit, unknown assessment, over-payment,
+  duplicate reference in file).
+- **Web**: payers list (search/type/status filters) + register (duplicate warnings after
+  save) + profile tabs (assessments / water accounts / payments / balance) + duplicate review
+  queue; revenue types admin; assessments list with full `FilterBar`, CSV export, detail
+  drawer with payments and cancel, create form with live amount preview; payment capture with
+  control-number lookup; payments list with filters and "Reverse" row action; reversal
+  approval queue (SoD error surfaces as a toast); bulk upload page with reusable `CsvUploader`
+  (dry run → preview → confirm → summary + rejected-rows download); customer portal `/me`.
+  Shared `MoneyText`, `StatusBadge`, `FilterBar`, `PageHeader`.
+
+**Tests:** 126 total — api unit 78 (TIN/control-number generate+validate incl. bad check digit,
+money rounding/conversion, FIXED vs PERCENT, payment application part/paid/over-payment,
+reversal ledger, phone/email/national-id normalisation and duplicate detection, CSV helpers,
+row schema rejections, reversal SoD rule, plus phase 1 suites), api e2e 37 (registry: TIN,
+duplicate flag + review, phone validation, control number, PERCENT base, filters + CSV export,
+360° + `/me`, suspend; revenue: lookup, cash + USD capture, over-payment, missing/duplicate
+reference, filters, reversal SoD + approval ledger; bulk: dry run 16/4 with reasons, import,
+missing columns, non-CSV, template), mocks 4, web 7. Lint and typecheck clean.
+
+**Verified manually (headless Chromium):** payers list, register with an existing phone →
+duplicate warning, profile tabs and balances, assessment amount preview, list + status filter +
+detail drawer, control-number lookup and cash capture, reversal request from the payment row,
+bulk dry run 16/4 → confirm → 16 imported, supervisor approval, duplicate queue, customer `/me`.
+No page errors or 5xx.
+
+**Decisions and deviations (why)**
+- **Control-number check digits use ISO 7064 MOD 97-10** (IBAN style): the body × 100 mod 97
+  complement, validated as whole-number mod 97 = 1. TIN uses ISBN-style mod 11 with weights
+  10..2; bodies that would need check digit "10" are not issued so the TIN stays all-digit.
+- **Over-payment inside a file is checked against the running balance**, so two rows paying
+  the same assessment cannot together exceed it; the first row wins.
+- **Bulk rows keep their real channel** (`CASH`/`BANK`/`MOBILE_MONEY`) and are tagged with
+  `bulkUploadId`; the `BULK` channel value remains for seeded legacy data and phase 4 statements.
+- **Demo seed uses `createMany` for payers/assessments/payments**; the audit extension still
+  writes one chained row per record, which is why the first seed takes ~20 s.
+- **Phone normalisation** prepends `SystemConfigKey.PHONE_DEFAULT_COUNTRY_CODE` (`+252`) to
+  local numbers; anything not matching E.164 is rejected rather than stored unnormalised.
+
+**Packages added** (rule 11): `csv-parse` (D12), `multer` + `@types/multer` (multipart upload;
+Nest's `FileInterceptor` needs the runtime package declared).
+
+**Open items / limitations**
+- Payment capture, lookup and the bulk importer only resolve assessments; bills join in
+  phase 3 (`billId` exists on `Payment`).
+- The web payer search in the assessment form queries by name/TIN/phone with a 20-row cap;
+  no debounce yet.
+- Customer portal is read-only; paying arrives with online channels in phase 4.
+- FMIS reversal batches on approval arrive in phase 5.
 
 ## Phase 3 — water billing
 _(pending)_
