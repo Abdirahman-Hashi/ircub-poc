@@ -89,7 +89,99 @@ for the Prisma CLI and the e2e runner), `pino`/`pino-http`/`pino-pretty` (peers 
 - Compose host ports default to 5432/5433; this machine uses 5440/5441 via `.env`.
 
 ## Phase 1 — auth, RBAC, SoD, audit, seed
-_(pending)_
+
+**Date:** 2026-10-21
+
+**Built**
+- **Schema** (`identity_access_audit`, `refresh_token_rotation` migrations): `User`,
+  `PasswordHistory`, `RefreshToken` (hashed, `rotatedAt` vs `revokedAt`), `Role` (self-relation
+  parent, `isSystem`), `Permission`, `RolePermission`, `UserRole`, `SodRule`, `AuditLog`
+  (`seq` unique, `prevHash`/`hash` char(64), indexes on entity+entityId, actorId, createdAt),
+  `AuditChainHead` (single locked row). Migration SQL adds the table comment, genesis head row,
+  an append-only trigger on `audit_log`, and the documented least-privilege grant.
+- **Audit** (`common/audit`): Prisma client extension over `$allModels` for
+  create/update/delete/upsert/createMany/updateMany/deleteMany of models in `audit.config.ts`
+  (User with `passwordHash`/`mfaSecret` redacted, Role, Permission, RolePermission, UserRole,
+  SodRule, SystemConfig). `before` loaded for updates/deletes; actor (id, email, ip, user agent)
+  from AsyncLocalStorage, `SYSTEM` for jobs and seed. Hash chain
+  `sha256(prevHash || canonicalJson(row))` appended under `SELECT … FOR UPDATE` on the head
+  row. `GET /audit` (filters, pagination) and `GET /audit/verify` (batched recomputation,
+  first broken seq). `PrismaService` now *is* the extended client.
+- **Auth** (`modules/auth`, `common/auth`): argon2id, JWT access (15 min, `purpose: access`),
+  opaque refresh token in an httpOnly cookie scoped to `/auth`, rotated on use, reuse
+  detection revokes all sessions; TOTP via otplib (enrol → QR URL → confirm → enabled; login
+  returns `mfaRequired` + 5-min challenge JWT); password policy from SystemConfig
+  (min length, classes, last-5 history, 90-day warn), lockout 5 attempts / 15 min; same
+  `INVALID_CREDENTIALS` for unknown email and wrong password; stricter throttle on login.
+  Global `JwtAuthGuard` (`@Public()` bypass) and `PermissionsGuard`
+  (`@RequirePermission(...codes)`, all required, 403 with `missing`).
+- **RBAC** (`modules/permissions`, `roles`, `users`): effective permissions = union over held
+  roles and ancestors (cycle-safe pure function), cached per request; `GET /permissions`
+  grouped; roles CRUD with parent, cycle check, `isSystem` immutable delete, in-use delete
+  guard, `PUT /roles/:id/permissions`; users CRUD with temporary password (returned once),
+  roles replacement, deactivate (revokes sessions), reactivate, reset password.
+- **SoD** (`modules/sod`): rules CRUD (sorted pair, duplicate check, creation rejected when
+  existing users already violate). `SodService.assertNoConflict(userIds, overrides)` evaluates
+  the *proposed* state in memory and is called from all three change paths: user ← roles,
+  role ← permissions, role ← parent. Nothing is written on rejection.
+- **SystemConfig admin API**: `GET /config`, `PUT /config/:key` (type-checked, audited).
+- **Seed**: 32 permissions with descriptions, six system roles (hierarchy Water Billing Officer
+  → Revenue Officer), six users (`Passw0rd!2026`), SoD rule capture ⟂ approve, config
+  defaults. Runs through the audit extension (actor SYSTEM).
+- **Web**: real `AuthProvider` (silent refresh on load, in-memory access token, MFA step,
+  logout), `RequireAuth` layout guard, per-route `RequirePermission` → `/403`, login page,
+  landing page per role, change-password and MFA enrol/disable pages (QR via `qrcode`),
+  account menu, admin area with tabs: users table (server-side pagination, search, status,
+  create/edit roles/deactivate/reset with one-time password modal), roles page with
+  permission matrix (inherited greyed, dirty tracking, custom role with parent, delete),
+  SoD rules page, system config page. `DataTable` wrapper over mantine-react-table.
+
+**Tests:** 69 total — api unit 42 (password policy per rule, lockout, staleness, temporary
+password, hierarchy 3 levels + cycle + descendants + overrides, SoD conflicts, canonical JSON,
+hash chain tamper/deletion/forgery detection, pagination), api e2e 20 (login, 401 vs 403,
+refresh rotation + reuse detection, logout, policy + history, lockout, custom role grants
+immediately with audit trail, SoD on both paths + re-parenting, system role immutable, cycle,
+deactivation), mocks unit 4, web unit 7 (nav filtering, nav active section, matrix rules).
+Lint and typecheck clean.
+
+**Verified manually (API):** each seeded user logs in with a different permission set (admin 31,
+supervisor 19, water 14 incl. inherited officer permissions, officer 11, auditor 11, customer 2);
+assigning Revenue Supervisor to officer@ → `403 SOD_VIOLATION`; auditor's `GET /audit/verify` →
+`{ ok: true, checked: 152 }`; OpenAPI export has 28 paths.
+
+**Deviations and decisions (why)**
+- **Role/permission mapping.** The phase prompt's three statements (Supervisor inherits Officer,
+  the seeded rule `reversals.capture ⟂ reversals.approve`, "Administrator holds everything")
+  cannot all hold: any role chain that unions capture and approve violates the rule. Kept the
+  decision-log rule (D7) and changed the seed: Officer captures reversals, Supervisor approves
+  and does **not** inherit Officer; the demonstrated hierarchy is Water Billing Officer →
+  Revenue Officer; Administrator holds everything except `reversals.capture`. No superuser
+  bypass of SoD. Recorded in `docs/ASSUMPTIONS.md`.
+- **Audit write is not atomic with the mutation.** Prisma query extensions cannot reach the
+  caller's interactive transaction, so the audit row is appended in its own short transaction
+  right after the mutation. A rolled-back outer transaction can leave audit rows behind.
+  Documented in the module README; a transactional outbox would fix it in production.
+- **Shared enums are `as const` objects + union types, not TS `enum`s**, so Prisma's generated
+  string-literal unions are assignable both ways without casts.
+- **otplib 12 instead of 13.** v13 depends on an ESM-only package that Jest's CommonJS runtime
+  cannot load; v12 is the long-standing CommonJS release with the same TOTP semantics.
+- **Rate limiting is skipped when `NODE_ENV=test`** (the e2e suite logs in far more than
+  10 times a minute). Throttling itself is therefore not covered by e2e.
+- **Refresh token reuse detection distinguishes rotation from revocation** (`rotatedAt`):
+  replaying a rotated token revokes every session; a token revoked by logout is simply invalid.
+
+**Packages added** (rule 11): `@nestjs/jwt`, `@nestjs/passport`, `passport`, `passport-jwt`
+(D5 Passport JWT), `argon2`, `otplib@12` (D5), `jest-mock-extended` (D21, unused yet),
+`qrcode` + types (web, phase prompt).
+
+**Open items / limitations**
+- Audit `createMany` rows cannot carry database-generated ids (entityId falls back to the
+  data supplied); audited models are created one by one or via upsert, so this path is
+  only used for composite-key join rows where the id *is* the data.
+- No "must change password at first login" flag; temporary passwords are policy-compliant
+  and the 90-day rule is warn-only (D5).
+- Web screens for the audit log and the `/me` customer portal are placeholders until their
+  phases.
 
 ## Phase 2 — registry, revenue types, assessments, bulk upload
 _(pending)_

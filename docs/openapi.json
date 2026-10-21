@@ -1,6 +1,82 @@
 {
   "openapi": "3.0.0",
   "paths": {
+    "/config": {
+      "get": {
+        "operationId": "SystemConfigController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SystemConfigEntryResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Every runtime-tunable parameter with its current and default value",
+        "tags": [
+          "config"
+        ]
+      }
+    },
+    "/config/{key}": {
+      "put": {
+        "operationId": "SystemConfigController_update",
+        "parameters": [
+          {
+            "name": "key",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSystemConfigDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SystemConfigEntryResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Set a parameter; takes effect within the cache window (30 s)",
+        "tags": [
+          "config"
+        ]
+      }
+    },
     "/events": {
       "get": {
         "operationId": "SseController_events",
@@ -48,13 +124,1114 @@
           "health"
         ]
       }
+    },
+    "/permissions": {
+      "get": {
+        "operationId": "PermissionsController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PermissionGroupResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "All permission codes, grouped for the role matrix",
+        "tags": [
+          "permissions"
+        ]
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "operationId": "AuthController_login",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "INVALID_CREDENTIALS"
+          },
+          "423": {
+            "description": "ACCOUNT_LOCKED"
+          }
+        },
+        "summary": "Password login; returns an MFA challenge when enabled",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/auth/mfa/verify": {
+      "post": {
+        "operationId": "AuthController_verifyMfa",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MfaVerifyDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Complete login with a TOTP code",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/auth/refresh": {
+      "post": {
+        "operationId": "AuthController_refresh",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Rotate the refresh cookie and issue a new access token",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "operationId": "AuthController_logout",
+        "parameters": [],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "summary": "Revoke the refresh token and clear the cookie",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/auth/me": {
+      "get": {
+        "operationId": "AuthController_me",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Current user, roles and effective permissions",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/auth/mfa/enrol": {
+      "post": {
+        "operationId": "AuthController_enrolMfa",
+        "parameters": [],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MfaEnrolResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Start TOTP enrolment; returns the otpauth URL to scan",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/auth/mfa/confirm": {
+      "post": {
+        "operationId": "AuthController_confirmMfa",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MfaCodeDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Confirm enrolment with a code from the authenticator app",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/auth/mfa/disable": {
+      "post": {
+        "operationId": "AuthController_disableMfa",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MfaDisableDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Disable TOTP after re-entering the password",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/auth/change-password": {
+      "post": {
+        "operationId": "AuthController_changePassword",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangePasswordDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "422": {
+            "description": "PASSWORD_POLICY_VIOLATION | PASSWORD_REUSED"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Change password (policy + history enforced); other sessions are revoked",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/sod-rules": {
+      "get": {
+        "operationId": "SodController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SodRuleResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Segregation-of-duties rules",
+        "tags": [
+          "sod"
+        ]
+      },
+      "post": {
+        "operationId": "SodController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSodRuleDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SodRuleResponseDto"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "SOD_VIOLATION (existing holders) | CONFLICT (duplicate)"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Add a rule; rejected if any user already violates it",
+        "tags": [
+          "sod"
+        ]
+      }
+    },
+    "/sod-rules/{id}": {
+      "delete": {
+        "operationId": "SodController_delete",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Remove a rule",
+        "tags": [
+          "sod"
+        ]
+      }
+    },
+    "/roles": {
+      "get": {
+        "operationId": "RolesController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RoleResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "All roles with direct and inherited permissions",
+        "tags": [
+          "roles"
+        ]
+      },
+      "post": {
+        "operationId": "RolesController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateRoleDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoleResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a custom role, optionally inheriting from a parent",
+        "tags": [
+          "roles"
+        ]
+      }
+    },
+    "/roles/{id}": {
+      "get": {
+        "operationId": "RolesController_get",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoleResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get one role",
+        "tags": [
+          "roles"
+        ]
+      },
+      "patch": {
+        "operationId": "RolesController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateRoleDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoleResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Rename, describe or re-parent a role (cycle and SoD checked)",
+        "tags": [
+          "roles"
+        ]
+      },
+      "delete": {
+        "operationId": "RolesController_delete",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "403": {
+            "description": "SYSTEM_ROLE_IMMUTABLE"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Delete a custom role that is not in use",
+        "tags": [
+          "roles"
+        ]
+      }
+    },
+    "/roles/{id}/permissions": {
+      "put": {
+        "operationId": "RolesController_setPermissions",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetRolePermissionsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RoleResponseDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "SOD_VIOLATION"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Replace the role’s direct permissions (SoD checked for every holder)",
+        "tags": [
+          "roles"
+        ]
+      }
+    },
+    "/users": {
+      "get": {
+        "operationId": "UsersController_list",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "maximum": 100,
+              "default": 25,
+              "type": "number"
+            }
+          },
+          {
+            "name": "sort",
+            "required": false,
+            "in": "query",
+            "description": "`field:asc` or `field:desc`",
+            "schema": {
+              "example": "createdAt:desc",
+              "type": "string"
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "Matches email or full name (case-insensitive)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "ACTIVE",
+                "DEACTIVATED"
+              ]
+            }
+          },
+          {
+            "name": "roleId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/UserResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List users with search, status and role filters",
+        "tags": [
+          "users"
+        ]
+      },
+      "post": {
+        "operationId": "UsersController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateUserDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreatedUserResponseDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "SOD_VIOLATION"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Create a user with a temporary password and initial roles",
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/users/{id}": {
+      "get": {
+        "operationId": "UsersController_get",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Get one user",
+        "tags": [
+          "users"
+        ]
+      },
+      "patch": {
+        "operationId": "UsersController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUserDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Edit name or email",
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/users/{id}/roles": {
+      "put": {
+        "operationId": "UsersController_setRoles",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetUserRolesDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponseDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "SOD_VIOLATION"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Replace the user’s roles (segregation of duties enforced)",
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/users/{id}/deactivate": {
+      "post": {
+        "operationId": "UsersController_deactivate",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Deactivate; revokes all sessions",
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/users/{id}/reactivate": {
+      "post": {
+        "operationId": "UsersController_reactivate",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Reactivate and clear any lockout",
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/users/{id}/reset-password": {
+      "post": {
+        "operationId": "UsersController_resetPassword",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResetPasswordResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Issue a new temporary password; revokes all sessions",
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/audit": {
+      "get": {
+        "operationId": "AuditController_list",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "maximum": 100,
+              "default": 25,
+              "type": "number"
+            }
+          },
+          {
+            "name": "sort",
+            "required": false,
+            "in": "query",
+            "description": "`field:asc` or `field:desc`",
+            "schema": {
+              "example": "createdAt:desc",
+              "type": "string"
+            }
+          },
+          {
+            "name": "entity",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "User",
+              "type": "string"
+            }
+          },
+          {
+            "name": "entityId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "actorId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AuditLogResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List audit rows (newest first) with filters",
+        "tags": [
+          "audit"
+        ]
+      }
+    },
+    "/audit/verify": {
+      "get": {
+        "operationId": "AuditController_verify",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChainVerifyResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Recompute the hash chain from genesis and report the first break",
+        "tags": [
+          "audit"
+        ]
+      }
     }
   },
   "info": {
     "title": "IRCUB API",
     "description": "Integrated Revenue Collection & Utility Billing Platform — proof of concept API. Errors follow { statusCode, code, message, details?, requestId }.",
     "version": "1.0.0",
-    "contact": {}
+    "contact": {
+      "name": "Abdirahman Hashi",
+      "url": "",
+      "email": ""
+    }
   },
   "tags": [],
   "servers": [],
@@ -66,6 +1243,1088 @@
         "type": "http"
       }
     },
-    "schemas": {}
+    "schemas": {
+      "SystemConfigEntryResponseDto": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "enum": [
+              "LOCAL_CURRENCY",
+              "PASSWORD_MIN_LENGTH",
+              "PASSWORD_HISTORY_SIZE",
+              "PASSWORD_MAX_AGE_DAYS",
+              "LOGIN_MAX_FAILED_ATTEMPTS",
+              "LOGIN_LOCKOUT_MINUTES",
+              "CSV_MAX_ROWS",
+              "ABNORMAL_CONSUMPTION_THRESHOLD_PCT",
+              "ABNORMAL_CONSUMPTION_HISTORY_MONTHS",
+              "BILL_DUE_DAYS",
+              "PAYMENT_STATUS_RETRY_LIMIT",
+              "PAYMENT_STATUS_CHECK_DELAY_SECONDS",
+              "CASH_GL_CODE",
+              "ANOMALY_Z_WARNING",
+              "ANOMALY_Z_CRITICAL",
+              "ANOMALY_TRAILING_DAYS",
+              "FORECAST_HISTORY_MONTHS",
+              "FORECAST_HORIZON_MONTHS"
+            ]
+          },
+          "value": {
+            "type": "object",
+            "description": "Current value (number or string)"
+          },
+          "defaultValue": {
+            "type": "object"
+          },
+          "description": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "object",
+            "nullable": true
+          }
+        },
+        "required": [
+          "key",
+          "value",
+          "defaultValue",
+          "description"
+        ]
+      },
+      "UpdateSystemConfigDto": {
+        "type": "object",
+        "properties": {
+          "value": {
+            "type": "object",
+            "description": "Must have the same primitive type as the key’s default",
+            "example": 200
+          }
+        },
+        "required": [
+          "value"
+        ]
+      },
+      "PermissionResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "code": {
+            "type": "string",
+            "example": "payments.capture"
+          },
+          "description": {
+            "type": "string"
+          },
+          "group": {
+            "type": "string",
+            "example": "Payments"
+          }
+        },
+        "required": [
+          "id",
+          "code",
+          "description",
+          "group"
+        ]
+      },
+      "PermissionGroupResponseDto": {
+        "type": "object",
+        "properties": {
+          "group": {
+            "type": "string",
+            "example": "Payments"
+          },
+          "permissions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PermissionResponseDto"
+            }
+          }
+        },
+        "required": [
+          "group",
+          "permissions"
+        ]
+      },
+      "LoginDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "example": "admin@ircub.test"
+          },
+          "password": {
+            "type": "string",
+            "example": "Passw0rd!2026"
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ]
+      },
+      "AuthUserResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "email": {
+            "type": "string"
+          },
+          "fullName": {
+            "type": "string"
+          },
+          "mfaEnabled": {
+            "type": "boolean"
+          },
+          "passwordChangeRecommended": {
+            "type": "boolean",
+            "description": "Password older than the configured maximum age (warn only)"
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "fullName",
+          "mfaEnabled",
+          "passwordChangeRecommended"
+        ]
+      },
+      "LoginResponseDto": {
+        "type": "object",
+        "properties": {
+          "mfaRequired": {
+            "type": "boolean"
+          },
+          "challengeToken": {
+            "type": "string",
+            "description": "Present when mfaRequired; send with the TOTP code"
+          },
+          "accessToken": {
+            "type": "string"
+          },
+          "user": {
+            "$ref": "#/components/schemas/AuthUserResponseDto"
+          },
+          "permissions": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "users.manage",
+                "roles.manage",
+                "config.manage",
+                "payers.view",
+                "payers.register",
+                "payers.review_duplicates",
+                "revenue_types.manage",
+                "assessments.view",
+                "assessments.create",
+                "payments.view",
+                "payments.capture",
+                "payments.supervise",
+                "reversals.capture",
+                "reversals.approve",
+                "bulk_uploads.create",
+                "meters.read",
+                "billing.run",
+                "billing.release",
+                "bills.view",
+                "fx.view",
+                "reconciliation.view",
+                "reconciliation.run",
+                "fmis.view",
+                "fmis.post",
+                "gl_mappings.manage",
+                "dashboard.view",
+                "targets.manage",
+                "alerts.view",
+                "audit.view",
+                "reports.view",
+                "self.view",
+                "self.pay"
+              ]
+            }
+          }
+        },
+        "required": [
+          "mfaRequired"
+        ]
+      },
+      "MfaVerifyDto": {
+        "type": "object",
+        "properties": {
+          "challengeToken": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string",
+            "example": "123456"
+          }
+        },
+        "required": [
+          "challengeToken",
+          "code"
+        ]
+      },
+      "SessionResponseDto": {
+        "type": "object",
+        "properties": {
+          "accessToken": {
+            "type": "string"
+          },
+          "user": {
+            "$ref": "#/components/schemas/AuthUserResponseDto"
+          },
+          "permissions": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "users.manage",
+                "roles.manage",
+                "config.manage",
+                "payers.view",
+                "payers.register",
+                "payers.review_duplicates",
+                "revenue_types.manage",
+                "assessments.view",
+                "assessments.create",
+                "payments.view",
+                "payments.capture",
+                "payments.supervise",
+                "reversals.capture",
+                "reversals.approve",
+                "bulk_uploads.create",
+                "meters.read",
+                "billing.run",
+                "billing.release",
+                "bills.view",
+                "fx.view",
+                "reconciliation.view",
+                "reconciliation.run",
+                "fmis.view",
+                "fmis.post",
+                "gl_mappings.manage",
+                "dashboard.view",
+                "targets.manage",
+                "alerts.view",
+                "audit.view",
+                "reports.view",
+                "self.view",
+                "self.pay"
+              ]
+            }
+          }
+        },
+        "required": [
+          "accessToken",
+          "user",
+          "permissions"
+        ]
+      },
+      "RoleSummaryDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "code": {
+            "type": "string",
+            "example": "REVENUE_OFFICER"
+          },
+          "name": {
+            "type": "string",
+            "example": "Revenue Officer"
+          }
+        },
+        "required": [
+          "id",
+          "code",
+          "name"
+        ]
+      },
+      "MeResponseDto": {
+        "type": "object",
+        "properties": {
+          "user": {
+            "$ref": "#/components/schemas/AuthUserResponseDto"
+          },
+          "roles": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RoleSummaryDto"
+            }
+          },
+          "permissions": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "users.manage",
+                "roles.manage",
+                "config.manage",
+                "payers.view",
+                "payers.register",
+                "payers.review_duplicates",
+                "revenue_types.manage",
+                "assessments.view",
+                "assessments.create",
+                "payments.view",
+                "payments.capture",
+                "payments.supervise",
+                "reversals.capture",
+                "reversals.approve",
+                "bulk_uploads.create",
+                "meters.read",
+                "billing.run",
+                "billing.release",
+                "bills.view",
+                "fx.view",
+                "reconciliation.view",
+                "reconciliation.run",
+                "fmis.view",
+                "fmis.post",
+                "gl_mappings.manage",
+                "dashboard.view",
+                "targets.manage",
+                "alerts.view",
+                "audit.view",
+                "reports.view",
+                "self.view",
+                "self.pay"
+              ]
+            }
+          }
+        },
+        "required": [
+          "user",
+          "roles",
+          "permissions"
+        ]
+      },
+      "MfaEnrolResponseDto": {
+        "type": "object",
+        "properties": {
+          "otpauthUrl": {
+            "type": "string",
+            "description": "otpauth://totp/… URI to render as a QR code"
+          },
+          "secret": {
+            "type": "string",
+            "description": "Base32 secret for manual entry"
+          }
+        },
+        "required": [
+          "otpauthUrl",
+          "secret"
+        ]
+      },
+      "MfaCodeDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "example": "123456"
+          }
+        },
+        "required": [
+          "code"
+        ]
+      },
+      "MfaDisableDto": {
+        "type": "object",
+        "properties": {
+          "password": {
+            "type": "string",
+            "description": "Current password, re-confirmed"
+          }
+        },
+        "required": [
+          "password"
+        ]
+      },
+      "ChangePasswordDto": {
+        "type": "object",
+        "properties": {
+          "currentPassword": {
+            "type": "string"
+          },
+          "newPassword": {
+            "type": "string",
+            "description": "Must satisfy the password policy (see SystemConfig PASSWORD_*)"
+          }
+        },
+        "required": [
+          "currentPassword",
+          "newPassword"
+        ]
+      },
+      "SodRuleResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "permissionACode": {
+            "type": "string",
+            "enum": [
+              "users.manage",
+              "roles.manage",
+              "config.manage",
+              "payers.view",
+              "payers.register",
+              "payers.review_duplicates",
+              "revenue_types.manage",
+              "assessments.view",
+              "assessments.create",
+              "payments.view",
+              "payments.capture",
+              "payments.supervise",
+              "reversals.capture",
+              "reversals.approve",
+              "bulk_uploads.create",
+              "meters.read",
+              "billing.run",
+              "billing.release",
+              "bills.view",
+              "fx.view",
+              "reconciliation.view",
+              "reconciliation.run",
+              "fmis.view",
+              "fmis.post",
+              "gl_mappings.manage",
+              "dashboard.view",
+              "targets.manage",
+              "alerts.view",
+              "audit.view",
+              "reports.view",
+              "self.view",
+              "self.pay"
+            ]
+          },
+          "permissionBCode": {
+            "type": "string",
+            "enum": [
+              "users.manage",
+              "roles.manage",
+              "config.manage",
+              "payers.view",
+              "payers.register",
+              "payers.review_duplicates",
+              "revenue_types.manage",
+              "assessments.view",
+              "assessments.create",
+              "payments.view",
+              "payments.capture",
+              "payments.supervise",
+              "reversals.capture",
+              "reversals.approve",
+              "bulk_uploads.create",
+              "meters.read",
+              "billing.run",
+              "billing.release",
+              "bills.view",
+              "fx.view",
+              "reconciliation.view",
+              "reconciliation.run",
+              "fmis.view",
+              "fmis.post",
+              "gl_mappings.manage",
+              "dashboard.view",
+              "targets.manage",
+              "alerts.view",
+              "audit.view",
+              "reports.view",
+              "self.view",
+              "self.pay"
+            ]
+          },
+          "description": {
+            "type": "string"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "permissionACode",
+          "permissionBCode",
+          "description",
+          "createdAt"
+        ]
+      },
+      "CreateSodRuleDto": {
+        "type": "object",
+        "properties": {
+          "permissionACode": {
+            "type": "string",
+            "enum": [
+              "users.manage",
+              "roles.manage",
+              "config.manage",
+              "payers.view",
+              "payers.register",
+              "payers.review_duplicates",
+              "revenue_types.manage",
+              "assessments.view",
+              "assessments.create",
+              "payments.view",
+              "payments.capture",
+              "payments.supervise",
+              "reversals.capture",
+              "reversals.approve",
+              "bulk_uploads.create",
+              "meters.read",
+              "billing.run",
+              "billing.release",
+              "bills.view",
+              "fx.view",
+              "reconciliation.view",
+              "reconciliation.run",
+              "fmis.view",
+              "fmis.post",
+              "gl_mappings.manage",
+              "dashboard.view",
+              "targets.manage",
+              "alerts.view",
+              "audit.view",
+              "reports.view",
+              "self.view",
+              "self.pay"
+            ],
+            "example": "reversals.capture"
+          },
+          "permissionBCode": {
+            "type": "string",
+            "enum": [
+              "users.manage",
+              "roles.manage",
+              "config.manage",
+              "payers.view",
+              "payers.register",
+              "payers.review_duplicates",
+              "revenue_types.manage",
+              "assessments.view",
+              "assessments.create",
+              "payments.view",
+              "payments.capture",
+              "payments.supervise",
+              "reversals.capture",
+              "reversals.approve",
+              "bulk_uploads.create",
+              "meters.read",
+              "billing.run",
+              "billing.release",
+              "bills.view",
+              "fx.view",
+              "reconciliation.view",
+              "reconciliation.run",
+              "fmis.view",
+              "fmis.post",
+              "gl_mappings.manage",
+              "dashboard.view",
+              "targets.manage",
+              "alerts.view",
+              "audit.view",
+              "reports.view",
+              "self.view",
+              "self.pay"
+            ],
+            "example": "reversals.approve"
+          },
+          "description": {
+            "type": "string",
+            "example": "The user who captures a reversal cannot approve it"
+          }
+        },
+        "required": [
+          "permissionACode",
+          "permissionBCode",
+          "description"
+        ]
+      },
+      "RoleResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "code": {
+            "type": "string",
+            "example": "REVENUE_OFFICER"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "object",
+            "nullable": true
+          },
+          "parentId": {
+            "type": "object",
+            "format": "uuid",
+            "nullable": true
+          },
+          "isSystem": {
+            "type": "boolean",
+            "description": "Built-in roles cannot be deleted"
+          },
+          "permissionCodes": {
+            "type": "array",
+            "description": "Directly assigned",
+            "items": {
+              "type": "string",
+              "enum": [
+                "users.manage",
+                "roles.manage",
+                "config.manage",
+                "payers.view",
+                "payers.register",
+                "payers.review_duplicates",
+                "revenue_types.manage",
+                "assessments.view",
+                "assessments.create",
+                "payments.view",
+                "payments.capture",
+                "payments.supervise",
+                "reversals.capture",
+                "reversals.approve",
+                "bulk_uploads.create",
+                "meters.read",
+                "billing.run",
+                "billing.release",
+                "bills.view",
+                "fx.view",
+                "reconciliation.view",
+                "reconciliation.run",
+                "fmis.view",
+                "fmis.post",
+                "gl_mappings.manage",
+                "dashboard.view",
+                "targets.manage",
+                "alerts.view",
+                "audit.view",
+                "reports.view",
+                "self.view",
+                "self.pay"
+              ]
+            }
+          },
+          "inheritedPermissionCodes": {
+            "type": "array",
+            "description": "From ancestors (read-only in the matrix)",
+            "items": {
+              "type": "string",
+              "enum": [
+                "users.manage",
+                "roles.manage",
+                "config.manage",
+                "payers.view",
+                "payers.register",
+                "payers.review_duplicates",
+                "revenue_types.manage",
+                "assessments.view",
+                "assessments.create",
+                "payments.view",
+                "payments.capture",
+                "payments.supervise",
+                "reversals.capture",
+                "reversals.approve",
+                "bulk_uploads.create",
+                "meters.read",
+                "billing.run",
+                "billing.release",
+                "bills.view",
+                "fx.view",
+                "reconciliation.view",
+                "reconciliation.run",
+                "fmis.view",
+                "fmis.post",
+                "gl_mappings.manage",
+                "dashboard.view",
+                "targets.manage",
+                "alerts.view",
+                "audit.view",
+                "reports.view",
+                "self.view",
+                "self.pay"
+              ]
+            }
+          },
+          "userCount": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "code",
+          "name",
+          "isSystem",
+          "permissionCodes",
+          "inheritedPermissionCodes",
+          "userCount"
+        ]
+      },
+      "CreateRoleDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "example": "CASHIER",
+            "description": "UPPER_SNAKE_CASE, unique"
+          },
+          "name": {
+            "type": "string",
+            "example": "Cashier"
+          },
+          "description": {
+            "type": "string"
+          },
+          "parentId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Role to inherit permissions from"
+          }
+        },
+        "required": [
+          "code",
+          "name"
+        ]
+      },
+      "UpdateRoleDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "parentId": {
+            "type": "object",
+            "format": "uuid",
+            "nullable": true,
+            "description": "null removes the parent"
+          }
+        }
+      },
+      "SetRolePermissionsDto": {
+        "type": "object",
+        "properties": {
+          "codes": {
+            "type": "array",
+            "description": "Full replacement set of direct permissions",
+            "items": {
+              "type": "string",
+              "enum": [
+                "users.manage",
+                "roles.manage",
+                "config.manage",
+                "payers.view",
+                "payers.register",
+                "payers.review_duplicates",
+                "revenue_types.manage",
+                "assessments.view",
+                "assessments.create",
+                "payments.view",
+                "payments.capture",
+                "payments.supervise",
+                "reversals.capture",
+                "reversals.approve",
+                "bulk_uploads.create",
+                "meters.read",
+                "billing.run",
+                "billing.release",
+                "bills.view",
+                "fx.view",
+                "reconciliation.view",
+                "reconciliation.run",
+                "fmis.view",
+                "fmis.post",
+                "gl_mappings.manage",
+                "dashboard.view",
+                "targets.manage",
+                "alerts.view",
+                "audit.view",
+                "reports.view",
+                "self.view",
+                "self.pay"
+              ]
+            }
+          }
+        },
+        "required": [
+          "codes"
+        ]
+      },
+      "UserResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "email": {
+            "type": "string"
+          },
+          "fullName": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ACTIVE",
+              "DEACTIVATED"
+            ]
+          },
+          "mfaEnabled": {
+            "type": "boolean"
+          },
+          "lockedUntil": {
+            "type": "object",
+            "nullable": true
+          },
+          "roles": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RoleSummaryDto"
+            }
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "fullName",
+          "status",
+          "mfaEnabled",
+          "roles",
+          "createdAt"
+        ]
+      },
+      "CreateUserDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "example": "clerk@ircub.test"
+          },
+          "fullName": {
+            "type": "string",
+            "example": "Asha Warsame"
+          },
+          "roleIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        },
+        "required": [
+          "email",
+          "fullName",
+          "roleIds"
+        ]
+      },
+      "CreatedUserResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "email": {
+            "type": "string"
+          },
+          "fullName": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ACTIVE",
+              "DEACTIVATED"
+            ]
+          },
+          "mfaEnabled": {
+            "type": "boolean"
+          },
+          "lockedUntil": {
+            "type": "object",
+            "nullable": true
+          },
+          "roles": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RoleSummaryDto"
+            }
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "temporaryPassword": {
+            "type": "string",
+            "description": "Shown once; the user must change it at first login"
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "fullName",
+          "status",
+          "mfaEnabled",
+          "roles",
+          "createdAt",
+          "temporaryPassword"
+        ]
+      },
+      "UpdateUserDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "fullName": {
+            "type": "string"
+          }
+        }
+      },
+      "SetUserRolesDto": {
+        "type": "object",
+        "properties": {
+          "roleIds": {
+            "description": "Full replacement set",
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        },
+        "required": [
+          "roleIds"
+        ]
+      },
+      "ResetPasswordResponseDto": {
+        "type": "object",
+        "properties": {
+          "temporaryPassword": {
+            "type": "string",
+            "description": "Shown once"
+          }
+        },
+        "required": [
+          "temporaryPassword"
+        ]
+      },
+      "AuditLogResponseDto": {
+        "type": "object",
+        "properties": {
+          "seq": {
+            "type": "string",
+            "example": "42"
+          },
+          "actorId": {
+            "type": "object",
+            "format": "uuid",
+            "nullable": true
+          },
+          "actorEmail": {
+            "type": "string",
+            "example": "admin@ircub.test"
+          },
+          "entity": {
+            "type": "string",
+            "example": "User"
+          },
+          "entityId": {
+            "type": "string"
+          },
+          "action": {
+            "type": "string",
+            "enum": [
+              "CREATE",
+              "UPDATE",
+              "DELETE"
+            ]
+          },
+          "before": {
+            "type": "object",
+            "nullable": true
+          },
+          "after": {
+            "type": "object",
+            "nullable": true
+          },
+          "ip": {
+            "type": "object",
+            "nullable": true
+          },
+          "userAgent": {
+            "type": "object",
+            "nullable": true
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "hash": {
+            "type": "string",
+            "description": "sha256 hex"
+          },
+          "prevHash": {
+            "type": "string",
+            "description": "sha256 hex of the previous row"
+          }
+        },
+        "required": [
+          "seq",
+          "actorEmail",
+          "entity",
+          "entityId",
+          "action",
+          "createdAt",
+          "hash",
+          "prevHash"
+        ]
+      },
+      "ChainVerifyResponseDto": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "checked": {
+            "type": "number",
+            "description": "Rows recomputed"
+          },
+          "firstBrokenSeq": {
+            "type": "number",
+            "description": "First sequence number whose hash or link is wrong"
+          }
+        },
+        "required": [
+          "ok",
+          "checked"
+        ]
+      }
+    }
   }
 }

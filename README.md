@@ -91,6 +91,20 @@ Created by the phase 1 seed. Password for all: `Passw0rd!2026`.
 | auditor@ircub.test    | Auditor               |
 | customer1@ircub.test  | Taxpayer/Customer     |
 
+## Authentication and authorisation (phase 1)
+
+- Log in with a seeded user; the response carries a 15-minute access token and sets an
+  httpOnly refresh cookie scoped to `/auth`. The SPA keeps the access token in memory only.
+- Optional TOTP two-factor: Account menu → Two-factor authentication → scan the QR code.
+- Permissions are data (`packages/shared/src/permissions.ts`, seeded into the database) and
+  roles inherit from their parent. Administration → Roles & permissions shows the matrix with
+  inherited permissions greyed out.
+- Segregation of duties: Administration → Segregation of duties. Try assigning the Revenue
+  Supervisor role to `officer@ircub.test` — the API rejects it with `SOD_VIOLATION`.
+- Audit log: every mutation of an audited model is hash-chained; `GET /audit/verify`
+  recomputes the chain. Production hardening (least-privilege database role with INSERT +
+  SELECT only on `audit_log`) is documented in the migration SQL.
+
 ## Assumptions
 
 Recorded as they are made in `docs/ASSUMPTIONS.md` and copied here in phase 7.

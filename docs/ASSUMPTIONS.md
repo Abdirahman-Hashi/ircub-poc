@@ -29,6 +29,18 @@ Phase 7 copies this list into the README.
   credit, currency, reference }] }` and returns `{ fmisReference }`; it is a mock.
 
 ## Security
+- We assume the role-level SoD rule (`reversals.capture` ⟂ `reversals.approve`) applies to every
+  user including System Administrators, because a superuser exemption would defeat the control;
+  if administrators must be able to do both, remove the seeded rule rather than add a bypass.
+- We assume Revenue Officers capture reversal requests and Revenue Supervisors approve them
+  (brief: "View/Approve/Reverse"), so Supervisor cannot inherit Officer without breaking the
+  SoD rule; the seeded hierarchy is therefore Water Billing Officer → Revenue Officer. If the
+  Ministry wants Supervisor ⊇ Officer, `reversals.capture` must move to a role outside that chain.
+- We assume the System Administrator holds every permission except `reversals.capture`
+  (brief lists only user/role/config management for admins; the extra permissions make the
+  demo navigable). If a reviewer wants a pure admin role, trim `ROLE_SEEDS`.
+- We assume an audit row written immediately after its mutation (not in the same transaction)
+  is acceptable for the POC; a production deployment would use a transactional outbox.
 - We assume 2FA is optional and user-enrolled (TOTP authenticator app), because the brief says
   "optional two-factor authentication".
 - We assume the Auditor role is view-only on *everything* including configuration screens.
