@@ -86,7 +86,12 @@
             "description": ""
           }
         },
-        "summary": "Server-Sent Events stream (payment updates, alerts, batches)",
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Server-Sent Events: payment updates, alerts, batches (scoped to the caller)",
         "tags": [
           "events"
         ]
@@ -1228,8 +1233,9 @@
         "parameters": [
           {
             "name": "base",
-            "required": true,
+            "required": false,
             "in": "query",
+            "description": "Defaults to USD",
             "schema": {
               "example": "USD",
               "type": "string",
@@ -1241,8 +1247,9 @@
           },
           {
             "name": "quote",
-            "required": true,
+            "required": false,
             "in": "query",
+            "description": "Defaults to the local currency",
             "schema": {
               "example": "SOS",
               "type": "string",
@@ -1270,20 +1277,21 @@
             "bearer": []
           }
         ],
-        "summary": "Latest stored rate for a pair",
+        "summary": "Latest stored rate for a pair, with a stale flag",
         "tags": [
           "fx"
         ]
       }
     },
-    "/fx/history": {
-      "get": {
-        "operationId": "FxController_history",
+    "/fx/refresh": {
+      "post": {
+        "operationId": "FxController_refresh",
         "parameters": [
           {
             "name": "base",
-            "required": true,
+            "required": false,
             "in": "query",
+            "description": "Defaults to USD",
             "schema": {
               "example": "USD",
               "type": "string",
@@ -1295,8 +1303,65 @@
           },
           {
             "name": "quote",
-            "required": true,
+            "required": false,
             "in": "query",
+            "description": "Defaults to the local currency",
+            "schema": {
+              "example": "SOS",
+              "type": "string",
+              "enum": [
+                "SOS",
+                "USD"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FxRateResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Fetch a fresh quote from the provider now (falls back to stored if down)",
+        "tags": [
+          "fx"
+        ]
+      }
+    },
+    "/fx/history": {
+      "get": {
+        "operationId": "FxController_history",
+        "parameters": [
+          {
+            "name": "base",
+            "required": false,
+            "in": "query",
+            "description": "Defaults to USD",
+            "schema": {
+              "example": "USD",
+              "type": "string",
+              "enum": [
+                "SOS",
+                "USD"
+              ]
+            }
+          },
+          {
+            "name": "quote",
+            "required": false,
+            "in": "query",
+            "description": "Defaults to the local currency",
             "schema": {
               "example": "SOS",
               "type": "string",
@@ -2587,7 +2652,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PaymentResponseDto"
+                  "$ref": "#/components/schemas/PaymentDetailResponseDto"
                 }
               }
             }
@@ -2598,7 +2663,47 @@
             "bearer": []
           }
         ],
-        "summary": "One payment",
+        "summary": "One payment with channel request/callback payloads",
+        "tags": [
+          "payments"
+        ]
+      }
+    },
+    "/payments/initiate": {
+      "post": {
+        "operationId": "PaymentsController_initiate",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InitiatePaymentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentResponseDto"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "CHANNEL_UNAVAILABLE"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Initiate an online bank / mobile-money payment for a control number",
         "tags": [
           "payments"
         ]
@@ -2639,6 +2744,58 @@
           }
         ],
         "summary": "Record a cash / bank / mobile-money payment against a control number",
+        "tags": [
+          "payments"
+        ]
+      }
+    },
+    "/payments/callback/{channel}": {
+      "post": {
+        "operationId": "PaymentCallbackController_callback",
+        "parameters": [
+          {
+            "name": "channel",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "x-signature",
+            "in": "header",
+            "description": "hex HMAC-SHA256 of the raw body",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChannelCallbackDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CallbackResponseDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "INVALID_SIGNATURE"
+          }
+        },
+        "summary": "Signed channel callback (idempotent)",
         "tags": [
           "payments"
         ]
@@ -3992,6 +4149,304 @@
         ]
       }
     },
+    "/reconciliation/runs": {
+      "post": {
+        "operationId": "ReconciliationController_run",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RunReconciliationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReconciliationRunResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Fetch the channel statement for a day and reconcile it",
+        "tags": [
+          "reconciliation"
+        ]
+      },
+      "get": {
+        "operationId": "ReconciliationController_list",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "maximum": 100,
+              "default": 25,
+              "type": "number"
+            }
+          },
+          {
+            "name": "sort",
+            "required": false,
+            "in": "query",
+            "description": "`field:asc` or `field:desc`",
+            "schema": {
+              "example": "createdAt:desc",
+              "type": "string"
+            }
+          },
+          {
+            "name": "channel",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "BANK",
+                "MOBILE_MONEY"
+              ]
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "COMPLETED",
+                "FAILED"
+              ]
+            }
+          },
+          {
+            "name": "dateFrom",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "2026-10-01",
+              "type": "string"
+            }
+          },
+          {
+            "name": "dateTo",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "example": "2026-10-31",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ReconciliationRunResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "List reconciliation runs",
+        "tags": [
+          "reconciliation"
+        ]
+      }
+    },
+    "/reconciliation/runs/{id}": {
+      "get": {
+        "operationId": "ReconciliationController_get",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "MATCHED",
+                "MISSING_IN_IRCUB",
+                "MISSING_IN_CHANNEL",
+                "AMOUNT_MISMATCH"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReconciliationRunDetailResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "One run with its lines (filter by status)",
+        "tags": [
+          "reconciliation"
+        ]
+      }
+    },
+    "/reconciliation/runs/{id}/export.csv": {
+      "get": {
+        "operationId": "ReconciliationController_export",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Export the run lines as CSV",
+        "tags": [
+          "reconciliation"
+        ]
+      }
+    },
+    "/reconciliation/statements": {
+      "get": {
+        "operationId": "ReconciliationController_statements",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ChannelStatementResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Stored channel statements",
+        "tags": [
+          "reconciliation"
+        ]
+      },
+      "post": {
+        "operationId": "ReconciliationController_upload",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  },
+                  "channel": {
+                    "type": "string"
+                  },
+                  "date": {
+                    "type": "string",
+                    "example": "2026-10-21"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReconciliationRunResponseDto"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "STATEMENT_INVALID"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Upload a channel statement file manually and reconcile it",
+        "tags": [
+          "reconciliation"
+        ]
+      }
+    },
     "/bulk-uploads/template.csv": {
       "get": {
         "operationId": "BulkUploadsController_template",
@@ -4569,6 +5024,46 @@
         ]
       }
     },
+    "/me/payments/initiate": {
+      "post": {
+        "operationId": "SelfController_initiatePayment",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InitiatePaymentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaymentResponseDto"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "NOT_OWN_PAYER"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Pay one of my own assessments or bills via bank or mobile money",
+        "tags": [
+          "self"
+        ]
+      }
+    },
     "/notifications": {
       "get": {
         "operationId": "NotificationsController_list",
@@ -4716,6 +5211,9 @@
               "BILL_NOTIFICATION_EMAIL",
               "PAYMENT_STATUS_RETRY_LIMIT",
               "PAYMENT_STATUS_CHECK_DELAY_SECONDS",
+              "PAYMENT_STATUS_RETRY_DELAY_SECONDS",
+              "FX_REFRESH_MINUTES",
+              "FX_STALE_AFTER_MINUTES",
               "CASH_GL_CODE",
               "ANOMALY_Z_WARNING",
               "ANOMALY_Z_CRITICAL",
@@ -5808,6 +6306,10 @@
           "source": {
             "type": "string",
             "example": "mock-fx-api"
+          },
+          "stale": {
+            "type": "boolean",
+            "description": "Provider unreachable and the stored rate is older than the stale window"
           }
         },
         "required": [
@@ -5815,7 +6317,8 @@
           "quote",
           "rate",
           "asOf",
-          "source"
+          "source",
+          "stale"
         ]
       },
       "PayerResponseDto": {
@@ -6572,6 +7075,9 @@
             "type": "object",
             "nullable": true
           },
+          "statusCheckAttempts": {
+            "type": "number"
+          },
           "createdAt": {
             "format": "date-time",
             "type": "string"
@@ -6587,6 +7093,7 @@
           "fxRate",
           "localAmount",
           "status",
+          "statusCheckAttempts",
           "createdAt"
         ]
       },
@@ -7093,6 +7600,182 @@
           "status"
         ]
       },
+      "PaymentDetailResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "controlNumber": {
+            "type": "string"
+          },
+          "assessmentId": {
+            "type": "object",
+            "format": "uuid",
+            "nullable": true
+          },
+          "billId": {
+            "type": "object",
+            "format": "uuid",
+            "nullable": true
+          },
+          "payer": {
+            "$ref": "#/components/schemas/AssessmentPayerDto"
+          },
+          "revenueType": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AssessmentRevenueTypeDto"
+              }
+            ]
+          },
+          "channel": {
+            "type": "string",
+            "enum": [
+              "CASH",
+              "BANK",
+              "MOBILE_MONEY",
+              "BULK"
+            ]
+          },
+          "channelTxnRef": {
+            "type": "object",
+            "nullable": true
+          },
+          "amount": {
+            "type": "string",
+            "example": "100.00"
+          },
+          "currency": {
+            "type": "string",
+            "enum": [
+              "SOS",
+              "USD"
+            ]
+          },
+          "fxRate": {
+            "type": "string",
+            "example": "571.500000"
+          },
+          "localAmount": {
+            "type": "string",
+            "example": "57150.00"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "INITIATED",
+              "PENDING",
+              "CONFIRMED",
+              "FAILED",
+              "PERMANENTLY_FAILED",
+              "REVERSED"
+            ]
+          },
+          "paidAt": {
+            "type": "object",
+            "nullable": true
+          },
+          "capturedById": {
+            "type": "object",
+            "format": "uuid",
+            "nullable": true
+          },
+          "bulkUploadId": {
+            "type": "object",
+            "format": "uuid",
+            "nullable": true
+          },
+          "failureReason": {
+            "type": "object",
+            "nullable": true
+          },
+          "statusCheckAttempts": {
+            "type": "number"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "channelRequestPayload": {
+            "type": "object",
+            "nullable": true,
+            "description": "Request sent to the channel at initiation"
+          },
+          "callbackPayload": {
+            "type": "object",
+            "nullable": true,
+            "description": "Last callback or status response"
+          },
+          "lastStatusCheckAt": {
+            "type": "string",
+            "nullable": true,
+            "format": "date-time"
+          },
+          "permanentlyFailedAt": {
+            "type": "string",
+            "nullable": true,
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "controlNumber",
+          "payer",
+          "channel",
+          "amount",
+          "currency",
+          "fxRate",
+          "localAmount",
+          "status",
+          "statusCheckAttempts",
+          "createdAt",
+          "lastStatusCheckAt",
+          "permanentlyFailedAt"
+        ]
+      },
+      "InitiatePaymentDto": {
+        "type": "object",
+        "properties": {
+          "controlNumber": {
+            "type": "string",
+            "example": "000000012395"
+          },
+          "amount": {
+            "type": "string",
+            "example": "2500.00",
+            "description": "Amount in `currency`"
+          },
+          "currency": {
+            "type": "string",
+            "enum": [
+              "SOS",
+              "USD"
+            ]
+          },
+          "channel": {
+            "type": "string",
+            "enum": [
+              "BANK",
+              "MOBILE_MONEY"
+            ]
+          },
+          "payerPhone": {
+            "type": "string",
+            "example": "+252611234567",
+            "description": "Mobile money wallet"
+          }
+        },
+        "required": [
+          "controlNumber",
+          "amount",
+          "currency",
+          "channel"
+        ]
+      },
       "CapturePaymentDto": {
         "type": "object",
         "properties": {
@@ -7134,6 +7817,75 @@
           "amount",
           "currency",
           "channel"
+        ]
+      },
+      "ChannelCallbackDto": {
+        "type": "object",
+        "properties": {
+          "txnRef": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "SUCCESS",
+              "FAILED"
+            ]
+          },
+          "amount": {
+            "type": "string",
+            "example": "2500.00"
+          },
+          "currency": {
+            "type": "string",
+            "enum": [
+              "SOS",
+              "USD"
+            ]
+          },
+          "controlNumber": {
+            "type": "string"
+          },
+          "paidAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "txnRef",
+          "status",
+          "amount",
+          "currency",
+          "controlNumber",
+          "paidAt"
+        ]
+      },
+      "CallbackResponseDto": {
+        "type": "object",
+        "properties": {
+          "paymentId": {
+            "type": "string"
+          },
+          "duplicate": {
+            "type": "boolean",
+            "description": "True when the payment was already terminal (idempotent replay)"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "INITIATED",
+              "PENDING",
+              "CONFIRMED",
+              "FAILED",
+              "PERMANENTLY_FAILED",
+              "REVERSED"
+            ]
+          }
+        },
+        "required": [
+          "paymentId",
+          "duplicate",
+          "status"
         ]
       },
       "TariffTierResponseDto": {
@@ -7681,6 +8433,256 @@
           "openingBalance",
           "closingBalance",
           "lines"
+        ]
+      },
+      "RunReconciliationDto": {
+        "type": "object",
+        "properties": {
+          "channel": {
+            "type": "string",
+            "enum": [
+              "BANK",
+              "MOBILE_MONEY"
+            ]
+          },
+          "date": {
+            "type": "string",
+            "example": "2026-10-21",
+            "description": "UTC business day"
+          },
+          "perturb": {
+            "type": "boolean",
+            "description": "Demo: ask the mock channel for a perturbed statement"
+          }
+        },
+        "required": [
+          "channel",
+          "date"
+        ]
+      },
+      "ReconciliationRunResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "channel": {
+            "type": "string",
+            "enum": [
+              "CASH",
+              "BANK",
+              "MOBILE_MONEY",
+              "BULK"
+            ]
+          },
+          "runDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "COMPLETED",
+              "FAILED"
+            ]
+          },
+          "matched": {
+            "type": "number"
+          },
+          "missingInIrcub": {
+            "type": "number"
+          },
+          "missingInChannel": {
+            "type": "number"
+          },
+          "amountMismatch": {
+            "type": "number"
+          },
+          "statementFileName": {
+            "type": "object",
+            "nullable": true
+          },
+          "error": {
+            "type": "object",
+            "nullable": true
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "channel",
+          "runDate",
+          "status",
+          "matched",
+          "missingInIrcub",
+          "missingInChannel",
+          "amountMismatch",
+          "createdAt"
+        ]
+      },
+      "ReconciliationLineResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "MATCHED",
+              "MISSING_IN_IRCUB",
+              "MISSING_IN_CHANNEL",
+              "AMOUNT_MISMATCH"
+            ]
+          },
+          "txnRef": {
+            "type": "string"
+          },
+          "paymentId": {
+            "type": "object",
+            "nullable": true
+          },
+          "controlNumber": {
+            "type": "object",
+            "nullable": true
+          },
+          "ircubAmount": {
+            "type": "object",
+            "nullable": true
+          },
+          "channelAmount": {
+            "type": "object",
+            "nullable": true
+          },
+          "currency": {
+            "type": "string",
+            "enum": [
+              "SOS",
+              "USD"
+            ],
+            "nullable": true
+          },
+          "note": {
+            "type": "object",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "txnRef"
+        ]
+      },
+      "ReconciliationRunDetailResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "channel": {
+            "type": "string",
+            "enum": [
+              "CASH",
+              "BANK",
+              "MOBILE_MONEY",
+              "BULK"
+            ]
+          },
+          "runDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "COMPLETED",
+              "FAILED"
+            ]
+          },
+          "matched": {
+            "type": "number"
+          },
+          "missingInIrcub": {
+            "type": "number"
+          },
+          "missingInChannel": {
+            "type": "number"
+          },
+          "amountMismatch": {
+            "type": "number"
+          },
+          "statementFileName": {
+            "type": "object",
+            "nullable": true
+          },
+          "error": {
+            "type": "object",
+            "nullable": true
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "lines": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReconciliationLineResponseDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "channel",
+          "runDate",
+          "status",
+          "matched",
+          "missingInIrcub",
+          "missingInChannel",
+          "amountMismatch",
+          "createdAt",
+          "lines"
+        ]
+      },
+      "ChannelStatementResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "channel": {
+            "type": "string",
+            "enum": [
+              "CASH",
+              "BANK",
+              "MOBILE_MONEY",
+              "BULK"
+            ]
+          },
+          "statementDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "fileName": {
+            "type": "string"
+          },
+          "lineCount": {
+            "type": "number"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "channel",
+          "statementDate",
+          "fileName",
+          "lineCount",
+          "createdAt"
         ]
       },
       "BulkUploadResponseDto": {

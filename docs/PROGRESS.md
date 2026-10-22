@@ -387,7 +387,93 @@ customer portal water tab. No page errors or 5xx.
 - Running a cycle for all accounts is sequential (~120 transactions); fine for the POC scale.
 
 ## Phase 4 — mocks, payments, FX, retries, channel reconciliation
-_(pending)_
+
+**Built**
+- **Schema**: `Payment` gained `channelRequestPayload`, `lastStatusCheckAt`,
+  `permanentlyFailedAt`; new `ChannelStatement`, `ChannelStatementLine`, `ReconciliationRun`,
+  `ReconciliationLine` (migration `channels_reconciliation`); audit covers statements and runs.
+- **Mocks**: bank and mobile-money channels (initiate with delayed HMAC-signed callback, status
+  with scenario handling, daily statements with `?perturb=1`), `.99/.77/.66` amount triggers,
+  `POST /__scenario`, `POST /__seed-statement` so statements know seeded payments. Unit tests
+  for signing, triggers and perturbation.
+- **FX**: `FxRateProvider` interface with an HTTP implementation, rates stored as history
+  (6 dp), stale fallback with a warning and `stale: true`, 15-minute cron,
+  `GET /fx/latest|history`, `POST /fx/refresh` (pair defaults to USD → local).
+- **Channels**: `ChannelClient` interface (initiate, status, statement) with HTTP clients per
+  channel behind a registry (`CHANNEL_CLIENTS`), 10 s timeout, errors → `CHANNEL_UNAVAILABLE`,
+  constant-time callback signature verification, statement CSV parsing.
+- **Payments**: `POST /payments/initiate` (officers) and `POST /me/payments/initiate`
+  (customers, own payer only); `INITIATED` → `PENDING` with the channel reference and a
+  `payment.status-check` job (delay, retry limit and backoff from SystemConfig); public signed
+  callback `POST /payments/callback/:channel` that is idempotent (`duplicate: true`) and
+  records amount/currency mismatches as `FAILED`; status-check job that settles a final answer
+  or counts the attempt and lets pg-boss retry; at the limit → `PERMANENTLY_FAILED`, e-mail to
+  every holder of `payments.supervise`, `payment.permanently-failed` event;
+  `GET /payments/:id` returns the channel payloads for auditors.
+- **SSE**: `/events` is authenticated (`?access_token=` for EventSource) and scoped: staff
+  with `payments.view` get everything, customers only their own payer's events.
+- **Reconciliation**: `POST /reconciliation/runs { channel, date, perturb? }` fetches the
+  statement, stores it (file + lines), matches on `channelTxnRef` and classifies lines
+  (pure `classify`); list, detail with status filter, CSV export; `POST
+  /reconciliation/statements` multipart for statement files; `0 1 * * *` cron for yesterday on
+  every channel; a fetch failure produces a `FAILED` run.
+- **Seed**: ~300 BANK/MOBILE_MONEY confirmed payments over 60 days with channel payloads,
+  2 PERMANENTLY_FAILED and 3 FAILED, registered with the mocks when reachable. Seeded
+  payment dates are now clamped to today (earlier seeds produced future-dated payments).
+- **Web**: live-events provider over SSE; Pay online dialog with live conversion preview and
+  stale badge; payments list with in-flight spinner, live toasts and detail drawer (payloads,
+  attempts timeline); supervisor bell with deep links; FX page (cards, stale badge, Recharts
+  history, refresh); reconciliation runs list, run dialog, statement upload, run detail with
+  summary cards, status filter and CSV export; `/demo` helper page; customer portal "Pay
+  online" for own assessments and bills.
+
+**Tests:** 193 total — api unit 122 (+25: settlement decisions and retry counter, status-check
+service incl. permanent failure and supervisor recipients, reconciliation classification for
+all four statuses and day helpers, FX stale fallback/rounding, SSE scoping, callback
+signatures and statement parsing), api e2e 48 (+6 in `channels.e2e-spec.ts` against an
+in-process mocks app: initiate → signed callback → CONFIRMED with ledger update; tampered
+signature 401 and replay `duplicate: true`; `.66` → 3 checks → PERMANENTLY_FAILED with
+supervisor notification; customer `NOT_OWN_PAYER`; perturbed statement → 1 mismatch,
+1 missing in IRCUB, 1 missing in channel; manual statement upload), mocks 9 (+5), web 14
+(+5: HALF_EVEN preview, conversion preview, live status notices). Lint/typecheck clean.
+
+**Verified manually (headless Chromium):** officer pays USD online → PENDING → CONFIRMED toast
+and row flip via SSE → detail drawer with payloads; `.99` → FAILED toast; supervisor bell deep
+link to permanently failed payments; FX page with refresh; perturbed reconciliation run →
+detail cards, status filter, CSV download; demo page; customer pays own item via mobile money
+and receives only their own live confirmation. No page errors or 5xx.
+
+**Decisions and deviations (why)**
+- **Settlement is one service for callbacks and status checks** so idempotency, mismatch
+  handling and ledger application are decided once, under a row lock, by a pure rule.
+- **The local amount is fixed at initiation**; a mismatching callback becomes FAILED rather than
+  re-applied (ASSUMPTIONS.md). A ledger refusal on confirmation is also recorded FAILED with
+  the reason, never dropped.
+- **Retry limit is the handler's decision, not pg-boss's**: the job counts attempts in the
+  database and stops throwing once the limit is reached, so the limit holds whatever pg-boss's
+  retry semantics are; pg-boss only provides the backoff.
+- **SSE token in the query string** because `EventSource` cannot send headers (ASSUMPTIONS.md).
+- **FX pair parameters are optional** (default USD → local) so the web does not hard-code
+  currencies.
+- **E2E boots the mocks app in-process** (ports 3901/3902) instead of adding a compose
+  service, so the suite stays a single `pnpm test:e2e` locally and in CI; the env overrides
+  live in `test/helpers/channels-env.ts` and must load before the app modules.
+- **Alert rows for permanent failures wait for phase 6** as the prompt says; the bell is fed by
+  SSE for the current session.
+
+**Packages added** (rule 11): none in the API; `decimal.js` added to the mocks for the
+statement perturbation (already in DECISIONS for the API).
+
+**Open items / limitations**
+- The supervisor bell holds only events received during the session; phase 6 persists alerts.
+- `prisma migrate reset` was not run on the local dev database (destructive; needs the owner):
+  it still contains future-dated payments from the earlier seed, which sort above new ones in
+  the payments list until the database is reseeded.
+- The in-browser conversion preview uses JavaScript numbers with banker's rounding; the API's
+  `decimal.js` conversion is authoritative and the stored values are what the UI shows after
+  initiation.
+- Statement upload trusts the file's `date` field and the chosen channel; there is no check
+  that the lines belong to that day.
 
 ## Phase 5 — FMIS posting & reconciliation
 _(pending)_

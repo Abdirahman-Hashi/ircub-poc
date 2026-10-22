@@ -49,6 +49,34 @@ Phase 7 copies this list into the README.
   because older generations have different dials; if a longer chain is wanted, the lookup
   follows `replacesMeterId` recursively.
 
+- We assume the local amount of an online payment is fixed at initiation (converted at the
+  rate in force then) because the payer agrees to that amount; a callback that reports a
+  different amount or currency is recorded as FAILED with reason `AMOUNT_MISMATCH` rather than
+  re-applied. If the Ministry wants the settled amount to win, the settlement service would
+  re-convert on confirmation.
+- We assume a confirmed channel payment whose ledger target can no longer accept it (for
+  example settled by cash while the channel was pending) is recorded FAILED with the ledger's
+  reason for a supervisor to resolve, because the money has already left the payer and
+  silently dropping it would hide a credit; a production system would create an unallocated
+  credit instead.
+- We assume "retry up to 3 times" means three status checks in total (configurable as
+  `PAYMENT_STATUS_RETRY_LIMIT`), spaced by exponential backoff from
+  `PAYMENT_STATUS_RETRY_DELAY_SECONDS`, and that the first check waits
+  `PAYMENT_STATUS_CHECK_DELAY_SECONDS` for the callback; if the brief meant three retries after
+  a first attempt, only the limit default changes.
+- We assume channel reconciliation matches on the channel's transaction reference only and
+  compares amounts in the original currency (what the channel settled), with `CONFIRMED` and
+  `REVERSED` payments of that UTC day on the IRCUB side; if the channel's statement day were
+  defined differently (value date), the `paidAt` window in `ReconciliationService` changes.
+- We assume a failed statement fetch produces a `FAILED` reconciliation run rather than no
+  run, so the daily history has no silent gaps.
+- We assume the supervisor escalation for permanently failed payments is an e-mail to every
+  user holding `payments.supervise` plus an in-app bell fed by SSE, and that the Alert record
+  arrives in phase 6 as the prompt says.
+- We assume the mocks keep channel state in memory, so the seed re-registers the last 60 days
+  of confirmed online payments with the mocks on every run when they are reachable; when the
+  mocks are down the seed logs it and the statements only know payments made live.
+
 ## Security
 - We assume the role-level SoD rule (`reversals.capture` ⟂ `reversals.approve`) applies to every
   user including System Administrators, because a superuser exemption would defeat the control;
@@ -67,6 +95,14 @@ Phase 7 copies this list into the README.
 - We assume the Auditor role is view-only on *everything* including configuration screens.
 - We assume a Taxpayer/Customer user is linked to exactly one Payer (`User.payerId`) and sees
   only that payer's data.
+
+## Security (phase 4)
+- We assume the shared HMAC secret with the channels (`MOCK_SHARED_SECRET`) stands in for the
+  per-channel credentials a real bank or mobile-money provider would issue; the callback is
+  the only unauthenticated business endpoint and is throttled separately.
+- We assume passing the short-lived access token as a query parameter to the SSE endpoint is
+  acceptable because `EventSource` cannot send headers and the token lives 15 minutes; a
+  production deployment would use a one-time stream ticket.
 
 ## Operations
 - We assume the business "day" for jobs, summaries and reconciliation is the UTC calendar date

@@ -132,6 +132,24 @@ Created by the phase 1 seed. Password for all: `Passw0rd!2026`.
   the outbox is at http://localhost:3100/outbox.
 - `customer1@ircub.test` sees their water account, bills (PDF) and statement under My account.
 
+## Online payments, FX and channel reconciliation (phase 4)
+
+- Payments → Pay online: look up a control number, choose bank or mobile money and a
+  currency; the dialog previews the converted amount at the latest rate (flagged when
+  stale). The row appears as PENDING and flips to CONFIRMED or FAILED through Server-Sent
+  Events without a reload; Details opens the channel request and callback payloads with the
+  status-check timeline.
+- Demo scenarios (Administration → Demo helper): amounts ending `.99` are declined, `.77`
+  are confirmed by the status-check job, `.66` exhaust the checks and become PERMANENTLY
+  FAILED, e-mail every holder of `payments.supervise` and light the supervisor bell.
+- FX rates: latest quote with provenance, stale indicator and history chart; the rate is
+  refreshed every 15 minutes from the mock provider and falls back to the last stored one.
+- Reconciliation: run for a channel and day (tick "perturbed statement" to see all four line
+  statuses), open the run for summary cards, filterable lines and CSV export, or upload a
+  statement file received out of band. A daily job reconciles yesterday for every channel.
+- `customer1@ircub.test` can pay their own assessments and bills under My account and only
+  receives live updates for their own payer.
+
 ## Assumptions
 
 Recorded as they are made in `docs/ASSUMPTIONS.md` and copied here in phase 7.

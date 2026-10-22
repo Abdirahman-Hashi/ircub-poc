@@ -1,20 +1,43 @@
 # payments
 
-**Purpose.** Manual payment capture (cash, bank, mobile money) and the payments list with
-filters (brief Module 3.2, 3.5; D9, D11). Online initiation, callbacks and retries arrive in phase 4.
+**Purpose.** The payment ledger (brief Module 3.2, 3.5, Module 5; D9, D11, D15): manual
+capture, online initiation through bank / mobile-money channels, signed callbacks, status-check
+retries with permanent failure, and the payments list with filters.
 
 **Rules.**
 
 - `recordConfirmedPayment` is the single path that converts to local currency (FX service),
-  applies the amount to the locked assessment (over-payment → `OVERPAYMENT`) and inserts a
-  `CONFIRMED` payment. Manual capture, the bulk importer and phase 4 callbacks all use it.
-- Bank and mobile-money captures need a channel reference; `(channel, channelTxnRef)` is
-  unique at the database so a duplicate is `DUPLICATE_PAYMENT`, never a second payment.
-- Suspended payers cannot be paid against; cancelled or paid assessments are not payable.
-- Every payment stores `amount`, `currency`, `fxRate`, `fxRateAt`, `localAmount`.
+  applies the amount to the locked assessment or bill (over-payment → `OVERPAYMENT`) and
+  inserts a `CONFIRMED` payment. Manual capture and the bulk importer use it.
+- Online payments (`PaymentInitiationService`): the amount is converted and the local amount
+  fixed at initiation; the row is `INITIATED` before the channel is called (an outage leaves a
+  `FAILED` trace), then `PENDING` with the channel's `channelTxnRef`, and a
+  `payment.status-check` job is scheduled after `PAYMENT_STATUS_CHECK_DELAY_SECONDS`.
+- Settlement (`PaymentSettlementService` + `settlement.rules.ts`) is the only place a `PENDING`
+  payment becomes terminal, under a row lock: a terminal payment answers `duplicate: true`
+  (idempotent callbacks), `FAILED` from the channel → `FAILED`, an amount/currency different
+  from what was initiated → `FAILED` with `AMOUNT_MISMATCH` reason, otherwise the ledger is
+  applied and the payment is `CONFIRMED`. If the ledger refuses (balance settled meanwhile),
+  the payment is `FAILED` with that reason for a supervisor to resolve, never dropped.
+- Callbacks are trusted only through the HMAC over the raw body (`x-signature`,
+  `MOCK_SHARED_SECRET`, constant-time) → `INVALID_SIGNATURE` (401) otherwise.
+- `PaymentStatusCheckService` handles the job: no-op unless still `PENDING`; a final answer
+  from the channel settles; `PENDING` or an error increments `statusCheckAttempts` and throws
+  so pg-boss retries with backoff (`PAYMENT_STATUS_RETRY_DELAY_SECONDS`). Reaching
+  `PAYMENT_STATUS_RETRY_LIMIT` marks `PERMANENTLY_FAILED`, e-mails every user holding
+  `payments.supervise` (permission, not role) and emits `payment.permanently-failed`.
+- Every change emits `payment.updated` on the SSE bus; customers receive only their payer's.
+- `(channel, channelTxnRef)` is unique at the database so a replayed reference is never a
+  second payment; customers can initiate only against their own payer (`NOT_OWN_PAYER`).
 
-**Endpoints.** `GET /payments`, `GET /payments/:id` (`payments.view`);
-`GET /payments/capture/lookup?controlNumber`, `POST /payments/capture` (`payments.capture`).
+**Endpoints.** `GET /payments`, `GET /payments/:id` (detail with channel request/callback
+payloads) (`payments.view`); `GET /payments/capture/lookup`, `POST /payments/capture`,
+`POST /payments/initiate` (`payments.capture`); `POST /me/payments/initiate` (`self.pay`);
+`POST /payments/callback/:channel` (public, signed).
 
-**Testing.** Unit: `assessments.rules.spec.ts` (application), `money.rules.spec.ts`.
-E2E: `test/revenue.e2e-spec.ts` (capture, over-payment, duplicate reference).
+**Testing.** Unit: `settlement.rules.spec.ts` (duplicate, fail, mismatch, confirm, retry
+counter), `payment-status-check.service.spec.ts` (pending → retry, error → retry, final answer
+→ settle, limit → permanently failed + supervisor recipients, no-op when settled),
+`channels.rules.spec.ts` (signatures). E2E: `test/channels.e2e-spec.ts` against an in-process
+mocks app (`.00` → callback → CONFIRMED, tampered/replayed callback, `.66` →
+PERMANENTLY_FAILED with notification, customer ownership), `test/revenue.e2e-spec.ts`.
