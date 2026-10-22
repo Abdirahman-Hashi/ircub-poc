@@ -5,6 +5,7 @@ import { PrismaClient } from '@prisma/client';
 import { applyAuditExtension } from '../src/common/audit/audit.extension';
 
 import { seedChannelPayments } from './seed/channel-payments.seed';
+import { seedRevenueTargets, seedSummaries } from './seed/dashboard.seed';
 import { seedDemoData } from './seed/demo-data.seed';
 import { seedGlMappings, seedJournalBatches } from './seed/fmis.seed';
 import { seedFxRate } from './seed/fx.seed';
@@ -47,6 +48,8 @@ async function main(): Promise<void> {
     console.info(
       `seed: journal batches ${await seedJournalBatches(prisma, process.env.MOCKS_BASE_URL)}`,
     );
+    console.info(`seed: summaries ${await seedSummaries(prisma)}`);
+    console.info(`seed: revenue targets ${await seedRevenueTargets(prisma)}`);
   } finally {
     await base.$disconnect();
   }

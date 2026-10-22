@@ -123,3 +123,11 @@ export const FMIS_DEMO = {
   MOCKS_TIMEOUT_MS: 2_000,
   FAILED_ERROR: 'FMIS unavailable (seeded demo failure; use Retry)',
 } as const;
+
+/** Dashboard demo data (phase 6, D18). */
+export const DASHBOARD_DEMO = {
+  HISTORY_MONTHS: 12,
+  FUTURE_MONTHS: 3,
+  /** Targets sit a little above the average month so attainment is realistic, not 100 %. */
+  TARGET_MARGIN: 1.1,
+} as const;
