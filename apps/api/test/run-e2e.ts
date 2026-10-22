@@ -12,8 +12,8 @@ import { TEST_ENV } from './test-env.constants';
  * (docker-compose.test.yml) and in CI (postgres service container).
  *
  * The test database is chosen in this order, so a developer's DATABASE_URL (the dev
- * database) can never be migrated or wiped by the suite:
- *   TEST_DATABASE_URL (shell) → TEST_DATABASE_URL (root .env) → DATABASE_URL (shell) → default.
+ * database) is never migrated or seeded by the suite:
+ *   TEST_DATABASE_URL (shell) → TEST_DATABASE_URL (root .env) → the docker-compose.test default.
  */
 const ROOT_ENV_FILE = resolve(__dirname, '..', '..', '..', '.env');
 
@@ -25,10 +25,7 @@ function readRootEnvValue(key: string): string | undefined {
 }
 
 const databaseUrl =
-  process.env.TEST_DATABASE_URL ??
-  readRootEnvValue('TEST_DATABASE_URL') ??
-  process.env.DATABASE_URL ??
-  TEST_ENV.DATABASE_URL;
+  process.env.TEST_DATABASE_URL ?? readRootEnvValue('TEST_DATABASE_URL') ?? TEST_ENV.DATABASE_URL;
 
 const env: NodeJS.ProcessEnv = { ...TEST_ENV, ...process.env, DATABASE_URL: databaseUrl };
 
