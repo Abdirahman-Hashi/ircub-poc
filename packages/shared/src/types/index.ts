@@ -1,4 +1,5 @@
 export * from './admin.types';
+export * from './audit.types';
 export * from './auth.types';
 export * from './channel.types';
 export * from './dashboard.types';

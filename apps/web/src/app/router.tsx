@@ -3,7 +3,6 @@ import { createRootRoute, createRoute, createRouter, Outlet } from '@tanstack/re
 import { PERMISSIONS } from '@ircub/shared';
 import type { PermissionCode } from '@ircub/shared';
 
-import { ComingSoonPage } from '../components/ComingSoonPage';
 import { ChangePasswordPage } from '../features/account/ChangePasswordPage';
 import { MfaPage } from '../features/account/MfaPage';
 import { ConfigPage } from '../features/admin/ConfigPage';
@@ -11,6 +10,7 @@ import { DemoPage } from '../features/admin/DemoPage';
 import { RolesPage } from '../features/admin/RolesPage';
 import { SodRulesPage } from '../features/admin/SodRulesPage';
 import { UsersPage } from '../features/admin/UsersPage';
+import { AuditPage } from '../features/audit/AuditPage';
 import { ForbiddenPage } from '../features/auth/ForbiddenPage';
 import { LoginPage } from '../features/auth/LoginPage';
 import { BulkUploadPage } from '../features/bulk/BulkUploadPage';
@@ -80,12 +80,6 @@ function guarded(permission: PermissionCode, Page: () => ReactElement): () => Re
   };
 }
 
-function placeholder(title: string): () => ReactElement {
-  return function Placeholder(): ReactElement {
-    return <ComingSoonPage title={title} />;
-  };
-}
-
 // Generic so each route keeps its literal path type; a widened union would make TanStack
 // Router demand `params` on every navigation.
 function page<TPath extends RoutePath>(path: TPath, component: () => ReactElement) {
@@ -136,7 +130,7 @@ const routeTree = rootRoute.addChildren([
       page(ROUTES.FMIS_MAPPINGS, guarded(PERMISSIONS.FMIS_VIEW, GlMappingsPage)),
       page(ROUTES.FMIS_RECONCILIATION, guarded(PERMISSIONS.FMIS_VIEW, FmisReconciliationPage)),
       page(ROUTES.FMIS_BATCH_DETAIL, guarded(PERMISSIONS.FMIS_VIEW, JournalBatchDetailPage)),
-      page(ROUTES.AUDIT, guarded(PERMISSIONS.AUDIT_VIEW, placeholder('Audit log'))),
+      page(ROUTES.AUDIT, guarded(PERMISSIONS.AUDIT_VIEW, AuditPage)),
       page(ROUTES.ME, guarded(PERMISSIONS.SELF_VIEW, MyProfilePage)),
     ]),
   ]),

@@ -5,8 +5,10 @@
 export type {
   AssessmentDetail,
   AssessmentView,
+  AuditLogView,
   AuthUser,
   BulkUploadView,
+  ChainVerifyResult,
   ControlNumberLookup,
   CsvImportSummaryView,
   CsvRejectedRow,
@@ -75,3 +77,4 @@ export type {
 } from '@ircub/shared';
 
 export type { UserListParams } from './admin.types';
+export type { AuditListParams } from './audit.types';

@@ -36,6 +36,7 @@ export const QUERY_KEYS = {
   bulkUploads: (params: unknown) => ['bulk-uploads', params] as const,
   bulkUpload: (id: string) => ['bulk-uploads', 'detail', id] as const,
   reversals: (params: unknown) => ['reversals', params] as const,
+  audit: (params: unknown) => ['audit', params] as const,
   me: ['auth', 'me'] as const,
   myProfile: ['me', 'profile'] as const,
   tariffs: ['tariffs'] as const,
