@@ -25,6 +25,7 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
 import { PayersModule } from './modules/payers/payers.module';
 import { PaymentsModule } from './modules/payments/payments.module';
 import { PermissionsModule } from './modules/permissions/permissions.module';
+import { ReconciliationModule } from './modules/reconciliation/reconciliation.module';
 import { RevenueTypesModule } from './modules/revenue-types/revenue-types.module';
 import { ReversalsModule } from './modules/reversals/reversals.module';
 import { RolesModule } from './modules/roles/roles.module';
@@ -73,6 +74,7 @@ import { PrismaModule } from './prisma/prisma.module';
     RevenueTypesModule,
     AssessmentsModule,
     PaymentsModule,
+    ReconciliationModule,
     BulkUploadsModule,
     ReversalsModule,
     SelfModule,
