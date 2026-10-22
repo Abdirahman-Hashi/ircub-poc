@@ -70,16 +70,33 @@ export class RevenueTypesService {
     return toRevenueTypeView(row);
   }
 
-  /** Deletes when unused; otherwise deactivates so historical assessments keep their type. */
+  /**
+   * Deletes when nothing references it; otherwise deactivates so history (assessments, GL
+   * mappings, journal lines, summaries, targets) keeps its type.
+   */
   async remove(id: string): Promise<RevenueTypeResponseDto | null> {
     await this.findOrThrow(id);
-    const used = await this.prisma.assessment.count({ where: { revenueTypeId: id } });
-    if (used > 0) {
+    const usage = await this.prisma.revenueType.findUniqueOrThrow({
+      where: { id },
+      select: {
+        _count: {
+          select: {
+            assessments: true,
+            glMappings: true,
+            journalLines: true,
+            dailyCollectionSummaries: true,
+            revenueTargets: true,
+          },
+        },
+      },
+    });
+    const references = Object.values(usage._count).reduce((sum, count) => sum + count, 0);
+    if (references > 0) {
       const row = await this.prisma.revenueType.update({ where: { id }, data: { active: false } });
       this.logger.log({
         msg: 'revenue type deactivated (in use)',
         revenueTypeId: id,
-        assessments: used,
+        references: usage._count,
       });
       return toRevenueTypeView(row);
     }

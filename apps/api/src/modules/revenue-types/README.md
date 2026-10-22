@@ -7,8 +7,9 @@ of a base) and the GL code collections post to (brief Module 3, phase 5 FMIS).
 
 - `code` is unique and immutable; rate changes affect new assessments only (existing
   assessments keep the amount computed at creation).
-- Delete is refused once assessments reference the type; it is deactivated instead and
-  disappears from the create-assessment picker.
+- Delete is refused once anything references the type (assessments, GL mappings, journal
+  lines, summaries, targets); it is deactivated instead and disappears from the
+  create-assessment picker.
 
 **Endpoints.** `GET /revenue-types?includeInactive`, `GET /revenue-types/:id`
 (`assessments.view`); `POST`, `PATCH /:id`, `DELETE /:id` (`revenue_types.manage`).
