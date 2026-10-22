@@ -14,6 +14,10 @@ import { UsersPage } from '../features/admin/UsersPage';
 import { ForbiddenPage } from '../features/auth/ForbiddenPage';
 import { LoginPage } from '../features/auth/LoginPage';
 import { BulkUploadPage } from '../features/bulk/BulkUploadPage';
+import { FmisReconciliationPage } from '../features/fmis/FmisReconciliationPage';
+import { GlMappingsPage } from '../features/fmis/GlMappingsPage';
+import { JournalBatchDetailPage } from '../features/fmis/JournalBatchDetailPage';
+import { JournalBatchesPage } from '../features/fmis/JournalBatchesPage';
 import { FxPage } from '../features/fx/FxPage';
 import { HomePage } from '../features/home/HomePage';
 import { DuplicatesPage } from '../features/payers/DuplicatesPage';
@@ -125,7 +129,10 @@ const routeTree = rootRoute.addChildren([
         guarded(PERMISSIONS.RECONCILIATION_VIEW, ReconciliationRunPage),
       ),
       page(ROUTES.DEMO, guarded(PERMISSIONS.CONFIG_MANAGE, DemoPage)),
-      page(ROUTES.FMIS, guarded(PERMISSIONS.FMIS_VIEW, placeholder('FMIS'))),
+      page(ROUTES.FMIS, guarded(PERMISSIONS.FMIS_VIEW, JournalBatchesPage)),
+      page(ROUTES.FMIS_MAPPINGS, guarded(PERMISSIONS.FMIS_VIEW, GlMappingsPage)),
+      page(ROUTES.FMIS_RECONCILIATION, guarded(PERMISSIONS.FMIS_VIEW, FmisReconciliationPage)),
+      page(ROUTES.FMIS_BATCH_DETAIL, guarded(PERMISSIONS.FMIS_VIEW, JournalBatchDetailPage)),
       page(ROUTES.AUDIT, guarded(PERMISSIONS.AUDIT_VIEW, placeholder('Audit log'))),
       page(ROUTES.ME, guarded(PERMISSIONS.SELF_VIEW, MyProfilePage)),
     ]),

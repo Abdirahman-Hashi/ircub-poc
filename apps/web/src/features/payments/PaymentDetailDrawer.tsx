@@ -1,13 +1,28 @@
-import { Badge, Code, Drawer, Group, Stack, Table, Text, Timeline, Title } from '@mantine/core';
+import {
+  Anchor,
+  Badge,
+  Code,
+  Drawer,
+  Group,
+  Stack,
+  Table,
+  Text,
+  Timeline,
+  Title,
+} from '@mantine/core';
 import { useQuery } from '@tanstack/react-query';
+import { useNavigate } from '@tanstack/react-router';
 
-import { PaymentStatus } from '@ircub/shared';
+import { PaymentStatus, PERMISSIONS } from '@ircub/shared';
 
 import { getPayment } from '../../api/payments.api';
 import { QUERY_KEYS } from '../../api/query-keys.constants';
+import { ROUTES } from '../../app/routes.constants';
 import { MoneyText } from '../../components/MoneyText';
 import { StatusBadge } from '../../components/StatusBadge';
-import { formatDateTime } from '../../lib/format';
+import { useCan } from '../../lib/auth';
+import { formatDate, formatDateTime } from '../../lib/format';
+import { BATCH_STATUS_COLORS, DEFAULT_COLOR } from '../fmis/fmis.constants';
 
 import { LOCAL_CURRENCY } from './payments.constants';
 import { isInFlight } from './payments.rules';
@@ -67,6 +82,8 @@ export function PaymentDetailDrawer({
   readonly paymentId: string | null;
   readonly onClose: () => void;
 }): ReactElement {
+  const navigate = useNavigate();
+  const canViewFmis = useCan(PERMISSIONS.FMIS_VIEW);
   const detail = useQuery({
     queryKey: QUERY_KEYS.payment(paymentId ?? ''),
     queryFn: () => getPayment(paymentId ?? ''),
@@ -121,6 +138,41 @@ export function PaymentDetailDrawer({
               </Table.Tr>
             </Table.Tbody>
           </Table>
+          <Title order={5}>FMIS posting</Title>
+          {p.journalLine === null ? (
+            <Text c="dimmed" size="sm">
+              Not journaled yet (batches are built daily from confirmed payments).
+            </Text>
+          ) : (
+            <Group gap="xs">
+              <Badge
+                color={BATCH_STATUS_COLORS[p.journalLine.batchStatus] ?? DEFAULT_COLOR}
+                variant="light"
+              >
+                {p.journalLine.batchStatus}
+              </Badge>
+              <Text size="sm">
+                Batch {formatDate(p.journalLine.batchDate)} · FMIS ref{' '}
+                <Text span ff="monospace">
+                  {p.journalLine.fmisReference ?? 'pending'}
+                </Text>
+                {p.journalLine.reversed && ' · reversed'}
+              </Text>
+              {canViewFmis && (
+                <Anchor
+                  size="sm"
+                  onClick={() =>
+                    void navigate({
+                      to: ROUTES.FMIS_BATCH_DETAIL,
+                      params: { batchId: p.journalLine?.batchId ?? '' },
+                    })
+                  }
+                >
+                  Open batch
+                </Anchor>
+              )}
+            </Group>
+          )}
           {p.channelRequestPayload !== null || p.statusCheckAttempts > 0 ? (
             <>
               <Title order={5}>Timeline</Title>

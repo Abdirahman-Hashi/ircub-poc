@@ -136,3 +136,19 @@ export interface ChannelStatementView {
 export interface ReconciliationRunDetail extends ReconciliationRunView {
   readonly lines: readonly ReconciliationLineView[];
 }
+
+export interface JournalBatchParams {
+  readonly page: number;
+  readonly pageSize: number;
+  readonly status?: string;
+  readonly kind?: string;
+  readonly dateFrom?: string;
+  readonly dateTo?: string;
+}
+
+export interface CreateGlMappingInput {
+  readonly revenueTypeId: string;
+  readonly glCode: string;
+  readonly glName: string;
+  readonly effectiveFrom: string;
+}

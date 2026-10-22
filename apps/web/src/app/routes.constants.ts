@@ -34,6 +34,9 @@ export const ROUTES = {
   RECONCILIATION_RUN: '/reconciliation/$runId',
   DEMO: '/demo',
   FMIS: '/fmis',
+  FMIS_BATCH_DETAIL: '/fmis/$batchId',
+  FMIS_MAPPINGS: '/fmis/gl-mappings',
+  FMIS_RECONCILIATION: '/fmis/reconciliation',
   AUDIT: '/audit',
   ME: '/me',
 } as const;
