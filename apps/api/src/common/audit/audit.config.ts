@@ -32,4 +32,7 @@ export const AUDITED_MODELS: AuditedModelMap = {
   Notification: {},
   ChannelStatement: {},
   ReconciliationRun: {},
+  GlMapping: {},
+  JournalBatch: {},
+  JournalLine: {},
 };

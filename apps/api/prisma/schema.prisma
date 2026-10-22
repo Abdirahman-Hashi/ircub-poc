@@ -250,13 +250,13 @@ model RefreshToken {
 }
 
 model Role {
-  id          String  @id @default(uuid()) @db.Uuid
-  code        String  @unique
+  id          String   @id @default(uuid()) @db.Uuid
+  code        String   @unique
   name        String
   description String?
   /// A role inherits every permission of its parent, recursively (D6).
-  parentId    String? @map("parent_id") @db.Uuid
-  isSystem    Boolean @default(false) @map("is_system")
+  parentId    String?  @map("parent_id") @db.Uuid
+  isSystem    Boolean  @default(false) @map("is_system")
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
@@ -389,7 +389,9 @@ model RevenueType {
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
-  assessments Assessment[]
+  assessments  Assessment[]
+  glMappings   GlMapping[]
+  journalLines JournalLine[]
 
   @@index([active])
   @@map("revenue_type")
@@ -428,39 +430,42 @@ model Assessment {
 }
 
 model Payment {
-  id                  String         @id @default(uuid()) @db.Uuid
-  controlNumber       String         @map("control_number")
-  assessmentId        String?        @map("assessment_id") @db.Uuid
-  billId              String?        @map("bill_id") @db.Uuid
-  payerId             String         @map("payer_id") @db.Uuid
-  channel             PaymentChannel
-  channelTxnRef       String?        @map("channel_txn_ref")
-  amount              Decimal        @db.Decimal(18, 2)
-  currency            Currency
+  id                    String         @id @default(uuid()) @db.Uuid
+  controlNumber         String         @map("control_number")
+  assessmentId          String?        @map("assessment_id") @db.Uuid
+  billId                String?        @map("bill_id") @db.Uuid
+  payerId               String         @map("payer_id") @db.Uuid
+  channel               PaymentChannel
+  channelTxnRef         String?        @map("channel_txn_ref")
+  amount                Decimal        @db.Decimal(18, 2)
+  currency              Currency
   /// Rate from `currency` to local currency at capture time; 1 for local payments (D9).
-  fxRate              Decimal        @default(1) @map("fx_rate") @db.Decimal(18, 6)
-  fxRateAt            DateTime?      @map("fx_rate_at")
-  localAmount         Decimal        @map("local_amount") @db.Decimal(18, 2)
-  status              PaymentStatus
-  statusCheckAttempts Int            @default(0) @map("status_check_attempts")
-  paidAt              DateTime?      @map("paid_at")
-  capturedById        String?        @map("captured_by_id") @db.Uuid
-  bulkUploadId        String?        @map("bulk_upload_id") @db.Uuid
-  /** What we sent to the channel (initiation); auditor view. */
-  channelRequestPayload Json?        @map("channel_request_payload")
-  callbackPayload     Json?          @map("callback_payload")
-  failureReason       String?        @map("failure_reason")
-  lastStatusCheckAt   DateTime?      @map("last_status_check_at")
-  permanentlyFailedAt DateTime?      @map("permanently_failed_at")
-  createdAt           DateTime       @default(now()) @map("created_at")
-  updatedAt           DateTime       @updatedAt @map("updated_at")
+  fxRate                Decimal        @default(1) @map("fx_rate") @db.Decimal(18, 6)
+  fxRateAt              DateTime?      @map("fx_rate_at")
+  localAmount           Decimal        @map("local_amount") @db.Decimal(18, 2)
+  status                PaymentStatus
+  statusCheckAttempts   Int            @default(0) @map("status_check_attempts")
+  paidAt                DateTime?      @map("paid_at")
+  capturedById          String?        @map("captured_by_id") @db.Uuid
+  bulkUploadId          String?        @map("bulk_upload_id") @db.Uuid
+  /**
+   * What we sent to the channel (initiation); auditor view.
+   */
+  channelRequestPayload Json?          @map("channel_request_payload")
+  callbackPayload       Json?          @map("callback_payload")
+  failureReason         String?        @map("failure_reason")
+  lastStatusCheckAt     DateTime?      @map("last_status_check_at")
+  permanentlyFailedAt   DateTime?      @map("permanently_failed_at")
+  createdAt             DateTime       @default(now()) @map("created_at")
+  updatedAt             DateTime       @updatedAt @map("updated_at")
 
-  assessment Assessment? @relation(fields: [assessmentId], references: [id], onDelete: Restrict)
-  bill       Bill?       @relation(fields: [billId], references: [id], onDelete: Restrict)
-  payer      Payer       @relation(fields: [payerId], references: [id], onDelete: Restrict)
-  bulkUpload BulkUpload? @relation(fields: [bulkUploadId], references: [id], onDelete: SetNull)
-  reversals  Reversal[]
+  assessment          Assessment?          @relation(fields: [assessmentId], references: [id], onDelete: Restrict)
+  bill                Bill?                @relation(fields: [billId], references: [id], onDelete: Restrict)
+  payer               Payer                @relation(fields: [payerId], references: [id], onDelete: Restrict)
+  bulkUpload          BulkUpload?          @relation(fields: [bulkUploadId], references: [id], onDelete: SetNull)
+  reversals           Reversal[]
   reconciliationLines ReconciliationLine[]
+  journalLine         JournalLine?
 
   /// Duplicate channel callbacks and duplicate bulk rows are no-ops at the database (D11).
   @@unique([channel, channelTxnRef])
@@ -488,7 +493,8 @@ model Reversal {
   createdAt    DateTime       @default(now()) @map("created_at")
   updatedAt    DateTime       @updatedAt @map("updated_at")
 
-  payment Payment @relation(fields: [paymentId], references: [id], onDelete: Restrict)
+  payment     Payment      @relation(fields: [paymentId], references: [id], onDelete: Restrict)
+  journalLine JournalLine?
 
   @@index([paymentId])
   @@index([status])
@@ -849,4 +855,77 @@ model ControlNumber {
   createdAt DateTime             @default(now()) @map("created_at")
 
   @@map("control_number")
+}
+
+/// Revenue type → GL code, effective-dated; the revenue type's own glCode is the default (D17).
+model GlMapping {
+  id            String   @id @default(uuid()) @db.Uuid
+  revenueTypeId String   @map("revenue_type_id") @db.Uuid
+  glCode        String   @map("gl_code")
+  glName        String   @map("gl_name")
+  effectiveFrom DateTime @map("effective_from") @db.Date
+  createdById   String?  @map("created_by_id") @db.Uuid
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  revenueType RevenueType @relation(fields: [revenueTypeId], references: [id], onDelete: Restrict)
+
+  @@unique([revenueTypeId, effectiveFrom])
+  @@index([revenueTypeId, effectiveFrom(sort: Desc)])
+  @@map("gl_mapping")
+}
+
+/// One day's journal (COLLECTIONS) or the mirror of approved reversals (REVERSAL). The batch
+/// id is the idempotency key sent to the FMIS (D11). A partial unique index in the migration
+/// keeps one COLLECTIONS batch per day.
+model JournalBatch {
+  id                String             @id @default(uuid()) @db.Uuid
+  batchDate         DateTime           @map("batch_date") @db.Date
+  kind              JournalBatchKind
+  status            JournalBatchStatus @default(PENDING)
+  lineCount         Int                @default(0) @map("line_count")
+  totalLocal        Decimal            @default(0) @map("total_local") @db.Decimal(18, 2)
+  fmisReference     String?            @map("fmis_reference")
+  postedAt          DateTime?          @map("posted_at")
+  attempts          Int                @default(0)
+  lastError         String?            @map("last_error")
+  reversedByBatchId String?            @map("reversed_by_batch_id") @db.Uuid
+  createdAt         DateTime           @default(now()) @map("created_at")
+  updatedAt         DateTime           @updatedAt @map("updated_at")
+
+  lines      JournalLine[]
+  reversedBy JournalBatch?  @relation("BatchReversal", fields: [reversedByBatchId], references: [id], onDelete: SetNull)
+  reverses   JournalBatch[] @relation("BatchReversal")
+
+  @@index([batchDate, kind])
+  @@index([status])
+  @@map("journal_batch")
+}
+
+/// One payment (or one approved reversal) per line: traceability payment → line → batch → FMIS.
+/// `paymentId` unique is the hard guarantee against double posting (D11).
+model JournalLine {
+  id            String   @id @default(uuid()) @db.Uuid
+  batchId       String   @map("batch_id") @db.Uuid
+  paymentId     String?  @unique @map("payment_id") @db.Uuid
+  reversalId    String?  @unique @map("reversal_id") @db.Uuid
+  revenueTypeId String   @map("revenue_type_id") @db.Uuid
+  glCode        String   @map("gl_code")
+  debitGl       String   @map("debit_gl")
+  creditGl      String   @map("credit_gl")
+  amount        Decimal  @db.Decimal(18, 2)
+  currency      Currency @default(SOS)
+  /// Control number of the assessment or bill the payment settled.
+  reference     String
+  reversed      Boolean  @default(false)
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  batch       JournalBatch @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  payment     Payment?     @relation(fields: [paymentId], references: [id], onDelete: Restrict)
+  reversal    Reversal?    @relation(fields: [reversalId], references: [id], onDelete: Restrict)
+  revenueType RevenueType  @relation(fields: [revenueTypeId], references: [id], onDelete: Restrict)
+
+  @@index([batchId])
+  @@index([glCode])
+  @@map("journal_line")
 }
