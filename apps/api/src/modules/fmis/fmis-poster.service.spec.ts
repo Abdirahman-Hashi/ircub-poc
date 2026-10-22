@@ -46,6 +46,7 @@ function build(options: { status: JournalBatchStatus; attempts: number; reply: '
         .fn()
         .mockImplementation((type: unknown, data: unknown) => emitted.push({ type, data })),
     } as never,
+    { raise: jest.fn().mockResolvedValue(null) } as never,
   );
   return { service, updates, emitted, fmis };
 }

@@ -59,13 +59,14 @@ export class SseController {
 
   private async scopeFor(user: AuthenticatedUser): Promise<SseScope> {
     const held = await this.permissions.getEffectivePermissions(user.id);
+    const alerts = held.has(PERMISSIONS.ALERTS_VIEW);
     if (held.has(PERMISSIONS.PAYMENTS_VIEW)) {
-      return { all: true, payerId: null };
+      return { all: true, alerts, payerId: null };
     }
     const row = await this.prisma.user.findUnique({
       where: { id: user.id },
       select: { payerId: true },
     });
-    return { all: false, payerId: row?.payerId ?? null };
+    return { all: false, alerts, payerId: row?.payerId ?? null };
   }
 }

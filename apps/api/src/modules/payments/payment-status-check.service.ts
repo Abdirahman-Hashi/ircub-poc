@@ -1,6 +1,13 @@
 import { Injectable, Logger, type OnModuleInit } from '@nestjs/common';
 
-import { ChannelOutcome, NotificationChannel, PaymentStatus, PERMISSIONS } from '@ircub/shared';
+import {
+  AlertSeverity,
+  AlertType,
+  ChannelOutcome,
+  NotificationChannel,
+  PaymentStatus,
+  PERMISSIONS,
+} from '@ircub/shared';
 import type { ChannelStatusResponse } from '@ircub/shared';
 
 import { JOB } from '../../common/jobs/job-names';
@@ -9,6 +16,8 @@ import { EventBus } from '../../common/sse/event-bus';
 import { SSE_EVENT } from '../../common/sse/event-names';
 import { PrismaService } from '../../prisma/prisma.service';
 import { ChannelsService } from '../channels/channels.service';
+import { AlertsService } from '../dashboard/alerts.service';
+import { ALERT_TEXT } from '../dashboard/dashboard.constants';
 import { NOTIFICATION_RELATED } from '../notifications/notifications.constants';
 import { NotificationsService } from '../notifications/notifications.service';
 import { PermissionsService } from '../permissions/permissions.service';
@@ -41,6 +50,7 @@ export class PaymentStatusCheckService implements OnModuleInit {
     private readonly systemConfig: SystemConfigService,
     private readonly jobs: JobsService,
     private readonly events: EventBus,
+    private readonly alerts: AlertsService,
   ) {}
 
   async onModuleInit(): Promise<void> {
@@ -127,6 +137,23 @@ export class PaymentStatusCheckService implements OnModuleInit {
       paymentId: payment.id,
       channel: payment.channel,
       attempts,
+    });
+    await this.alerts.raise({
+      type: AlertType.PAYMENT_PERMANENTLY_FAILED,
+      severity: AlertSeverity.WARNING,
+      title: ALERT_TEXT.PAYMENT_PERMANENTLY_FAILED.title,
+      message: ALERT_TEXT.PAYMENT_PERMANENTLY_FAILED.message(
+        payment.controlNumber,
+        payment.channel,
+        attempts,
+      ),
+      data: {
+        paymentId: payment.id,
+        controlNumber: payment.controlNumber,
+        channel: payment.channel,
+        attempts,
+      },
+      dedupeKey: payment.id,
     });
     const recipients = await this.supervisorEmails();
     for (const email of recipients) {

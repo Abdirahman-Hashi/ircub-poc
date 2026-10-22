@@ -9,6 +9,8 @@ import {
   ErrorCode,
   type Paginated,
   WaterAccountStatus,
+  AlertSeverity,
+  AlertType,
 } from '@ircub/shared';
 
 import { AppException } from '../../../common/errors/app.exception';
@@ -20,6 +22,9 @@ import { parseSort, toPageSlice, toPaginated } from '../../../common/pagination/
 import { EventBus } from '../../../common/sse/event-bus';
 import { SSE_EVENT } from '../../../common/sse/event-names';
 import { PrismaService } from '../../../prisma/prisma.service';
+import { AlertsService } from '../../dashboard/alerts.service';
+import { ALERT_TEXT } from '../../dashboard/dashboard.constants';
+import { SummaryService } from '../../dashboard/summary.service';
 import { SystemConfigKey } from '../../system-config/system-config.keys';
 import { SystemConfigService } from '../../system-config/system-config.service';
 import { computeTieredCharge } from '../tariffs/tariffs.rules';
@@ -52,6 +57,8 @@ export class BillingService {
     private readonly systemConfig: SystemConfigService,
     private readonly jobs: JobsService,
     private readonly events: EventBus,
+    private readonly alerts: AlertsService,
+    private readonly summaries: SummaryService,
   ) {}
 
   async run(period: string, actorId: string): Promise<BillingCycleResponseDto> {
@@ -192,6 +199,16 @@ export class BillingService {
       cycleId: cycle.id,
       status: updated.status,
     });
+    if (flagged > 0) {
+      await this.alerts.raise({
+        type: AlertType.ABNORMAL_CONSUMPTION,
+        severity: AlertSeverity.WARNING,
+        title: ALERT_TEXT.ABNORMAL_CONSUMPTION.title,
+        message: ALERT_TEXT.ABNORMAL_CONSUMPTION.message(period, flagged),
+        data: { cycleId: cycle.id, period, flagged },
+        dedupeKey: cycle.id,
+      });
+    }
     return toCycleView(updated);
   }
 
@@ -348,6 +365,14 @@ export class BillingService {
         data: { status: BillingCycleStatus.RELEASED, releasedById: actorId, releasedAt },
       });
     });
+    const periodEnds = await this.prisma.bill.findMany({
+      where: { cycleId: id },
+      select: { periodEnd: true },
+      distinct: ['periodEnd'],
+    });
+    for (const bill of periodEnds) {
+      this.summaries.markDirty(bill.periodEnd);
+    }
     for (const bill of bills) {
       await this.jobs.enqueue(JOB.BILL_RENDER_PDF, { billId: bill.id });
     }

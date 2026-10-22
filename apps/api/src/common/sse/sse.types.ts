@@ -8,6 +8,8 @@ export type SseEventName = (typeof SSE_EVENT)[keyof typeof SSE_EVENT];
 /** Who the subscriber is allowed to see events for. */
 export interface SseScope {
   readonly all: boolean;
+  /** Holder of `alerts.view`: receives `alert.created`. */
+  readonly alerts: boolean;
   readonly payerId: string | null;
 }
 

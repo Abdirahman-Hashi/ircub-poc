@@ -1,12 +1,14 @@
 import { Inject, Injectable, Logger, type OnModuleInit } from '@nestjs/common';
 
-import { JournalBatchStatus } from '@ircub/shared';
+import { AlertSeverity, AlertType, JournalBatchStatus } from '@ircub/shared';
 
 import { JOB } from '../../common/jobs/job-names';
 import { JobsService } from '../../common/jobs/jobs.service';
 import { EventBus } from '../../common/sse/event-bus';
 import { SSE_EVENT } from '../../common/sse/event-names';
 import { PrismaService } from '../../prisma/prisma.service';
+import { AlertsService } from '../dashboard/alerts.service';
+import { ALERT_TEXT } from '../dashboard/dashboard.constants';
 import { SystemConfigKey } from '../system-config/system-config.keys';
 import { SystemConfigService } from '../system-config/system-config.service';
 
@@ -32,6 +34,7 @@ export class FmisPosterService implements OnModuleInit {
     private readonly systemConfig: SystemConfigService,
     private readonly jobs: JobsService,
     private readonly events: EventBus,
+    private readonly alerts: AlertsService,
   ) {}
 
   async onModuleInit(): Promise<void> {
@@ -122,6 +125,14 @@ export class FmisPosterService implements OnModuleInit {
           msg: FMIS_MESSAGES.POST_EXHAUSTED,
           batchId,
           attempts: progress.attempts,
+        });
+        await this.alerts.raise({
+          type: AlertType.FMIS_BATCH_FAILED,
+          severity: AlertSeverity.CRITICAL,
+          title: ALERT_TEXT.FMIS_BATCH_FAILED.title,
+          message: ALERT_TEXT.FMIS_BATCH_FAILED.message(date, progress.attempts, message),
+          data: { batchId, date, attempts: progress.attempts, error: message },
+          dedupeKey: batchId,
         });
         return;
       }

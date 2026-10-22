@@ -84,6 +84,7 @@ function build(options: { attempts: number; channelReply: ChannelStatusResponse 
     systemConfig as never,
     { register: jest.fn() } as never,
     events as never,
+    { raise: jest.fn().mockResolvedValue(null) } as never,
   );
   return { service, updates, sent, emitted, settlement, permissions };
 }

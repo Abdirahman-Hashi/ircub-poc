@@ -20,11 +20,11 @@ const paymentEvent = (payerId: string): AppEvent => ({
 
 describe('isVisibleTo', () => {
   it('staff scope sees everything', () => {
-    expect(isVisibleTo(paymentEvent('x'), { all: true, payerId: null })).toBe(true);
+    expect(isVisibleTo(paymentEvent('x'), { all: true, alerts: true, payerId: null })).toBe(true);
   });
 
   it('customer scope sees only own payment events and heartbeats', () => {
-    const scope = { all: false, payerId: 'me' };
+    const scope = { all: false, alerts: false, payerId: 'me' };
     expect(isVisibleTo(paymentEvent('me'), scope)).toBe(true);
     expect(isVisibleTo(paymentEvent('other'), scope)).toBe(false);
     expect(isVisibleTo({ type: SSE_EVENT.HEARTBEAT, data: { at: '' }, emittedAt: '' }, scope)).toBe(
@@ -41,6 +41,10 @@ describe('isVisibleTo', () => {
       emittedAt: '',
     };
     expect(isVisibleTo(alert, scope)).toBe(false);
-    expect(isVisibleTo(paymentEvent('me'), { all: false, payerId: null })).toBe(false);
+    expect(isVisibleTo(alert, { ...scope, alerts: true })).toBe(true);
+    expect(isVisibleTo(alert, { all: true, alerts: false, payerId: null })).toBe(false);
+    expect(isVisibleTo(paymentEvent('me'), { all: false, alerts: false, payerId: null })).toBe(
+      false,
+    );
   });
 });

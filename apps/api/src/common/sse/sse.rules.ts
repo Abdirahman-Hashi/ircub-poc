@@ -4,7 +4,13 @@ import type { AppEvent, SseScope } from './sse.types';
 
 /** Customers see only their own payment events; heartbeats go to everyone. */
 export function isVisibleTo(event: AppEvent, scope: SseScope): boolean {
-  if (scope.all || event.type === SSE_EVENT.HEARTBEAT) {
+  if (event.type === SSE_EVENT.HEARTBEAT) {
+    return true;
+  }
+  if (event.type === SSE_EVENT.ALERT_CREATED) {
+    return scope.alerts;
+  }
+  if (scope.all) {
     return true;
   }
   if (
