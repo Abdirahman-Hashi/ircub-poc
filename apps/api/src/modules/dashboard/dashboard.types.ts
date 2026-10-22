@@ -27,9 +27,11 @@ export interface ReversalForSummary {
   readonly revenueTypeId: string;
 }
 
+/** A released bill's own charges; `totalDue` would count carried arrears once per cycle. */
 export interface BillForSummary {
   readonly periodEnd: Date;
-  readonly totalDue: DecimalLike;
+  readonly consumptionCharge: DecimalLike;
+  readonly fixedCharge: DecimalLike;
 }
 
 export interface BillPaymentForSummary {

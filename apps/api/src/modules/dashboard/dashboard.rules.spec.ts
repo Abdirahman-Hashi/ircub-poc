@@ -64,11 +64,11 @@ describe('aggregateCollections', () => {
     expect(rows).toHaveLength(3);
   });
 
-  it('aggregates water billed by period end and collected by paid day', () => {
+  it('aggregates water billed (own charges, never carried arrears) by period end and collected by paid day', () => {
     const rows = aggregateBilling(
       [
-        { periodEnd: new Date('2026-09-30T00:00:00Z'), totalDue: '40' },
-        { periodEnd: new Date('2026-09-30T00:00:00Z'), totalDue: '60' },
+        { periodEnd: new Date('2026-09-30T00:00:00Z'), consumptionCharge: '30', fixedCharge: '10' },
+        { periodEnd: new Date('2026-09-30T00:00:00Z'), consumptionCharge: '50', fixedCharge: '10' },
       ],
       [
         { paidAt: new Date('2026-09-30T12:00:00Z'), localAmount: '25' },

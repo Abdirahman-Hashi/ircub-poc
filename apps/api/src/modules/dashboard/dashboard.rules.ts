@@ -103,7 +103,11 @@ export function aggregateCollections(
   }));
 }
 
-/** Water billed per period-end day and collected per paid day. */
+/**
+ * Water billed per period-end day and collected per paid day. "Billed" is each bill's own
+ * charges (consumption + fixed): its `totalDue` also carries earlier arrears, which would be
+ * counted again every cycle and inflate the collection-efficiency denominator.
+ */
 export function aggregateBilling(
   bills: readonly BillForSummary[],
   payments: readonly BillPaymentForSummary[],
@@ -123,7 +127,9 @@ export function aggregateBilling(
   };
   for (const bill of bills) {
     const row = rowFor(toDateKey(bill.periodEnd));
-    row.billed = row.billed.plus(toDecimal(bill.totalDue));
+    row.billed = row.billed
+      .plus(toDecimal(bill.consumptionCharge))
+      .plus(toDecimal(bill.fixedCharge));
   }
   for (const payment of payments) {
     const row = rowFor(toDateKey(payment.paidAt));

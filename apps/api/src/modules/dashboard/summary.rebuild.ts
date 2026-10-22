@@ -57,7 +57,7 @@ export async function rebuildDailySummaries(
       status: { in: [BillStatus.RELEASED, BillStatus.PART_PAID, BillStatus.PAID] },
       periodEnd: { gte: start, lt: end },
     },
-    select: { periodEnd: true, totalDue: true },
+    select: { periodEnd: true, consumptionCharge: true, fixedCharge: true },
   });
 
   const forSummary: PaymentForSummary[] = [];
