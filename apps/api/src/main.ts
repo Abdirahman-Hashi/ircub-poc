@@ -6,7 +6,8 @@ import { configureApp, mountSwagger } from './app.setup';
 import { AppConfigService } from './config/app-config.service';
 
 async function bootstrap(): Promise<void> {
-  const app = await NestFactory.create(AppModule, { bufferLogs: true });
+  // rawBody keeps the exact callback bytes for HMAC verification.
+  const app = await NestFactory.create(AppModule, { bufferLogs: true, rawBody: true });
   configureApp(app);
   mountSwagger(app);
 
