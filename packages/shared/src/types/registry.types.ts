@@ -1,3 +1,4 @@
+import type { PaymentJournalSummary } from './fmis.types';
 import type { PayerWaterSummary } from './water.types';
 import type {
   AssessmentStatus,
@@ -103,6 +104,8 @@ export interface PaymentDetail extends PaymentView {
   readonly callbackPayload: unknown;
   readonly lastStatusCheckAt: Date | string | null;
   readonly permanentlyFailedAt: Date | string | null;
+  /** FMIS posting of this payment, when it has been journaled (phase 5). */
+  readonly journalLine: PaymentJournalSummary | null;
 }
 
 export interface AssessmentDetail extends AssessmentView {
