@@ -101,7 +101,13 @@ export function BillingCycleDetailPage(): ReactElement {
   }
   const data = cycle.data;
   const flaggedCount = flaggedBills.data?.total ?? data.stats.flagged;
-  const releasable = canRelease && data.status === BillingCycleStatus.REVIEW && flaggedCount === 0;
+  // A flag with a note has been reviewed: cleared bills go out, confirmed ones are held back.
+  const unreviewedCount = (flaggedBills.data?.items ?? []).filter(
+    (bill) => bill.flagNote === null,
+  ).length;
+  const heldCount = data.stats.held ?? flaggedCount - unreviewedCount;
+  const releasable =
+    canRelease && data.status === BillingCycleStatus.REVIEW && unreviewedCount === 0;
 
   return (
     <Stack>
@@ -120,7 +126,7 @@ export function BillingCycleDetailPage(): ReactElement {
                 disabled={!releasable}
                 title={releasable ? '' : 'Clear or confirm every flagged bill first'}
               >
-                Release ({flaggedCount} flagged)
+                Release ({unreviewedCount} to review, {heldCount} held)
               </Button>
             )}
           </Group>
@@ -129,7 +135,7 @@ export function BillingCycleDetailPage(): ReactElement {
       <SimpleGrid cols={{ base: 2, md: 5 }}>
         <Stat label="Accounts" value={String(data.stats.accounts)} />
         <Stat label="Billed" value={String(data.stats.billed)} />
-        <Stat label="Flagged" value={String(flaggedCount)} />
+        <Stat label="Flagged" value={`${String(flaggedCount)} (${String(heldCount)} held)`} />
         <Stat label="Skipped" value={String(data.stats.skipped.length)} />
         <Card withBorder>
           <Text size="sm" c="dimmed">
@@ -182,16 +188,18 @@ export function BillingCycleDetailPage(): ReactElement {
                       >
                         Clear
                       </Button>
-                      <Button
-                        size="xs"
-                        variant="light"
-                        color="orange"
-                        onClick={() => {
-                          setReviewing({ bill, action: 'confirm' });
-                        }}
-                      >
-                        Confirm
-                      </Button>
+                      {bill.flagNote === null && (
+                        <Button
+                          size="xs"
+                          variant="light"
+                          color="orange"
+                          onClick={() => {
+                            setReviewing({ bill, action: 'confirm' });
+                          }}
+                        >
+                          Confirm (hold)
+                        </Button>
+                      )}
                     </Group>
                   )}
                 </Table.Td>

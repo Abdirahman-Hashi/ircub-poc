@@ -308,15 +308,31 @@ export class BillingService {
     return toCycleView(await this.findOrThrow(id));
   }
 
-  /** Flag review (billing.release): clear → bill becomes DRAFT; confirm → stays FLAGGED (held). */
+  /**
+   * Flag review (billing.release): clear → bill becomes DRAFT, or RELEASED straight away when
+   * its cycle has already gone out (a held bill released late); confirm → stays FLAGGED and is
+   * held back when the cycle is released.
+   */
   async clearFlag(billId: string, note: string): Promise<BillResponseDto> {
     const bill = await this.flaggedBillOrThrow(billId);
+    const cycle = await this.findOrThrow(bill.cycleId);
+    const releaseNow = cycle.status === BillingCycleStatus.RELEASED;
     const updated = await this.prisma.bill.update({
       where: { id: bill.id },
-      data: { flagged: false, status: BillStatus.DRAFT, flagNote: note },
+      data: {
+        flagged: false,
+        flagNote: note,
+        status: releaseNow ? BillStatus.RELEASED : BillStatus.DRAFT,
+        ...(releaseNow ? { releasedAt: new Date() } : {}),
+      },
       include: BILL_INCLUDE,
     });
     await this.refreshFlagCount(bill.cycleId);
+    if (releaseNow) {
+      this.summaries.markDirty(updated.periodEnd);
+      await this.jobs.enqueue(JOB.BILL_RENDER_PDF, { billId: updated.id });
+      this.logger.log({ msg: 'held bill released', billId: updated.id, cycleId: cycle.id });
+    }
     return toBillView(updated);
   }
 
@@ -330,7 +346,11 @@ export class BillingService {
     return toBillView(updated);
   }
 
-  /** REVIEW → RELEASED: refuses while any bill is still flagged; enqueues PDF + notifications per bill. */
+  /**
+   * REVIEW → RELEASED: refuses while any flagged bill is still unreviewed (no note yet);
+   * confirmed flags stay FLAGGED and are held back, every DRAFT bill goes out with a PDF and
+   * notifications.
+   */
   async release(id: string, actorId: string): Promise<BillingCycleResponseDto> {
     const cycle = await this.findOrThrow(id);
     if (cycle.status !== BillingCycleStatus.REVIEW) {
@@ -341,15 +361,18 @@ export class BillingService {
         { status: cycle.status },
       );
     }
-    const flagged = await this.prisma.bill.count({ where: { cycleId: id, flagged: true } });
-    if (flagged > 0) {
+    const unreviewed = await this.prisma.bill.count({
+      where: { cycleId: id, flagged: true, flagNote: null },
+    });
+    if (unreviewed > 0) {
       throw new AppException(
         ErrorCode.BILLING_CYCLE_HAS_FLAGGED_BILLS,
         WATER_MESSAGES.CYCLE_HAS_FLAGGED,
         HttpStatus.CONFLICT,
-        { flagged },
+        { flagged: unreviewed },
       );
     }
+    const held = await this.prisma.bill.count({ where: { cycleId: id, flagged: true } });
     const releasedAt = new Date();
     const bills = await this.prisma.bill.findMany({
       where: { cycleId: id, status: BillStatus.DRAFT },
@@ -360,9 +383,15 @@ export class BillingService {
         where: { cycleId: id, status: BillStatus.DRAFT },
         data: { status: BillStatus.RELEASED, releasedAt },
       });
+      const stats = cycle.stats as unknown as BillingCycleStats;
       return tx.billingCycle.update({
         where: { id },
-        data: { status: BillingCycleStatus.RELEASED, releasedById: actorId, releasedAt },
+        data: {
+          status: BillingCycleStatus.RELEASED,
+          releasedById: actorId,
+          releasedAt,
+          stats: { ...stats, held } as unknown as Prisma.InputJsonValue,
+        },
       });
     });
     const periodEnds = await this.prisma.bill.findMany({
@@ -376,7 +405,7 @@ export class BillingService {
     for (const bill of bills) {
       await this.jobs.enqueue(JOB.BILL_RENDER_PDF, { billId: bill.id });
     }
-    this.logger.log({ msg: 'billing cycle released', cycleId: id, bills: bills.length });
+    this.logger.log({ msg: 'billing cycle released', cycleId: id, bills: bills.length, held });
     this.events.emit(SSE_EVENT.BILLING_CYCLE_UPDATED, { cycleId: id, status: updated.status });
     return toCycleView(updated);
   }
@@ -399,9 +428,11 @@ export class BillingService {
     const cycle = await this.findOrThrow(cycleId);
     const stats = cycle.stats as unknown as BillingCycleStats;
     const flagged = await this.prisma.bill.count({ where: { cycleId, flagged: true } });
+    // Once released, every bill still flagged is a held bill.
+    const held = cycle.status === BillingCycleStatus.RELEASED ? { held: flagged } : {};
     await this.prisma.billingCycle.update({
       where: { id: cycleId },
-      data: { stats: { ...stats, flagged } as unknown as Prisma.InputJsonValue },
+      data: { stats: { ...stats, flagged, ...held } as unknown as Prisma.InputJsonValue },
     });
   }
 

@@ -152,6 +152,7 @@ function toStatsDto(stats: BillingCycleStats): BillingCycleResponseDto['stats'] 
     flagged: stats.flagged,
     skipped: [...stats.skipped],
     totalBilled: stats.totalBilled,
+    ...(stats.held === undefined ? {} : { held: stats.held }),
     ...(stats.notificationsSent === undefined
       ? {}
       : { notificationsSent: stats.notificationsSent }),

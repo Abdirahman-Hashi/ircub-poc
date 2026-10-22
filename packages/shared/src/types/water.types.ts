@@ -125,6 +125,8 @@ export interface BillingCycleStats {
   readonly accounts: number;
   readonly billed: number;
   readonly flagged: number;
+  /** Bills whose flag was confirmed: kept back when the cycle was released. */
+  readonly held?: number;
   readonly skipped: readonly SkippedAccount[];
   readonly totalBilled: MoneyString;
   readonly notificationsSent?: number;

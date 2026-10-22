@@ -31,6 +31,9 @@ export class BillingCycleStatsDto implements BillingCycleStats {
   @ApiProperty({ example: '1250000.00' })
   totalBilled!: string;
 
+  @ApiPropertyOptional({ description: 'Confirmed-flag bills held back at release' })
+  held?: number;
+
   @ApiPropertyOptional()
   notificationsSent?: number;
 }
