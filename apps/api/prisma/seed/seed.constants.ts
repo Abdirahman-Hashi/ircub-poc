@@ -3,6 +3,12 @@ import { REVENUE_TYPE_CODES } from '@ircub/shared';
 /** Fixed faker seed so every environment gets identical demo data (standards §6). */
 export const FAKER_SEED = 42;
 
+/** Command-line flags understood by `prisma/seed.ts`. */
+export const SEED_FLAGS = {
+  /** Do nothing when users already exist (container boot). */
+  IF_EMPTY: '--if-empty',
+} as const;
+
 /** Password for every seeded demo user (CLAUDE.md). Demo only. */
 export const SEED_PASSWORD = 'Passw0rd!2026';
 

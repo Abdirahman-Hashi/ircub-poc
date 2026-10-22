@@ -19,6 +19,7 @@ COPY apps/api apps/api
 RUN pnpm --filter @ircub/shared build \
  && pnpm --filter api exec prisma generate \
  && pnpm --filter api build \
+ && pnpm --filter api seed:build \
  && pnpm --filter api --prod deploy --legacy /out/api
 
 # ── runtime ─────────────────────────────────────────────────────────────────
@@ -36,5 +37,5 @@ USER node
 EXPOSE 3000
 HEALTHCHECK --interval=15s --timeout=5s --start-period=30s --retries=5 \
   CMD wget -qO- http://127.0.0.1:3000/health || exit 1
-ENTRYPOINT ["dumb-init", "--"]
-CMD ["sh", "-c", "./node_modules/.bin/prisma migrate deploy && node dist/main"]
+COPY --chown=node:node apps/api/docker-entrypoint.sh ./docker-entrypoint.sh
+ENTRYPOINT ["dumb-init", "--", "./docker-entrypoint.sh"]

@@ -12,7 +12,7 @@ import { seedFxRate } from './seed/fx.seed';
 import { seedPermissions } from './seed/permissions.seed';
 import { seedRevenueTypes } from './seed/revenue-types.seed';
 import { seedRoles } from './seed/roles.seed';
-import { FAKER_SEED, SEED_LOG_LEVELS } from './seed/seed.constants';
+import { FAKER_SEED, SEED_FLAGS, SEED_LOG_LEVELS } from './seed/seed.constants';
 import { seedSodRules } from './seed/sod.seed';
 import { seedSystemConfig } from './seed/system-config.seed';
 import { seedUsers } from './seed/users.seed';
@@ -31,6 +31,12 @@ async function main(): Promise<void> {
   const base = new PrismaClient();
   const prisma = applyAuditExtension(base);
   try {
+    // Container first boot (SEED_ON_BOOT): the seeded users are the marker that the database
+    // is already populated, so a restart never re-runs the demo data generation.
+    if (process.argv.includes(SEED_FLAGS.IF_EMPTY) && (await base.user.count()) > 0) {
+      console.info('seed: database already seeded, skipping (--if-empty)');
+      return;
+    }
     console.info(`seed: system_config ${await seedSystemConfig(prisma)} keys`);
     console.info(`seed: permissions ${await seedPermissions(prisma)}`);
     console.info(`seed: roles ${await seedRoles(prisma)}`);

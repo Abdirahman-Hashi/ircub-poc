@@ -38,6 +38,8 @@ services:
       API_PUBLIC_URL: http://api:3000
       CORS_ORIGIN: http://localhost:8080,http://localhost:5173
       STORAGE_DIR: /app/storage
+      # First boot seeds roles, users and demo data; later boots see the users and skip.
+      SEED_ON_BOOT: ${SEED_ON_BOOT:-true}
     ports:
       - '3000:3000'
     volumes:
