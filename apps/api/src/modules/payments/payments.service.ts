@@ -15,7 +15,12 @@ import { BillsService } from '../water/bills/bills.service';
 
 import { PAYMENTS_API } from './payments.constants';
 import { PAYMENTS_MESSAGES } from './payments.messages';
-import { PAYMENT_INCLUDE, toPaymentDetail, toPaymentView } from './payments.view';
+import {
+  PAYMENT_DETAIL_INCLUDE,
+  PAYMENT_INCLUDE,
+  toPaymentDetail,
+  toPaymentView,
+} from './payments.view';
 
 import type { CapturePaymentDto } from './dto/capture-payment.dto';
 import type { ControlNumberLookupResponseDto } from './dto/control-number-lookup.response.dto';
@@ -257,7 +262,19 @@ export class PaymentsService {
   }
 
   async getDetail(id: string): Promise<PaymentDetailResponseDto> {
-    return toPaymentDetail(await this.findOrThrow(id));
+    const row = await this.prisma.payment.findUnique({
+      where: { id },
+      include: PAYMENT_DETAIL_INCLUDE,
+    });
+    if (row === null) {
+      throw new AppException(
+        ErrorCode.NOT_FOUND,
+        PAYMENTS_MESSAGES.NOT_FOUND,
+        HttpStatus.NOT_FOUND,
+        { id },
+      );
+    }
+    return toPaymentDetail(row);
   }
 
   async findOrThrow(id: string): Promise<PaymentWithRelations> {

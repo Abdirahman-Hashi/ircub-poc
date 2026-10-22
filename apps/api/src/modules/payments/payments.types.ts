@@ -14,6 +14,20 @@ export type PaymentWithRelations = Prisma.PaymentGetPayload<{
   };
 }>;
 
+export type PaymentDetailWithRelations = Prisma.PaymentGetPayload<{
+  include: {
+    payer: { select: { id: true; tin: true; name: true } };
+    assessment: { select: { revenueType: { select: { id: true; code: true; name: true } } } };
+    journalLine: {
+      select: {
+        id: true;
+        reversed: true;
+        batch: { select: { id: true; batchDate: true; status: true; fmisReference: true } };
+      };
+    };
+  };
+}>;
+
 /** One confirmed payment to record and apply; used by manual capture and the bulk importer. */
 export interface ConfirmedPaymentInput {
   readonly assessmentId: string | null;
