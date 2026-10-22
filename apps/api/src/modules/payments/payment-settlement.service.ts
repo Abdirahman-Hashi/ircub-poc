@@ -8,6 +8,7 @@ import { EventBus } from '../../common/sse/event-bus';
 import { SSE_EVENT } from '../../common/sse/event-names';
 import { PrismaService } from '../../prisma/prisma.service';
 import { AssessmentsService } from '../assessments/assessments.service';
+import { SummaryService } from '../dashboard/summary.service';
 import { BillsService } from '../water/bills/bills.service';
 
 import { PAYMENTS_MESSAGES } from './payments.messages';
@@ -31,6 +32,7 @@ export class PaymentSettlementService {
     private readonly assessments: AssessmentsService,
     private readonly bills: BillsService,
     private readonly events: EventBus,
+    private readonly summaries: SummaryService,
   ) {}
 
   async settleByReference(
@@ -90,6 +92,9 @@ export class PaymentSettlementService {
       status: result.status,
       duplicate: result.duplicate,
     });
+    if (!result.duplicate && result.status === PaymentStatus.CONFIRMED) {
+      this.summaries.markDirty(result.payment.paidAt ?? new Date());
+    }
     if (!result.duplicate) {
       this.events.emit(SSE_EVENT.PAYMENT_UPDATED, {
         paymentId,

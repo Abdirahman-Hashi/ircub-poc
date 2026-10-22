@@ -9,6 +9,7 @@ import { parseSort, toPageSlice, toPaginated } from '../../common/pagination/pag
 import { PrismaService } from '../../prisma/prisma.service';
 import { AssessmentsService } from '../assessments/assessments.service';
 import { outstandingOf, outstandingOf as billOutstandingOf } from '../assessments/assessments.view';
+import { SummaryService } from '../dashboard/summary.service';
 import { FxService } from '../fx/fx.service';
 import { PayersService } from '../payers/payers.service';
 import { BillsService } from '../water/bills/bills.service';
@@ -46,6 +47,7 @@ export class PaymentsService {
     private readonly payers: PayersService,
     private readonly fx: FxService,
     private readonly bills: BillsService,
+    private readonly summaries: SummaryService,
   ) {}
 
   /** What the cashier sees before capturing: payer, description, outstanding. */
@@ -156,6 +158,7 @@ export class PaymentsService {
         bulkUploadId: null,
       }),
     );
+    this.summaries.markDirty(payment.paidAt ?? new Date());
     this.logger.log({
       msg: 'payment captured',
       paymentId: payment.id,

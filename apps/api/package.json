@@ -15,6 +15,7 @@
     "test:cov": "jest --coverage",
     "test:e2e": "tsx test/run-e2e.ts",
     "openapi:export": "nest build && node dist/openapi-export.js",
+    "bench": "dotenv -e ../../.env -- tsx scripts/bench.ts",
     "prisma": "dotenv -e ../../.env -- prisma",
     "db:migrate": "pnpm prisma migrate dev",
     "db:deploy": "pnpm prisma migrate deploy",
@@ -57,6 +58,7 @@
     "prisma": "^6.19.3",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2",
+    "simple-statistics": "7.8.8",
     "swagger-ui-express": "^5.0.1",
     "zod": "^4.1.0"
   },

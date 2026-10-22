@@ -19,6 +19,7 @@ import { AuditModule } from './modules/audit/audit.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { BulkUploadsModule } from './modules/bulk-uploads/bulk-uploads.module';
 import { ChannelsModule } from './modules/channels/channels.module';
+import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { FmisModule } from './modules/fmis/fmis.module';
 import { FxModule } from './modules/fx/fx.module';
 import { HealthModule } from './modules/health/health.module';
@@ -77,6 +78,7 @@ import { PrismaModule } from './prisma/prisma.module';
     PaymentsModule,
     ReconciliationModule,
     FmisModule,
+    DashboardModule,
     BulkUploadsModule,
     ReversalsModule,
     SelfModule,

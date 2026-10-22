@@ -7,6 +7,7 @@ import { toDecimal } from '../../common/money/money.rules';
 import { parseSort, toPageSlice, toPaginated } from '../../common/pagination/pagination.rules';
 import { PrismaService } from '../../prisma/prisma.service';
 import { AssessmentsService } from '../assessments/assessments.service';
+import { SummaryService } from '../dashboard/summary.service';
 import { JournalBatchService } from '../fmis/journal-batch.service';
 import { PaymentsService } from '../payments/payments.service';
 import { PAYMENT_INCLUDE, toPaymentView } from '../payments/payments.view';
@@ -39,6 +40,7 @@ export class ReversalsService {
     private readonly assessments: AssessmentsService,
     private readonly bills: BillsService,
     private readonly journals: JournalBatchService,
+    private readonly summaries: SummaryService,
   ) {}
 
   async create(dto: CreateReversalDto, actorId: string): Promise<ReversalResponseDto> {
@@ -119,6 +121,7 @@ export class ReversalsService {
     });
     // FMIS mirror (phase 5): outside the ledger transaction so a posting problem never undoes the approval.
     await this.journals.onReversalApproved(id, reversal.paymentId);
+    this.summaries.markDirty(new Date());
     return this.toView(updated);
   }
 
