@@ -14,6 +14,8 @@ export const SWAGGER = {
   /** Relative to apps/api; the export script writes the committed spec here. */
   EXPORT_PATH: '../../docs/openapi.json',
   EXPORT_INDENT: 2,
+  ERROR_RESPONSE_DESCRIPTION:
+    'Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.',
 } as const;
 
 /** Standards §5: reject unknown fields, strip nothing silently, transform to DTO classes. */

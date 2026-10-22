@@ -18,6 +18,16 @@
                 }
               }
             }
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -64,6 +74,16 @@
                 }
               }
             }
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -84,6 +104,16 @@
         "responses": {
           "200": {
             "description": ""
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -104,6 +134,16 @@
         "responses": {
           "200": {
             "description": "Always ok while the process runs"
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
           }
         },
         "summary": "Liveness probe — process is up",
@@ -122,6 +162,16 @@
           },
           "503": {
             "description": "At least one check down"
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
           }
         },
         "summary": "Readiness probe — database and job queue reachable",
@@ -144,6 +194,16 @@
                   "items": {
                     "$ref": "#/components/schemas/PermissionGroupResponseDto"
                   }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
                 }
               }
             }
@@ -190,6 +250,16 @@
           },
           "423": {
             "description": "ACCOUNT_LOCKED"
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
           }
         },
         "summary": "Password login; returns an MFA challenge when enabled",
@@ -222,6 +292,16 @@
                 }
               }
             }
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
           }
         },
         "summary": "Complete login with a TOTP code",
@@ -244,6 +324,16 @@
                 }
               }
             }
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
           }
         },
         "summary": "Rotate the refresh cookie and issue a new access token",
@@ -259,6 +349,16 @@
         "responses": {
           "204": {
             "description": ""
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
           }
         },
         "summary": "Revoke the refresh token and clear the cookie",
@@ -278,6 +378,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/MeResponseDto"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
                 }
               }
             }
@@ -305,6 +415,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/MfaEnrolResponseDto"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
                 }
               }
             }
@@ -338,6 +458,16 @@
         "responses": {
           "204": {
             "description": ""
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -368,6 +498,16 @@
         "responses": {
           "204": {
             "description": ""
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -398,6 +538,16 @@
         "responses": {
           "422": {
             "description": "PASSWORD_POLICY_VIOLATION | PASSWORD_REUSED"
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -425,6 +575,16 @@
                   "items": {
                     "$ref": "#/components/schemas/SodRuleResponseDto"
                   }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
                 }
               }
             }
@@ -466,6 +626,16 @@
           },
           "409": {
             "description": "SOD_VIOLATION (existing holders) | CONFLICT (duplicate)"
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -495,6 +665,16 @@
         "responses": {
           "204": {
             "description": ""
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -522,6 +702,16 @@
                   "items": {
                     "$ref": "#/components/schemas/RoleResponseDto"
                   }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
                 }
               }
             }
@@ -560,6 +750,16 @@
                 }
               }
             }
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -593,6 +793,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/RoleResponseDto"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
                 }
               }
             }
@@ -640,6 +850,16 @@
                 }
               }
             }
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -667,6 +887,16 @@
         "responses": {
           "403": {
             "description": "SYSTEM_ROLE_IMMUTABLE"
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -716,6 +946,16 @@
           },
           "403": {
             "description": "SOD_VIOLATION"
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -807,6 +1047,16 @@
                 }
               }
             }
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -845,6 +1095,16 @@
           },
           "403": {
             "description": "SOD_VIOLATION"
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -878,6 +1138,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/UserResponseDto"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
                 }
               }
             }
@@ -922,6 +1192,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/UserResponseDto"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
                 }
               }
             }
@@ -974,6 +1254,16 @@
           },
           "403": {
             "description": "SOD_VIOLATION"
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -1007,6 +1297,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/UserResponseDto"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
                 }
               }
             }
@@ -1046,6 +1346,16 @@
                 }
               }
             }
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -1079,6 +1389,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ResetPasswordResponseDto"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
                 }
               }
             }
@@ -1187,6 +1507,16 @@
                 }
               }
             }
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -1211,6 +1541,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ChainVerifyResponseDto"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
                 }
               }
             }
@@ -1270,6 +1610,16 @@
                 }
               }
             }
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -1323,6 +1673,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/FxRateResponseDto"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
                 }
               }
             }
@@ -1382,6 +1742,16 @@
                   "items": {
                     "$ref": "#/components/schemas/FxRateResponseDto"
                   }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
                 }
               }
             }
@@ -1479,6 +1849,16 @@
                 }
               }
             }
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -1511,6 +1891,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/RegisteredPayerResponseDto"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
                 }
               }
             }
@@ -1589,6 +1979,16 @@
                 }
               }
             }
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -1635,6 +2035,16 @@
                 }
               }
             }
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -1668,6 +2078,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PayerProfileResponseDto"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
                 }
               }
             }
@@ -1715,6 +2135,16 @@
                 }
               }
             }
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -1751,6 +2181,16 @@
                 }
               }
             }
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -1784,6 +2224,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PayerResponseDto"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
                 }
               }
             }
@@ -1827,6 +2277,16 @@
                 }
               }
             }
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -1859,6 +2319,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/RevenueTypeResponseDto"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
                 }
               }
             }
@@ -1895,6 +2365,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/RevenueTypeResponseDto"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
                 }
               }
             }
@@ -1942,6 +2422,16 @@
                 }
               }
             }
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -1973,6 +2463,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/RevenueTypeResponseDto"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
                 }
               }
             }
@@ -2142,6 +2642,16 @@
                 }
               }
             }
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -2174,6 +2684,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/AssessmentResponseDto"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
                 }
               }
             }
@@ -2333,6 +2853,16 @@
         "responses": {
           "200": {
             "description": ""
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -2369,6 +2899,16 @@
                 }
               }
             }
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -2402,6 +2942,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/AssessmentResponseDto"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
                 }
               }
             }
@@ -2583,6 +3133,16 @@
                 }
               }
             }
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -2620,6 +3180,16 @@
                 }
               }
             }
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -2653,6 +3223,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PaymentDetailResponseDto"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
                 }
               }
             }
@@ -2696,6 +3276,16 @@
           },
           "503": {
             "description": "CHANNEL_UNAVAILABLE"
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -2736,6 +3326,16 @@
           },
           "422": {
             "description": "OVERPAYMENT"
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -2793,6 +3393,16 @@
           },
           "401": {
             "description": "INVALID_SIGNATURE"
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
           }
         },
         "summary": "Signed channel callback (idempotent)",
@@ -2825,6 +3435,16 @@
                   "items": {
                     "$ref": "#/components/schemas/TariffCategoryResponseDto"
                   }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
                 }
               }
             }
@@ -2866,6 +3486,16 @@
           },
           "400": {
             "description": "TARIFF_TIERS_INVALID"
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -2899,6 +3529,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/TariffCategoryResponseDto"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
                 }
               }
             }
@@ -2942,6 +3582,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/TariffCategoryResponseDto"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
                 }
               }
             }
@@ -3045,6 +3695,16 @@
                 }
               }
             }
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -3077,6 +3737,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/WaterAccountResponseDto"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
                 }
               }
             }
@@ -3116,6 +3786,16 @@
                 }
               }
             }
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -3148,6 +3828,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/WaterAccountResponseDto"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
                 }
               }
             }
@@ -3186,6 +3876,16 @@
                 }
               }
             }
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -3218,6 +3918,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/MeterResponseDto"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
                 }
               }
             }
@@ -3254,6 +3964,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/MeterResponseDto"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
                 }
               }
             }
@@ -3300,6 +4020,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/MeterResponseDto"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
                 }
               }
             }
@@ -3420,6 +4150,16 @@
                 }
               }
             }
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -3458,6 +4198,16 @@
           },
           "422": {
             "description": "READING_BELOW_PREVIOUS"
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -3495,6 +4245,16 @@
                 }
               }
             }
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -3515,6 +4275,16 @@
         "responses": {
           "200": {
             "description": ""
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -3566,6 +4336,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/CsvSummaryResponseDto"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
                 }
               }
             }
@@ -3643,6 +4423,16 @@
                 }
               }
             }
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -3681,6 +4471,16 @@
           },
           "409": {
             "description": "BILLING_CYCLE_INVALID_STATE (already released)"
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -3714,6 +4514,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/BillingCycleResponseDto"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
                 }
               }
             }
@@ -3756,6 +4566,16 @@
           },
           "409": {
             "description": "BILLING_CYCLE_HAS_FLAGGED_BILLS"
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -3875,6 +4695,16 @@
                 }
               }
             }
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -3911,6 +4741,16 @@
                 }
               }
             }
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -3939,6 +4779,16 @@
         "responses": {
           "200": {
             "description": ""
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -3985,6 +4835,16 @@
                 }
               }
             }
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -4028,6 +4888,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/BillResponseDto"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
                 }
               }
             }
@@ -4087,6 +4957,16 @@
                 }
               }
             }
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -4136,6 +5016,16 @@
         "responses": {
           "200": {
             "description": ""
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -4170,6 +5060,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ReconciliationRunResponseDto"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
                 }
               }
             }
@@ -4274,6 +5174,16 @@
                 }
               }
             }
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -4324,6 +5234,16 @@
                 }
               }
             }
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -4353,6 +5273,16 @@
         "responses": {
           "200": {
             "description": ""
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -4380,6 +5310,16 @@
                   "items": {
                     "$ref": "#/components/schemas/ChannelStatementResponseDto"
                   }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
                 }
               }
             }
@@ -4434,6 +5374,16 @@
           },
           "422": {
             "description": "STATEMENT_INVALID"
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -4473,6 +5423,16 @@
                 }
               }
             }
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -4508,6 +5468,16 @@
                 }
               }
             }
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -4537,6 +5507,16 @@
         "responses": {
           "204": {
             "description": ""
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -4577,6 +5557,16 @@
           },
           "409": {
             "description": "DUPLICATE_POSTING"
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -4614,6 +5604,16 @@
                 }
               }
             }
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -4647,6 +5647,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/JournalBatchResponseDto"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
                 }
               }
             }
@@ -4755,6 +5765,16 @@
                 }
               }
             }
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -4788,6 +5808,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/JournalBatchDetailResponseDto"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
                 }
               }
             }
@@ -4836,6 +5866,16 @@
                   "items": {
                     "$ref": "#/components/schemas/JournalLineResponseDto"
                   }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
                 }
               }
             }
@@ -4888,6 +5928,16 @@
                 }
               }
             }
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -4927,6 +5977,16 @@
         "responses": {
           "200": {
             "description": ""
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -4968,6 +6028,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/FmisReconciliationDrilldownResponseDto"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
                 }
               }
             }
@@ -5014,6 +6084,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/OverviewResponseDto"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
                 }
               }
             }
@@ -5090,6 +6170,16 @@
                 }
               }
             }
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -5139,6 +6229,16 @@
                 }
               }
             }
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -5185,6 +6285,16 @@
                   "items": {
                     "$ref": "#/components/schemas/EfficiencyRowResponseDto"
                   }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
                 }
               }
             }
@@ -5256,6 +6366,16 @@
           },
           "422": {
             "description": "INSUFFICIENT_HISTORY"
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -5286,6 +6406,16 @@
         "responses": {
           "200": {
             "description": ""
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -5384,6 +6514,16 @@
                 }
               }
             }
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -5408,6 +6548,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/UnacknowledgedCountResponseDto"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
                 }
               }
             }
@@ -5438,6 +6588,16 @@
                   "items": {
                     "$ref": "#/components/schemas/AlertResponseDto"
                   }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
                 }
               }
             }
@@ -5474,6 +6634,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/AlertResponseDto"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
                 }
               }
             }
@@ -5526,6 +6696,16 @@
                 }
               }
             }
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -5561,6 +6741,16 @@
                 }
               }
             }
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -5590,6 +6780,16 @@
         "responses": {
           "204": {
             "description": ""
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -5610,6 +6810,16 @@
         "responses": {
           "200": {
             "description": ""
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -5664,6 +6874,16 @@
                 }
               }
             }
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -5684,6 +6904,16 @@
         "responses": {
           "200": {
             "description": ""
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -5741,6 +6971,16 @@
           },
           "422": {
             "description": "CSV_INVALID | CSV_TOO_MANY_ROWS"
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -5814,6 +7054,16 @@
                 }
               }
             }
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -5847,6 +7097,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/BulkUploadResponseDto"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
                 }
               }
             }
@@ -5960,6 +7220,16 @@
                 }
               }
             }
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -5992,6 +7262,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ReversalResponseDto"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
                 }
               }
             }
@@ -6028,6 +7308,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ReversalResponseDto"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
                 }
               }
             }
@@ -6080,6 +7370,16 @@
           },
           "403": {
             "description": "SOD_VIOLATION"
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -6126,6 +7426,16 @@
                 }
               }
             }
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -6156,6 +7466,16 @@
           },
           "404": {
             "description": "User is not linked to a payer"
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -6185,6 +7505,16 @@
         "responses": {
           "200": {
             "description": ""
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -6241,6 +7571,16 @@
                 }
               }
             }
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -6281,6 +7621,16 @@
           },
           "403": {
             "description": "NOT_OWN_PAYER"
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -6381,6 +7731,16 @@
                   "items": {
                     "$ref": "#/components/schemas/NotificationResponseDto"
                   }
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Error envelope: statusCode, a stable `code` (ErrorCode), message, optional details and requestId.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponseDto"
                 }
               }
             }
@@ -11114,6 +12474,99 @@
           "body",
           "status",
           "createdAt"
+        ]
+      },
+      "ErrorResponseDto": {
+        "type": "object",
+        "properties": {
+          "statusCode": {
+            "type": "number",
+            "example": 403
+          },
+          "code": {
+            "type": "string",
+            "enum": [
+              "INTERNAL_ERROR",
+              "VALIDATION_FAILED",
+              "NOT_FOUND",
+              "UNAUTHENTICATED",
+              "FORBIDDEN",
+              "RATE_LIMITED",
+              "CONFLICT",
+              "INVALID_CREDENTIALS",
+              "ACCOUNT_LOCKED",
+              "PASSWORD_POLICY_VIOLATION",
+              "PASSWORD_REUSED",
+              "MFA_REQUIRED",
+              "MFA_INVALID",
+              "REFRESH_TOKEN_INVALID",
+              "REFRESH_TOKEN_REUSED",
+              "SOD_VIOLATION",
+              "SYSTEM_ROLE_IMMUTABLE",
+              "AUDIT_CHAIN_BROKEN",
+              "DUPLICATE_PAYER",
+              "INVALID_TIN",
+              "INVALID_CONTROL_NUMBER",
+              "ASSESSMENT_NOT_PAYABLE",
+              "OVERPAYMENT",
+              "REVERSAL_ALREADY_DECIDED",
+              "PAYMENT_NOT_REVERSIBLE",
+              "CSV_INVALID",
+              "CSV_TOO_MANY_ROWS",
+              "UNSUPPORTED_FILE_TYPE",
+              "REVENUE_TYPE_INACTIVE",
+              "PAYER_SUSPENDED",
+              "REVERSAL_PENDING_EXISTS",
+              "READING_BELOW_PREVIOUS",
+              "READING_INVALID_ROLLOVER",
+              "READING_DUPLICATE_DATE",
+              "METER_NOT_ACTIVE",
+              "BILLING_CYCLE_EXISTS",
+              "BILLING_CYCLE_INVALID_STATE",
+              "BILLING_CYCLE_HAS_FLAGGED_BILLS",
+              "TARIFF_NOT_CONFIGURED",
+              "TARIFF_TIERS_INVALID",
+              "BILL_NOT_PAYABLE",
+              "BILL_NOT_FLAGGED",
+              "METER_ALREADY_REPLACED",
+              "ACCOUNT_NOT_ACTIVE",
+              "READING_IN_FUTURE",
+              "PDF_NOT_AVAILABLE",
+              "CHANNEL_UNAVAILABLE",
+              "INVALID_SIGNATURE",
+              "FX_RATE_UNAVAILABLE",
+              "UNSUPPORTED_CURRENCY",
+              "DUPLICATE_PAYMENT",
+              "PAYMENT_INVALID_STATE",
+              "CHANNEL_NOT_SUPPORTED",
+              "STATEMENT_INVALID",
+              "NOT_OWN_PAYER",
+              "DUPLICATE_POSTING",
+              "GL_MAPPING_MISSING",
+              "JOURNAL_UNBALANCED",
+              "FMIS_UNAVAILABLE",
+              "INSUFFICIENT_HISTORY"
+            ],
+            "example": "SOD_VIOLATION",
+            "description": "Stable machine-readable code"
+          },
+          "message": {
+            "type": "string",
+            "example": "The user who captured a reversal cannot approve it."
+          },
+          "details": {
+            "type": "object",
+            "description": "Context for the error (ids, limits, conflicts)"
+          },
+          "requestId": {
+            "type": "string",
+            "description": "Correlation id, also in the x-request-id header"
+          }
+        },
+        "required": [
+          "statusCode",
+          "code",
+          "message"
         ]
       }
     }

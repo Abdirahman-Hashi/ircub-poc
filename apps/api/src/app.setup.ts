@@ -8,6 +8,7 @@ import { API } from '@ircub/shared';
 
 import { APP, SWAGGER, VALIDATION_PIPE_OPTIONS } from './app.constants';
 import { requestIdMiddleware } from './common/context/request-id.middleware';
+import { ErrorResponseDto } from './common/dto/error-response.dto';
 import { AppConfigService } from './config/app-config.service';
 
 /**
@@ -40,7 +41,32 @@ export function buildOpenApiDocument(app: INestApplication): OpenAPIObject {
     .setContact(APP.AUTHOR, '', '')
     .addBearerAuth({ type: 'http', scheme: 'bearer', bearerFormat: 'JWT' }, SWAGGER.BEARER_SCHEME)
     .build();
-  return SwaggerModule.createDocument(app, builder);
+  const document = SwaggerModule.createDocument(app, builder, { extraModels: [ErrorResponseDto] });
+  return withErrorEnvelope(document);
+}
+
+/**
+ * Every operation can fail with the same `{ statusCode, code, message, details?, requestId? }`
+ * body; declaring it once as the `default` response keeps the per-endpoint decorators focused
+ * on the codes that matter (DUPLICATE_POSTING, SOD_VIOLATION, …).
+ */
+function withErrorEnvelope(document: OpenAPIObject): OpenAPIObject {
+  const errorResponse = {
+    description: SWAGGER.ERROR_RESPONSE_DESCRIPTION,
+    content: {
+      'application/json': { schema: { $ref: `#/components/schemas/${ErrorResponseDto.name}` } },
+    },
+  };
+  for (const path of Object.values(document.paths)) {
+    for (const operation of Object.values(
+      path as Record<string, { responses?: Record<string, unknown> }>,
+    )) {
+      if (typeof operation === 'object' && operation.responses !== undefined) {
+        operation.responses.default ??= errorResponse;
+      }
+    }
+  }
+  return document;
 }
 
 export function mountSwagger(app: INestApplication): void {
