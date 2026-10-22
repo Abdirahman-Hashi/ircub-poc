@@ -8,6 +8,7 @@ import {
   ErrorCode,
   PaymentChannel,
   PaymentStatus,
+  PERMISSIONS,
   ReversalStatus,
 } from '@ircub/shared';
 
@@ -165,24 +166,77 @@ describe('revenue collection (e2e)', () => {
       .expect(403);
     expect(noPermission.body.code).toBe(ErrorCode.FORBIDDEN);
 
-    // Even the capturer *with* the permission is blocked: the supervisor captures one and tries to approve it.
-    const second = await request(app.getHttpServer())
-      .get('/payments')
-      .query({ payerId: assessment.payer.id, channel: PaymentChannel.BANK })
+    // Even the capturer *with* the approve permission is blocked by the per-record rule. The
+    // configurable SoD rule normally forbids holding both permissions, so it is lifted for the
+    // check and restored afterwards.
+    const admin = await loginAs(app, SEED.ADMIN);
+    const rules = await request(app.getHttpServer())
+      .get('/sod-rules')
+      .set('Authorization', bearer(admin))
+      .expect(200);
+    const captureApprove = (
+      rules.body as { id: string; permissionACode: string; permissionBCode: string }[]
+    ).find(
+      (r) =>
+        [r.permissionACode, r.permissionBCode].includes(PERMISSIONS.REVERSALS_CAPTURE) &&
+        [r.permissionACode, r.permissionBCode].includes(PERMISSIONS.REVERSALS_APPROVE),
+    );
+    expect(captureApprove).toBeDefined();
+    const me = await request(app.getHttpServer())
+      .get('/auth/me')
       .set('Authorization', bearer(officer))
       .expect(200);
-    const admin = await loginAs(app, SEED.ADMIN);
-    const ownReversal = await request(app.getHttpServer())
-      .post('/reversals')
-      .set('Authorization', bearer(admin))
-      .send({ paymentId: second.body.items[0].id, reason: 'Admin captured' });
-    if (ownReversal.status === 201) {
-      const sod = await request(app.getHttpServer())
-        .post(`/reversals/${ownReversal.body.id}/approve`)
+    const officerId = me.body.user.id as string;
+    const originalRoleIds = (me.body.roles as { id: string }[]).map((r) => r.id);
+    let approverRoleId: string | null = null;
+    try {
+      await request(app.getHttpServer())
+        .delete(`/sod-rules/${captureApprove?.id ?? ''}`)
         .set('Authorization', bearer(admin))
+        .expect(204);
+      const role = await request(app.getHttpServer())
+        .post('/roles')
+        .set('Authorization', bearer(admin))
+        .send({ code: `E2E_APPROVER_${Date.now()}`, name: 'E2E approver' })
+        .expect(201);
+      approverRoleId = role.body.id as string;
+      await request(app.getHttpServer())
+        .put(`/roles/${approverRoleId}/permissions`)
+        .set('Authorization', bearer(admin))
+        .send({ codes: [PERMISSIONS.REVERSALS_APPROVE] })
+        .expect(200);
+      await request(app.getHttpServer())
+        .put(`/users/${officerId}/roles`)
+        .set('Authorization', bearer(admin))
+        .send({ roleIds: [...originalRoleIds, approverRoleId] })
+        .expect(200);
+      const sod = await request(app.getHttpServer())
+        .post(`/reversals/${reversal.body.id}/approve`)
+        .set('Authorization', bearer(officer))
         .send({})
         .expect(403);
       expect(sod.body.code).toBe(ErrorCode.SOD_VIOLATION);
+    } finally {
+      await request(app.getHttpServer())
+        .put(`/users/${officerId}/roles`)
+        .set('Authorization', bearer(admin))
+        .send({ roleIds: originalRoleIds })
+        .expect(200);
+      if (approverRoleId !== null) {
+        await request(app.getHttpServer())
+          .delete(`/roles/${approverRoleId}`)
+          .set('Authorization', bearer(admin))
+          .expect(204);
+      }
+      await request(app.getHttpServer())
+        .post('/sod-rules')
+        .set('Authorization', bearer(admin))
+        .send({
+          permissionACode: captureApprove?.permissionACode,
+          permissionBCode: captureApprove?.permissionBCode,
+          description: 'Restored by the e2e suite',
+        })
+        .expect(201);
     }
 
     const approved = await request(app.getHttpServer())
@@ -200,6 +254,36 @@ describe('revenue collection (e2e)', () => {
     expect(detail.body.paidAmount).toBe(money(usdLocal.plus(10))); // usd + 50000 + 10 − 50000
     expect(detail.body.status).toBe(AssessmentStatus.PART_PAID);
 
+    const again = await request(app.getHttpServer())
+      .post(`/reversals/${reversal.body.id}/approve`)
+      .set('Authorization', bearer(supervisor))
+      .send({})
+      .expect(409);
+    expect(again.body.code).toBe(ErrorCode.REVERSAL_ALREADY_DECIDED);
+  });
+
+  it('rejects a reversal with a note and leaves the payment untouched', async () => {
+    const payments = await request(app.getHttpServer())
+      .get('/payments')
+      .query({ payerId: assessment.payer.id, status: PaymentStatus.CONFIRMED })
+      .set('Authorization', bearer(officer))
+      .expect(200);
+    const paymentId = payments.body.items[0].id as string;
+    const reversal = await request(app.getHttpServer())
+      .post('/reversals')
+      .set('Authorization', bearer(officer))
+      .send({ paymentId, reason: 'Second thoughts' })
+      .expect(201);
+    const rejected = await request(app.getHttpServer())
+      .post(`/reversals/${reversal.body.id}/reject`)
+      .set('Authorization', bearer(supervisor))
+      .send({ note: 'Payment is genuine' })
+      .expect(201);
+    expect(rejected.body).toMatchObject({
+      status: ReversalStatus.REJECTED,
+      decisionNote: 'Payment is genuine',
+      payment: { status: PaymentStatus.CONFIRMED },
+    });
     const again = await request(app.getHttpServer())
       .post(`/reversals/${reversal.body.id}/approve`)
       .set('Authorization', bearer(supervisor))

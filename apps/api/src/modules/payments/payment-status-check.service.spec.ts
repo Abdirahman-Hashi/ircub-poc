@@ -1,4 +1,5 @@
 import {
+  AlertType,
   ChannelOutcome,
   Currency,
   PaymentChannel,
@@ -57,15 +58,13 @@ function build(options: { attempts: number; channelReply: ChannelStatusResponse 
   };
   const settlement = {
     settle: jest.fn().mockResolvedValue({ duplicate: false }),
-    markPermanentlyFailed: jest
-      .fn()
-      .mockImplementation((id: string) =>
-        Promise.resolve({
-          ...pendingPayment(RETRY_LIMIT),
-          id,
-          status: PaymentStatus.PERMANENTLY_FAILED,
-        }),
-      ),
+    markPermanentlyFailed: jest.fn().mockImplementation((id: string) =>
+      Promise.resolve({
+        ...pendingPayment(RETRY_LIMIT),
+        id,
+        status: PaymentStatus.PERMANENTLY_FAILED,
+      }),
+    ),
   };
   const notifications = {
     sendNow: jest.fn().mockImplementation((input: unknown) => {
@@ -86,6 +85,7 @@ function build(options: { attempts: number; channelReply: ChannelStatusResponse 
       .fn()
       .mockImplementation((type: unknown, data: unknown) => emitted.push({ type, data })),
   };
+  const alerts = { raise: jest.fn().mockResolvedValue(null) };
   const service = new PaymentStatusCheckService(
     prisma as never,
     { clientFor: () => client } as never,
@@ -95,9 +95,9 @@ function build(options: { attempts: number; channelReply: ChannelStatusResponse 
     systemConfig as never,
     { register: jest.fn() } as never,
     events as never,
-    { raise: jest.fn().mockResolvedValue(null) } as never,
+    alerts as never,
   );
-  return { service, updates, sent, emitted, settlement, permissions };
+  return { service, updates, sent, emitted, settlement, permissions, alerts };
 }
 
 const pendingReply: ChannelStatusResponse = {
@@ -143,7 +143,7 @@ describe('PaymentStatusCheckService', () => {
   });
 
   it('marks PERMANENTLY_FAILED at the limit and e-mails every holder of payments.supervise', async () => {
-    const { service, updates, sent, emitted, permissions, settlement } = build({
+    const { service, updates, sent, emitted, permissions, settlement, alerts } = build({
       attempts: RETRY_LIMIT - 1,
       channelReply: pendingReply,
     });
@@ -154,6 +154,9 @@ describe('PaymentStatusCheckService', () => {
       PAYMENTS_MESSAGES.PERMANENTLY_FAILED,
     );
     expect(permissions.userIdsHolding).toHaveBeenCalledWith(PERMISSIONS.PAYMENTS_SUPERVISE);
+    expect(alerts.raise).toHaveBeenCalledWith(
+      expect.objectContaining({ type: AlertType.PAYMENT_PERMANENTLY_FAILED, dedupeKey: 'pay-1' }),
+    );
     expect(sent.map((s) => (s as { to: string }).to)).toEqual([
       'supervisor@ircub.test',
       'admin@ircub.test',

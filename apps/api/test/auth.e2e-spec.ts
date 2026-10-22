@@ -1,3 +1,4 @@
+import { authenticator } from 'otplib';
 import request from 'supertest';
 
 import { API, ErrorCode } from '@ircub/shared';
@@ -162,5 +163,63 @@ describe('auth (e2e)', () => {
       .send({ email, password: created.body.temporaryPassword as string })
       .expect(423);
     expect(locked.body.code).toBe(ErrorCode.ACCOUNT_LOCKED);
+  });
+  it('enrols, confirms and uses TOTP two-factor authentication, then disables it', async () => {
+    const session = await loginAs(app, SEED.AUDITOR);
+    const auth = `Bearer ${session.accessToken}`;
+    const enrol = await request(app.getHttpServer())
+      .post('/auth/mfa/enrol')
+      .set('Authorization', auth)
+      .expect(201);
+    const secret = enrol.body.secret as string;
+    expect(enrol.body.otpauthUrl).toContain('otpauth://totp/');
+
+    const badConfirm = await request(app.getHttpServer())
+      .post('/auth/mfa/confirm')
+      .set('Authorization', auth)
+      .send({ code: '000000' })
+      .expect(401);
+    expect(badConfirm.body.code).toBe(ErrorCode.MFA_INVALID);
+    await request(app.getHttpServer())
+      .post('/auth/mfa/confirm')
+      .set('Authorization', auth)
+      .send({ code: authenticator.generate(secret) })
+      .expect(204);
+
+    // Password alone now yields a challenge, not a session.
+    const challenge = await request(app.getHttpServer())
+      .post('/auth/login')
+      .send({ email: SEED.AUDITOR, password: SEED.PASSWORD })
+      .expect(200);
+    expect(challenge.body).toMatchObject({ mfaRequired: true });
+    expect(challenge.body.accessToken).toBeUndefined();
+    const wrongCode = await request(app.getHttpServer())
+      .post('/auth/mfa/verify')
+      .send({ challengeToken: challenge.body.challengeToken, code: '000000' })
+      .expect(401);
+    expect(wrongCode.body.code).toBe(ErrorCode.MFA_INVALID);
+    const verified = await request(app.getHttpServer())
+      .post('/auth/mfa/verify')
+      .send({ challengeToken: challenge.body.challengeToken, code: authenticator.generate(secret) })
+      .expect(200);
+    expect(verified.body.accessToken).toEqual(expect.any(String));
+    expect(verified.body.permissions).toContain('audit.view');
+
+    const wrongPassword = await request(app.getHttpServer())
+      .post('/auth/mfa/disable')
+      .set('Authorization', `Bearer ${verified.body.accessToken}`)
+      .send({ password: 'not-the-Password-1!' })
+      .expect(401);
+    expect(wrongPassword.body.code).toBe(ErrorCode.INVALID_CREDENTIALS);
+    await request(app.getHttpServer())
+      .post('/auth/mfa/disable')
+      .set('Authorization', `Bearer ${verified.body.accessToken}`)
+      .send({ password: SEED.PASSWORD })
+      .expect(204);
+    const plain = await request(app.getHttpServer())
+      .post('/auth/login')
+      .send({ email: SEED.AUDITOR, password: SEED.PASSWORD })
+      .expect(200);
+    expect(plain.body.mfaRequired).toBe(false);
   });
 });

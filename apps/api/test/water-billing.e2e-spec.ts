@@ -2,6 +2,7 @@ import { addDays, subDays } from 'date-fns';
 import request from 'supertest';
 
 import {
+  AlertType,
   BillingCycleStatus,
   BillStatus,
   ErrorCode,
@@ -191,6 +192,18 @@ describe('water billing (e2e)', () => {
     expect((bill.tierBreakdown as { units: number }[]).map((l) => l.units)).toEqual([10, 70]);
     expect(bill.totalDue).toBe('15500');
 
+    // The run raised the ABNORMAL_CONSUMPTION alert for this cycle (event-sourced alert).
+    const alerts = await request(app.getHttpServer())
+      .get('/alerts')
+      .query({ type: AlertType.ABNORMAL_CONSUMPTION, acknowledged: 'false', pageSize: 100 })
+      .set('Authorization', bearer(admin))
+      .expect(200);
+    expect(
+      (alerts.body.items as { data: { cycleId: string } }[]).some(
+        (a) => a.data.cycleId === cycleId,
+      ),
+    ).toBe(true);
+
     const blocked = await request(app.getHttpServer())
       .post(`/billing-cycles/${cycleId}/release`)
       .set('Authorization', bearer(water))
@@ -361,5 +374,19 @@ describe('water billing (e2e)', () => {
       .send({ meterId, readingDate: day(new Date()), readingValue: 1200 })
       .expect(409);
     expect(oldMeter.body.code).toBe(ErrorCode.METER_NOT_ACTIVE);
+  });
+
+  it('a customer can only read statements of their own water accounts', async () => {
+    const customer = await loginAs(app, SEED.CUSTOMER);
+    const foreign = await request(app.getHttpServer())
+      .get(`/me/water-accounts/${accountId}/statement`)
+      .set('Authorization', bearer(customer))
+      .expect(403);
+    expect(foreign.body.code).toBe(ErrorCode.FORBIDDEN);
+    // The staff route is closed to customers altogether (no bills.view).
+    await request(app.getHttpServer())
+      .get(`/water-accounts/${accountId}/statement`)
+      .set('Authorization', bearer(customer))
+      .expect(403);
   });
 });

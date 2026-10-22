@@ -1,4 +1,4 @@
-import { JournalBatchStatus } from '@ircub/shared';
+import { AlertType, JournalBatchStatus } from '@ircub/shared';
 
 import { SSE_EVENT } from '../../common/sse/event-names';
 
@@ -36,6 +36,7 @@ function build(options: { status: JournalBatchStatus; attempts: number; reply: '
       ),
     ledger: jest.fn(),
   };
+  const alerts = { raise: jest.fn().mockResolvedValue(null) };
   const service = new FmisPosterService(
     prisma as never,
     fmis,
@@ -46,9 +47,9 @@ function build(options: { status: JournalBatchStatus; attempts: number; reply: '
         .fn()
         .mockImplementation((type: unknown, data: unknown) => emitted.push({ type, data })),
     } as never,
-    { raise: jest.fn().mockResolvedValue(null) } as never,
+    alerts as never,
   );
-  return { service, updates, emitted, fmis };
+  return { service, updates, emitted, fmis, alerts };
 }
 
 describe('FmisPosterService', () => {
@@ -96,8 +97,8 @@ describe('FmisPosterService', () => {
     expect(updates[0]?.data).toEqual({ attempts: 1, lastError: 'FMIS down' });
   });
 
-  it('marks FAILED with lastError once the limit is reached and stops retrying', async () => {
-    const { service, updates, emitted } = build({
+  it('marks FAILED with lastError once the limit is reached, raises the alert and stops retrying', async () => {
+    const { service, updates, emitted, alerts } = build({
       status: JournalBatchStatus.PENDING,
       attempts: LIMIT - 1,
       reply: new Error('FMIS down'),
@@ -108,6 +109,9 @@ describe('FmisPosterService', () => {
       lastError: 'FMIS down',
       status: JournalBatchStatus.FAILED,
     });
+    expect(alerts.raise).toHaveBeenCalledWith(
+      expect.objectContaining({ type: AlertType.FMIS_BATCH_FAILED, dedupeKey: 'b1' }),
+    );
     expect(emitted[0]).toMatchObject({ data: { status: JournalBatchStatus.FAILED } });
   });
 });

@@ -181,13 +181,21 @@ describe('online payment channels (e2e)', () => {
       });
       expect(failed.permanentlyFailedAt).not.toBeNull();
 
-      const notifications = await request(app.getHttpServer())
-        .get('/notifications')
-        .query({ relatedType: 'Payment', relatedId: String(pending.id) })
-        .set('Authorization', bearer(admin))
-        .expect(200);
-      const recipients = (notifications.body.items as { to: string }[]).map((n) => n.to);
-      expect(recipients).toEqual(expect.arrayContaining([SEED.SUPERVISOR]));
+      // The escalation e-mails are written after the status flips: poll until every holder
+      // of payments.supervise (admin and supervisor) has one.
+      const recipients = await waitFor(
+        async () => {
+          const notifications = await request(app.getHttpServer())
+            .get('/notifications')
+            .query({ relatedType: 'Payment', relatedId: String(pending.id) })
+            .set('Authorization', bearer(admin))
+            .expect(200);
+          return (notifications.body.items as { to: string }[]).map((n) => n.to);
+        },
+        (sent) => sent.includes(SEED.SUPERVISOR),
+        SETTLE_TIMEOUT_MS,
+      );
+      expect(recipients).toEqual(expect.arrayContaining([SEED.SUPERVISOR, SEED.ADMIN]));
       expect(recipients).not.toContain(SEED.OFFICER);
     },
     PERMANENT_FAILURE_TIMEOUT_MS + SETTLE_TIMEOUT_MS,
