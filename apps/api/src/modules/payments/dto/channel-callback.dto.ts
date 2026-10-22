@@ -1,5 +1,5 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsEnum, IsIn, IsISO8601, IsString, Matches, MinLength } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsEnum, IsIn, IsISO8601, IsOptional, IsString, Matches, MinLength } from 'class-validator';
 
 import { ChannelOutcome, Currency } from '@ircub/shared';
 
@@ -34,4 +34,12 @@ export class ChannelCallbackDto {
   @ApiProperty({ format: 'date-time' })
   @IsISO8601()
   paidAt!: string;
+
+  @ApiPropertyOptional({
+    description:
+      'IRCUB payment id sent at initiation; lets a callback find a payment whose initiation reply was lost',
+  })
+  @IsOptional()
+  @IsString()
+  clientRef?: string;
 }

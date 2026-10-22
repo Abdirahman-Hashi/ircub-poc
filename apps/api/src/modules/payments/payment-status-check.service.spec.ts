@@ -55,7 +55,18 @@ function build(options: { attempts: number; channelReply: ChannelStatusResponse 
           : Promise.resolve(options.channelReply),
       ),
   };
-  const settlement = { settle: jest.fn().mockResolvedValue({ duplicate: false }) };
+  const settlement = {
+    settle: jest.fn().mockResolvedValue({ duplicate: false }),
+    markPermanentlyFailed: jest
+      .fn()
+      .mockImplementation((id: string) =>
+        Promise.resolve({
+          ...pendingPayment(RETRY_LIMIT),
+          id,
+          status: PaymentStatus.PERMANENTLY_FAILED,
+        }),
+      ),
+  };
   const notifications = {
     sendNow: jest.fn().mockImplementation((input: unknown) => {
       sent.push(input);
@@ -132,15 +143,16 @@ describe('PaymentStatusCheckService', () => {
   });
 
   it('marks PERMANENTLY_FAILED at the limit and e-mails every holder of payments.supervise', async () => {
-    const { service, updates, sent, emitted, permissions } = build({
+    const { service, updates, sent, emitted, permissions, settlement } = build({
       attempts: RETRY_LIMIT - 1,
       channelReply: pendingReply,
     });
     await expect(service.check('pay-1')).resolves.toBeUndefined();
     expect(updates[0]).toMatchObject({ data: { statusCheckAttempts: RETRY_LIMIT } });
-    expect(updates[1]).toMatchObject({
-      data: { status: PaymentStatus.PERMANENTLY_FAILED, permanentlyFailedAt: expect.any(Date) },
-    });
+    expect(settlement.markPermanentlyFailed).toHaveBeenCalledWith(
+      'pay-1',
+      PAYMENTS_MESSAGES.PERMANENTLY_FAILED,
+    );
     expect(permissions.userIdsHolding).toHaveBeenCalledWith(PERMISSIONS.PAYMENTS_SUPERVISE);
     expect(sent.map((s) => (s as { to: string }).to)).toEqual([
       'supervisor@ircub.test',
@@ -150,6 +162,17 @@ describe('PaymentStatusCheckService', () => {
       SSE_EVENT.PAYMENT_PERMANENTLY_FAILED,
       SSE_EVENT.PAYMENT_UPDATED,
     ]);
+  });
+
+  it('does not escalate when a callback settled the payment just before the limit was applied', async () => {
+    const { service, settlement, sent, emitted } = build({
+      attempts: RETRY_LIMIT - 1,
+      channelReply: pendingReply,
+    });
+    settlement.markPermanentlyFailed.mockResolvedValue(null);
+    await expect(service.check('pay-1')).resolves.toBeUndefined();
+    expect(sent).toHaveLength(0);
+    expect(emitted).toHaveLength(0);
   });
 
   it('is a no-op when the payment is no longer pending', async () => {

@@ -14,6 +14,8 @@ export interface ChannelInitiateRequest {
   readonly controlNumber: string;
   readonly callbackUrl: string;
   readonly payerPhone?: string;
+  /** IRCUB's own payment id, echoed back so a callback can be matched even when the initiation reply was lost. */
+  readonly clientRef?: string;
 }
 
 export interface ChannelInitiateResponse {
@@ -28,6 +30,7 @@ export interface ChannelStatusResponse {
   readonly currency: Currency;
   readonly controlNumber: string;
   readonly paidAt: string | null;
+  readonly clientRef?: string;
 }
 
 /** Body the channel posts to `callbackUrl`, signed in `x-signature`. */
@@ -38,6 +41,7 @@ export interface ChannelCallbackPayload {
   readonly currency: Currency;
   readonly controlNumber: string;
   readonly paidAt: string;
+  readonly clientRef?: string;
 }
 
 export interface ScenarioRequest {

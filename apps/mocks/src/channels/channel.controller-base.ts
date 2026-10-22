@@ -64,6 +64,7 @@ export abstract class ChannelControllerBase {
       currency: payment.currency,
       controlNumber: payment.controlNumber,
       paidAt: payment.paidAt,
+      ...(payment.clientRef === null ? {} : { clientRef: payment.clientRef }),
     };
   }
 

@@ -124,14 +124,15 @@ export class PaymentStatusCheckService implements OnModuleInit {
     payment: PaymentForStatusCheck,
     attempts: number,
   ): Promise<void> {
-    await this.prisma.payment.update({
-      where: { id: payment.id },
-      data: {
-        status: PaymentStatus.PERMANENTLY_FAILED,
-        permanentlyFailedAt: new Date(),
-        failureReason: PAYMENTS_MESSAGES.PERMANENTLY_FAILED,
-      },
-    });
+    const failed = await this.settlement.markPermanentlyFailed(
+      payment.id,
+      PAYMENTS_MESSAGES.PERMANENTLY_FAILED,
+    );
+    if (failed === null) {
+      // A callback settled the payment between the status check and this step.
+      this.logger.log({ msg: 'payment settled before permanent failure', paymentId: payment.id });
+      return;
+    }
     this.logger.error({
       msg: 'payment permanently failed',
       paymentId: payment.id,

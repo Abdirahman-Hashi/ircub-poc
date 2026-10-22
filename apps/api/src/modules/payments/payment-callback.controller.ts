@@ -73,7 +73,9 @@ export class PaymentCallbackController {
         currency: dto.currency,
         controlNumber: dto.controlNumber,
         paidAt: dto.paidAt,
+        ...(dto.clientRef === undefined ? {} : { clientRef: dto.clientRef }),
       },
+      dto.clientRef ?? null,
     );
   }
 }

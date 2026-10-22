@@ -40,6 +40,7 @@ export class ChannelsService {
       currency: dto.currency,
       controlNumber: dto.controlNumber,
       callbackUrl: dto.callbackUrl,
+      clientRef: dto.clientRef ?? null,
       status: ChannelOutcome.PENDING,
       paidAt: null,
       createdAt: new Date().toISOString(),
@@ -138,6 +139,7 @@ export class ChannelsService {
       this.store.channelPayments.set(line.txnRef, {
         txnRef: line.txnRef,
         channel: dto.channel,
+        clientRef: null,
         amount: line.amount,
         currency: line.currency,
         controlNumber: line.controlNumber,
@@ -176,6 +178,7 @@ export class ChannelsService {
       currency: payment.currency,
       controlNumber: payment.controlNumber,
       paidAt: payment.paidAt ?? new Date().toISOString(),
+      ...(payment.clientRef === null ? {} : { clientRef: payment.clientRef }),
     };
     const raw = JSON.stringify(body);
     if (payment.callbackUrl === null) {

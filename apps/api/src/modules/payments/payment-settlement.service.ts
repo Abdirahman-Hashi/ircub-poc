@@ -35,29 +35,56 @@ export class PaymentSettlementService {
     private readonly summaries: SummaryService,
   ) {}
 
+  /**
+   * Finds the payment by the channel's reference. When the initiation reply was lost (timeout
+   * after the channel accepted), the payment is FAILED without a `channelTxnRef`; the channel
+   * echoes our `clientRef` (the payment id), so the reference is adopted and the outcome applied.
+   */
   async settleByReference(
     channel: PaymentChannel,
     channelTxnRef: string,
     outcome: SettlementOutcome,
     source: SettlementSource,
     rawPayload: Prisma.InputJsonValue,
+    clientRef: string | null = null,
   ): Promise<SettlementResult> {
     const existing = await this.prisma.payment.findUnique({
       where: { channel_channelTxnRef: { channel, channelTxnRef } },
       select: { id: true },
     });
-    if (existing === null) {
+    const paymentId =
+      existing?.id ?? (await this.adoptReference(channel, channelTxnRef, clientRef));
+    if (paymentId === null) {
       throw new AppException(
         ErrorCode.NOT_FOUND,
         PAYMENTS_MESSAGES.NOT_FOUND,
         HttpStatus.NOT_FOUND,
-        {
-          channel,
-          channelTxnRef,
-        },
+        { channel, channelTxnRef },
       );
     }
-    return this.settle(existing.id, outcome, source, rawPayload);
+    return this.settle(paymentId, outcome, source, rawPayload);
+  }
+
+  /**
+   * The one place a PENDING payment is given up on: the status-check job calls this once the
+   * retry limit is reached. Row-locked and re-checked so a callback confirming the payment at
+   * the same moment is never overwritten; returns `null` when the payment is no longer PENDING.
+   */
+  async markPermanentlyFailed(paymentId: string, reason: string): Promise<Payment | null> {
+    return this.prisma.$transaction(async (tx) => {
+      const payment = await this.lockForUpdate(tx, paymentId);
+      if (payment.status !== PaymentStatus.PENDING) {
+        return null;
+      }
+      return tx.payment.update({
+        where: { id: paymentId },
+        data: {
+          status: PaymentStatus.PERMANENTLY_FAILED,
+          permanentlyFailedAt: new Date(),
+          failureReason: reason,
+        },
+      });
+    });
   }
 
   async settle(
@@ -71,6 +98,15 @@ export class PaymentSettlementService {
       const decision = decideSettlement(payment, outcome);
       if (decision === 'DUPLICATE') {
         return { paymentId, duplicate: true, status: payment.status, payment };
+      }
+      if (payment.status !== PaymentStatus.PENDING) {
+        this.logger.warn({
+          msg: 'late channel outcome re-opens a failed payment',
+          paymentId,
+          source,
+          previousStatus: payment.status,
+          decision,
+        });
       }
       const updated =
         decision === 'CONFIRM'
@@ -148,8 +184,43 @@ export class PaymentSettlementService {
             : new Date(outcome.paidAt),
         callbackPayload: rawPayload,
         failureReason: null,
+        permanentlyFailedAt: null,
       },
     });
+  }
+
+  /** Adopts the channel reference onto the FAILED-at-initiation payment the channel named. */
+  private async adoptReference(
+    channel: PaymentChannel,
+    channelTxnRef: string,
+    clientRef: string | null,
+  ): Promise<string | null> {
+    if (clientRef === null) {
+      return null;
+    }
+    const orphan = await this.prisma.payment.findFirst({
+      where: {
+        id: clientRef,
+        channel,
+        channelTxnRef: null,
+        status: PaymentStatus.FAILED,
+      },
+      select: { id: true },
+    });
+    if (orphan === null) {
+      return null;
+    }
+    await this.prisma.payment.update({
+      where: { id: orphan.id },
+      data: { channelTxnRef },
+    });
+    this.logger.warn({
+      msg: 'channel reference adopted from callback',
+      paymentId: orphan.id,
+      channel,
+      channelTxnRef,
+    });
+    return orphan.id;
   }
 
   private fail(

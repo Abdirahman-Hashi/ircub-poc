@@ -14,11 +14,20 @@ retries with permanent failure, and the payments list with filters.
   `FAILED` trace), then `PENDING` with the channel's `channelTxnRef`, and a
   `payment.status-check` job is scheduled after `PAYMENT_STATUS_CHECK_DELAY_SECONDS`.
 - Settlement (`PaymentSettlementService` + `settlement.rules.ts`) is the only place a `PENDING`
-  payment becomes terminal, under a row lock: a terminal payment answers `duplicate: true`
-  (idempotent callbacks), `FAILED` from the channel → `FAILED`, an amount/currency different
-  from what was initiated → `FAILED` with `AMOUNT_MISMATCH` reason, otherwise the ledger is
-  applied and the payment is `CONFIRMED`. If the ledger refuses (balance settled meanwhile),
-  the payment is `FAILED` with that reason for a supervisor to resolve, never dropped.
+  payment becomes terminal, under a row lock: a settled payment (`CONFIRMED`/`REVERSED`)
+  answers `duplicate: true` (idempotent callbacks), `FAILED` from the channel → `FAILED`, an
+  amount/currency different from what was initiated → `FAILED` with `AMOUNT_MISMATCH` reason,
+  otherwise the ledger is applied and the payment is `CONFIRMED`. A late `SUCCESS` for a
+  `FAILED` or `PERMANENTLY_FAILED` payment is applied too (the channel did take the money);
+  a repeat `FAILED` is a duplicate. If the ledger refuses (balance settled meanwhile), the
+  payment is `FAILED` with that reason for a supervisor to resolve, never dropped.
+- The payment id travels to the channel as `clientRef`. If the initiation reply (and its
+  `txnRef`) is lost to a timeout, the payment is `FAILED` without a reference; the channel
+  echoes `clientRef` in its callback, so `settleByReference` adopts the `txnRef` onto that
+  payment and settles it instead of answering 404.
+- `markPermanentlyFailed` (also in the settlement service) re-reads the locked row and only
+  gives up on a payment that is still `PENDING`, so a callback confirming it at the same
+  moment is never overwritten.
 - Callbacks are trusted only through the HMAC over the raw body (`x-signature`,
   `MOCK_SHARED_SECRET`, constant-time) → `INVALID_SIGNATURE` (401) otherwise.
 - `PaymentStatusCheckService` handles the job: no-op unless still `PENDING`; a final answer

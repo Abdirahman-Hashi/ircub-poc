@@ -33,4 +33,7 @@ export class StatusResponseDto implements ChannelStatusResponse {
 
   @ApiPropertyOptional({ nullable: true })
   paidAt!: string | null;
+
+  @ApiPropertyOptional({ description: "The caller's clientRef from initiation, when given" })
+  clientRef?: string;
 }

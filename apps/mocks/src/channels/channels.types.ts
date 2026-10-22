@@ -7,6 +7,7 @@ export interface MockPayment {
   readonly currency: Currency;
   readonly controlNumber: string;
   readonly callbackUrl: string | null;
+  readonly clientRef: string | null;
   status: ChannelOutcome;
   paidAt: string | null;
   readonly createdAt: string;

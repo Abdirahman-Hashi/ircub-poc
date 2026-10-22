@@ -1,4 +1,4 @@
-import { PaymentStatus } from '@ircub/shared';
+import { ChannelOutcome, PaymentStatus } from '@ircub/shared';
 
 import { toDecimal } from '../../common/money/money.rules';
 
@@ -9,33 +9,30 @@ import type {
   StatusCheckProgress,
 } from './payments.types';
 
-const TERMINAL: readonly PaymentStatus[] = [
-  PaymentStatus.CONFIRMED,
-  PaymentStatus.FAILED,
-  PaymentStatus.PERMANENTLY_FAILED,
-  PaymentStatus.REVERSED,
-];
+/** Money has been applied to the ledger (or applied and reversed): nothing can change it. */
+const SETTLED: readonly PaymentStatus[] = [PaymentStatus.CONFIRMED, PaymentStatus.REVERSED];
 
-export function isTerminal(status: PaymentStatus): boolean {
-  return TERMINAL.includes(status);
+export function isSettled(status: PaymentStatus): boolean {
+  return SETTLED.includes(status);
 }
 
 /**
  * What a callback or status check means for a payment (D15):
- * - already terminal → DUPLICATE (idempotent, nothing changes)
- * - channel says FAILED → FAIL
+ * - CONFIRMED or REVERSED → DUPLICATE (idempotent, nothing changes)
+ * - channel says FAILED → FAIL while PENDING; a repeat FAILED on an already failed payment is a DUPLICATE
  * - amount or currency differ from what we initiated → MISMATCH (recorded as FAILED with a reason)
- * - otherwise → CONFIRM
+ * - otherwise → CONFIRM, also for a FAILED or PERMANENTLY_FAILED payment: a late SUCCESS means
+ *   the channel did take the money, so it is applied rather than ignored.
  */
 export function decideSettlement(
   payment: PaymentLedgerSnapshot,
   outcome: SettlementOutcome,
 ): SettlementDecision {
-  if (isTerminal(payment.status)) {
+  if (isSettled(payment.status)) {
     return 'DUPLICATE';
   }
-  if (outcome.status === 'FAILED') {
-    return 'FAIL';
+  if (outcome.status === ChannelOutcome.FAILED) {
+    return payment.status === PaymentStatus.PENDING ? 'FAIL' : 'DUPLICATE';
   }
   if (
     outcome.currency !== payment.currency ||

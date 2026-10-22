@@ -1,6 +1,6 @@
 import { Currency, PaymentStatus } from '@ircub/shared';
 
-import { decideSettlement, isTerminal, nextStatusCheck } from './settlement.rules';
+import { decideSettlement, isSettled, nextStatusCheck } from './settlement.rules';
 
 const pending = { status: PaymentStatus.PENDING, amount: '100.00', currency: Currency.USD };
 
@@ -11,22 +11,35 @@ describe('decideSettlement', () => {
     ).toBe('CONFIRM');
   });
 
-  it('treats any outcome for a terminal payment as a duplicate (idempotent callbacks)', () => {
-    for (const status of [
-      PaymentStatus.CONFIRMED,
-      PaymentStatus.FAILED,
-      PaymentStatus.PERMANENTLY_FAILED,
-      PaymentStatus.REVERSED,
-    ]) {
+  it('treats any outcome for a settled payment as a duplicate (idempotent callbacks)', () => {
+    for (const status of [PaymentStatus.CONFIRMED, PaymentStatus.REVERSED]) {
       expect(
         decideSettlement(
           { ...pending, status },
           { status: 'SUCCESS', amount: '100.00', currency: Currency.USD },
         ),
       ).toBe('DUPLICATE');
-      expect(isTerminal(status)).toBe(true);
+      expect(isSettled(status)).toBe(true);
     }
-    expect(isTerminal(PaymentStatus.PENDING)).toBe(false);
+    expect(isSettled(PaymentStatus.PENDING)).toBe(false);
+    expect(isSettled(PaymentStatus.FAILED)).toBe(false);
+  });
+
+  it('applies a late SUCCESS to a FAILED or PERMANENTLY_FAILED payment, but ignores a repeat FAILED', () => {
+    for (const status of [PaymentStatus.FAILED, PaymentStatus.PERMANENTLY_FAILED]) {
+      expect(
+        decideSettlement(
+          { ...pending, status },
+          { status: 'SUCCESS', amount: '100.00', currency: Currency.USD },
+        ),
+      ).toBe('CONFIRM');
+      expect(
+        decideSettlement(
+          { ...pending, status },
+          { status: 'FAILED', amount: '100.00', currency: Currency.USD },
+        ),
+      ).toBe('DUPLICATE');
+    }
   });
 
   it('fails on FAILED, and flags an amount or currency mismatch', () => {

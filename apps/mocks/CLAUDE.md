@@ -10,7 +10,7 @@ Port 3100. All endpoints JSON unless noted. Swagger at `/docs`.
 | System | Endpoint | Behaviour |
 |---|---|---|
 | FX | `GET /rates?base=USD` | `{ base, rates: { USD: 1, SOS: 571.5 ± drift }, asOf }`. Rate drifts slightly per call (±0.5 %) so "dynamic" is visible. `?fail=1` → 503. |
-| Bank | `POST /bank/payments` `{ amount, currency, controlNumber, callbackUrl }` | Returns `{ txnRef: 'BNK-…', status: 'PENDING' }`. After `MOCK_CALLBACK_DELAY_MS` (default 3000) POSTs a signed callback to `callbackUrl`: `{ txnRef, status: 'SUCCESS'|'FAILED', amount, currency, controlNumber, paidAt }` with header `X-Signature: hmac-sha256(body, MOCK_SHARED_SECRET)`. |
+| Bank | `POST /bank/payments` `{ amount, currency, controlNumber, callbackUrl, clientRef? }` | Returns `{ txnRef: 'BNK-…', status: 'PENDING' }`. After `MOCK_CALLBACK_DELAY_MS` (default 3000) POSTs a signed callback to `callbackUrl`: `{ txnRef, status: 'SUCCESS'|'FAILED', amount, currency, controlNumber, paidAt, clientRef? }` with header `X-Signature: hmac-sha256(body, MOCK_SHARED_SECRET)`. `clientRef` is echoed verbatim (callback and status) so the caller can match a payment whose initiation reply was lost. |
 | Bank | `GET /bank/payments/:txnRef` | Status check. Honour scenario flags (below). |
 | Bank | `GET /bank/statements?date=YYYY-MM-DD` (text/csv) | Statement of that day's SUCCESS payments, with deliberate perturbations when `?perturb=1`: one missing line, one extra line, one amount off by 0.01. |
 | Mobile money | `POST /momo/payments`, `GET /momo/payments/:txnRef`, `GET /momo/statements` | Same contract as bank, prefix `MM-`. |

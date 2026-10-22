@@ -29,4 +29,11 @@ export class InitiatePaymentDto implements ChannelInitiateRequest {
   @IsOptional()
   @IsString()
   payerPhone?: string;
+
+  @ApiPropertyOptional({
+    description: "Caller's own reference, echoed in callbacks and status replies",
+  })
+  @IsOptional()
+  @IsString()
+  clientRef?: string;
 }

@@ -1,3 +1,5 @@
+import { randomUUID } from 'node:crypto';
+
 import { HttpStatus, Injectable, Logger } from '@nestjs/common';
 
 import { ErrorCode, PaymentStatus } from '@ircub/shared';
@@ -90,7 +92,11 @@ export class PaymentInitiationService {
     }
 
     // Channels and statements carry money as fixed two-decimal strings (apps/mocks/CLAUDE.md).
+    // The payment id goes along as clientRef so a callback can still find the payment if the
+    // initiation reply (and with it the channel's txnRef) is lost to a timeout.
+    const paymentId = randomUUID();
     const request: ChannelInitiateRequest = {
+      clientRef: paymentId,
       amount: amount.toFixed(AMOUNT_SCALE),
       currency: dto.currency,
       controlNumber: lookup.controlNumber,
@@ -99,6 +105,7 @@ export class PaymentInitiationService {
     };
     const initiated = await this.prisma.payment.create({
       data: {
+        id: paymentId,
         controlNumber: lookup.controlNumber,
         assessmentId: assessment?.id ?? null,
         billId: bill?.id ?? null,
