@@ -644,5 +644,64 @@ a customer does not land on the dashboard. No page errors or 5xx.
 - The dashboard re-queries on every SSE payment event (debounced only by TanStack Query);
   acceptable at POC volumes.
 
+## Fix pass after the self-review (2026-10-22)
+
+`docs/REVIEW-2026-10-22.md` walked every brief requirement and produced a prioritised fix
+list. This pass closed every P0 and P1 item that is not a phase 7 deliverable, in 20
+commits, each a single logical change.
+
+**Money and billing (P0)**
+- Arrears were double-counted: each bill's `totalDue` already rolls up earlier arrears, so
+  summing `totalDue − paidAmount` over earlier bills charged the same debt once per cycle
+  (the unit test asserted 7500 where 5000 was owed). One rule, `accountOutstanding` =
+  Σ own charges − Σ payments over released bills, now drives arrears, the statement running
+  balance, the account and payer balances and the dashboard's outstanding-water KPI.
+- Confirmed abnormal flags held a cycle hostage; a confirmed bill is now held back
+  (`stats.held`), the cycle goes out, and the bill is released on its own when cleared.
+- ROLLOVER readings are only accepted when the dial actually wrapped
+  (`READING_INVALID_ROLLOVER`); meter replacement records an optional closing reading.
+
+**Payments and FMIS (P1)**
+- Late or back-dated payments were never posted: a batch for day D now also sweeps unposted
+  confirmed payments from the previous `FMIS_CATCH_UP_DAYS` (31) days (`catchUp`, default on;
+  the seed builds without it). Journal lines are denominated in `LOCAL_CURRENCY`.
+- A SUCCESS callback after FAILED/PERMANENTLY_FAILED is applied (the channel took the money);
+  the payment id travels as `clientRef` so a lost initiation reply can still be matched;
+  permanent failure is applied under the row lock only while still PENDING.
+- One open alert per `(type, dedupeKey)` is enforced by a partial unique index
+  (migration `20261022113000_alert_dedupe_key`), not by find-then-create.
+
+**Audit and data (P0/P1)**
+- The Auditor's audit-log screen exists: filters, field-level before/after diff, verify
+  button. `createMany` rows get real entity ids; `ChannelStatementLine` and
+  `ReconciliationLine` are audited; `verify` compares the tail with the chain head so a
+  truncated log is reported.
+- Bulk-upload lookups are prefetched from header-keyed records (column order no longer
+  matters); imports mark their days dirty for the dashboard; the summary rebuild is
+  transactional; targets/efficiency/forecast carry `Cache-Control`.
+- Reversal decisions and SoD checks on role assignment, role permissions and re-parenting
+  run under `SELECT … FOR UPDATE`, closing the check-then-write races.
+- Revenue types referenced by mappings, lines, summaries or targets are deactivated instead
+  of answering 500; the e2e runner no longer falls back to `DATABASE_URL`.
+
+**Standards and tests**
+- Hard-coded status/currency/path strings replaced by shared enums and constants (API, web,
+  mocks); `FX_REFRESH_MINUTES` now drives the refresh interval instead of a fixed cron.
+- Bulk-upload row validation is a pure rule with a unit test per rejection reason. New
+  tests: TOTP enrol/challenge/verify/disable, revenue types (delete vs deactivate), the
+  ABNORMAL_CONSUMPTION / PAYMENT_PERMANENTLY_FAILED / FMIS_BATCH_FAILED raises, reversal
+  reject, a customer's 403 on a foreign statement, and a deterministic per-record SoD check
+  (the configurable rule is lifted and restored inside the test).
+- Repository hygiene: 11 Finder duplicates and 148 tracked test PDFs removed; one git
+  author identity.
+
+**Gates:** lint and typecheck clean; API unit 174, API e2e 64 (11 suites), mocks 13, web 23.
+
+**Deferred to phase 7 / P2:** ERD, Postman collection, `render.yaml` and hosted demo, README
+assumptions and limitations, Compose seeding step, the P2 list in the review (named
+constants in rules files, tunables vs SystemConfig, payments CSV export, extra indexes,
+`common/*` READMEs, FMIS ledger cache invalidation, `mfaSecret` at rest, notification job
+idempotency).
+
 ## Phase 7 — deliverables & deployment
 _(pending)_

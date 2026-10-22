@@ -3310,7 +3310,7 @@
             "bearer": []
           }
         ],
-        "summary": "Replace a meter: old → REPLACED, new meter linked via replacesMeterId",
+        "summary": "Replace a meter: optional closing reading on the old meter, old → REPLACED, new meter linked via replacesMeterId",
         "tags": [
           "water"
         ]
@@ -6447,6 +6447,7 @@
               "CASH_GL_CODE",
               "FMIS_POST_RETRY_LIMIT",
               "FMIS_POST_RETRY_DELAY_SECONDS",
+              "FMIS_CATCH_UP_DAYS",
               "ANOMALY_Z_WARNING",
               "ANOMALY_Z_CRITICAL",
               "ANOMALY_TRAILING_DAYS",
@@ -7501,7 +7502,11 @@
           },
           "firstBrokenSeq": {
             "type": "number",
-            "description": "First sequence number whose hash or link is wrong"
+            "description": "First sequence number whose hash or link is wrong, or that is missing from the tail"
+          },
+          "headSeq": {
+            "type": "number",
+            "description": "Last sequence number recorded by the chain head"
           }
         },
         "required": [
@@ -9128,6 +9133,10 @@
           "paidAt": {
             "type": "string",
             "format": "date-time"
+          },
+          "clientRef": {
+            "type": "string",
+            "description": "IRCUB payment id sent at initiation; lets a callback find a payment whose initiation reply was lost"
           }
         },
         "required": [
@@ -9386,6 +9395,10 @@
           "installedAt": {
             "type": "string",
             "format": "date-time"
+          },
+          "finalReading": {
+            "type": "number",
+            "description": "Closing reading taken from the old meter at replacement; recorded as its final NORMAL reading on the installation date so the consumption since its last read is billed"
           }
         },
         "required": [
@@ -9548,6 +9561,10 @@
           "totalBilled": {
             "type": "string",
             "example": "1250000.00"
+          },
+          "held": {
+            "type": "number",
+            "description": "Confirmed-flag bills held back at release"
           },
           "notificationsSent": {
             "type": "number"
@@ -10055,6 +10072,11 @@
           "forceFailure": {
             "type": "boolean",
             "description": "Demo: ask the mock FMIS to fail this posting"
+          },
+          "catchUp": {
+            "type": "boolean",
+            "default": true,
+            "description": "Also sweep unposted confirmed payments from the previous FMIS_CATCH_UP_DAYS days (late callbacks, back-dated captures)"
           }
         },
         "required": [
@@ -10140,6 +10162,11 @@
           "to": {
             "type": "string",
             "example": "2026-10-21"
+          },
+          "catchUp": {
+            "type": "boolean",
+            "default": true,
+            "description": "See POST /fmis/batches/build"
           }
         },
         "required": [
