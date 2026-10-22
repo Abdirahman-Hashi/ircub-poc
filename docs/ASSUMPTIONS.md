@@ -122,6 +122,29 @@ Phase 7 copies this list into the README.
   build and enqueue) should be re-enqueued when the API boots, because posting is idempotent at
   both ends.
 
+- We assume "same-hour cumulative" anomaly baselines can be approximated from the daily
+  summaries scaled by the fraction of the UTC day elapsed (today-so-far vs trailing daily
+  totals × elapsed fraction), because keeping hourly summaries would multiply the aggregate
+  rows by 24 for a POC; if intra-day shape matters (lunch dips, weekend patterns), an hourly
+  summary table replaces the scaling. No alert is raised with fewer than 5 baseline days or a
+  zero standard deviation.
+- We assume reversals land on the day the reversal was approved (not the day of the original
+  payment) in the summaries, because that is when the ledger changed; the KPI "reversed" for a
+  range therefore counts decisions in that range.
+- We assume target attainment covers tax revenue types only (WATER has bills, so collection
+  efficiency is its measure), and that the seeded targets are 110 % of each type's average
+  month so the demo shows realistic attainment rather than 100 %.
+- We assume the forecast fits the last 12 complete calendar months (the current month is
+  partial and excluded) and that OLS is the default model: with 12 points an interpretable
+  line with an R² is more honest than a seasonal model; Holt's smoothing is the alternative
+  the UI can toggle. Projections are floored at zero.
+- We assume one open alert per type per day for anomalies and per entity for event alerts is
+  the right de-duplication; acknowledging clears the way for a new one.
+- We assume "async updates" are satisfied by the hourly rebuild plus a 5-second debounced
+  rebuild of any day touched by a payment, reversal or billing release, rather than a
+  per-event incremental update, because a full-day recompute is cheap (one query per table)
+  and cannot drift from the source rows.
+
 ## Security (phase 4)
 - We assume the shared HMAC secret with the channels (`MOCK_SHARED_SECRET`) stands in for the
   per-channel credentials a real bank or mobile-money provider would issue; the callback is

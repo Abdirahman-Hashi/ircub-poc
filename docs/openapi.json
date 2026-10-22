@@ -4984,6 +4984,699 @@
         ]
       }
     },
+    "/dashboard/overview": {
+      "get": {
+        "operationId": "DashboardController_overview",
+        "parameters": [
+          {
+            "name": "from",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "example": "2026-09-22",
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "example": "2026-10-22",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OverviewResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "KPI cards for a date range (from pre-aggregated summaries)",
+        "tags": [
+          "dashboard"
+        ]
+      }
+    },
+    "/dashboard/trends": {
+      "get": {
+        "operationId": "DashboardController_trends",
+        "parameters": [
+          {
+            "name": "from",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "example": "2026-09-22",
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "example": "2026-10-22",
+              "type": "string"
+            }
+          },
+          {
+            "name": "groupBy",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": "day",
+              "type": "string",
+              "enum": [
+                "day",
+                "week",
+                "month"
+              ]
+            }
+          },
+          {
+            "name": "by",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": "revenueType",
+              "type": "string",
+              "enum": [
+                "revenueType",
+                "channel"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrendsResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Collection series by revenue type or channel, per day/week/month",
+        "tags": [
+          "dashboard"
+        ]
+      }
+    },
+    "/dashboard/targets": {
+      "get": {
+        "operationId": "DashboardController_targets",
+        "parameters": [
+          {
+            "name": "from",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "example": "2026-01",
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "example": "2026-10",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TargetAttainmentRowResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Collected vs target per revenue type and month",
+        "tags": [
+          "dashboard"
+        ]
+      }
+    },
+    "/dashboard/efficiency": {
+      "get": {
+        "operationId": "DashboardController_efficiency",
+        "parameters": [
+          {
+            "name": "from",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "example": "2026-09-22",
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "example": "2026-10-22",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EfficiencyRowResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Water billed vs collected per month",
+        "tags": [
+          "dashboard"
+        ]
+      }
+    },
+    "/dashboard/forecast": {
+      "get": {
+        "operationId": "DashboardController_forecast",
+        "parameters": [
+          {
+            "name": "months",
+            "required": false,
+            "in": "query",
+            "description": "Defaults to FORECAST_HORIZON_MONTHS",
+            "schema": {
+              "minimum": 1,
+              "maximum": 12,
+              "type": "number"
+            }
+          },
+          {
+            "name": "model",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": "ols-linear",
+              "type": "string",
+              "enum": [
+                "ols-linear",
+                "holt-linear"
+              ]
+            }
+          },
+          {
+            "name": "by",
+            "required": false,
+            "in": "query",
+            "description": "Only revenueType is supported; omit for the total",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "revenueType",
+                "channel"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForecastResponseDto"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "INSUFFICIENT_HISTORY"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Monthly forecast: OLS regression (default) or Holt smoothing, with R² and caveat",
+        "tags": [
+          "dashboard"
+        ]
+      }
+    },
+    "/dashboard/rebuild": {
+      "post": {
+        "operationId": "DashboardController_rebuild",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RebuildDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Recompute the daily summaries for a date range",
+        "tags": [
+          "dashboard"
+        ]
+      }
+    },
+    "/alerts": {
+      "get": {
+        "operationId": "AlertsController_list",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "minimum": 1,
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "maximum": 100,
+              "default": 25,
+              "type": "number"
+            }
+          },
+          {
+            "name": "sort",
+            "required": false,
+            "in": "query",
+            "description": "`field:asc` or `field:desc`",
+            "schema": {
+              "example": "createdAt:desc",
+              "type": "string"
+            }
+          },
+          {
+            "name": "acknowledged",
+            "required": false,
+            "in": "query",
+            "description": "false → open alerts only",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "type",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "COLLECTION_DROP",
+                "REVERSAL_SPIKE",
+                "PAYMENT_PERMANENTLY_FAILED",
+                "FMIS_BATCH_FAILED",
+                "ABNORMAL_CONSUMPTION"
+              ]
+            }
+          },
+          {
+            "name": "severity",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "INFO",
+                "WARNING",
+                "CRITICAL"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AlertResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Alerts, newest first; `acknowledged=false` for the open ones",
+        "tags": [
+          "alerts"
+        ]
+      }
+    },
+    "/alerts/unacknowledged-count": {
+      "get": {
+        "operationId": "AlertsController_unacknowledged",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnacknowledgedCountResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Open alert count for the header bell",
+        "tags": [
+          "alerts"
+        ]
+      }
+    },
+    "/alerts/evaluate": {
+      "post": {
+        "operationId": "AlertsController_evaluate",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AlertResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Run the anomaly checks now; returns the alerts raised",
+        "tags": [
+          "alerts"
+        ]
+      }
+    },
+    "/alerts/{id}/ack": {
+      "post": {
+        "operationId": "AlertsController_acknowledge",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlertResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Acknowledge an alert",
+        "tags": [
+          "alerts"
+        ]
+      }
+    },
+    "/targets": {
+      "get": {
+        "operationId": "TargetsController_list",
+        "parameters": [
+          {
+            "name": "from",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "example": "2026-01",
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "example": "2026-10",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RevenueTargetResponseDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Revenue targets for a period range",
+        "tags": [
+          "dashboard"
+        ]
+      },
+      "put": {
+        "operationId": "TargetsController_upsert",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpsertTargetDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RevenueTargetResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Set the target for a period and revenue type (upsert)",
+        "tags": [
+          "dashboard"
+        ]
+      }
+    },
+    "/targets/{id}": {
+      "delete": {
+        "operationId": "TargetsController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Remove a target",
+        "tags": [
+          "dashboard"
+        ]
+      }
+    },
+    "/targets/template.csv": {
+      "get": {
+        "operationId": "TargetsController_template",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Download the revenue-targets CSV template",
+        "tags": [
+          "dashboard"
+        ]
+      }
+    },
+    "/targets/import": {
+      "post": {
+        "operationId": "TargetsController_import",
+        "parameters": [
+          {
+            "name": "dryRun",
+            "required": false,
+            "in": "query",
+            "description": "Validate every row and report, but persist nothing",
+            "schema": {
+              "default": false,
+              "type": "boolean"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CsvSummaryResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Import targets from CSV (period, revenue_type_code, amount); `?dryRun=true` previews",
+        "tags": [
+          "dashboard"
+        ]
+      }
+    },
     "/bulk-uploads/template.csv": {
       "get": {
         "operationId": "BulkUploadsController_template",
@@ -9748,6 +10441,455 @@
           "date",
           "glCode",
           "lines"
+        ]
+      },
+      "OverviewResponseDto": {
+        "type": "object",
+        "properties": {
+          "from": {
+            "type": "string"
+          },
+          "to": {
+            "type": "string"
+          },
+          "collected": {
+            "type": "string"
+          },
+          "collectedCount": {
+            "type": "number"
+          },
+          "collectedLastYear": {
+            "type": "string"
+          },
+          "changeVsLastYearPct": {
+            "type": "object",
+            "nullable": true
+          },
+          "reversed": {
+            "type": "string"
+          },
+          "reversedCount": {
+            "type": "number"
+          },
+          "outstandingAssessments": {
+            "type": "string"
+          },
+          "outstandingWater": {
+            "type": "string"
+          },
+          "waterBilled": {
+            "type": "string"
+          },
+          "waterCollected": {
+            "type": "string"
+          },
+          "collectionEfficiencyPct": {
+            "type": "object",
+            "nullable": true
+          },
+          "target": {
+            "type": "string"
+          },
+          "targetAttainmentPct": {
+            "type": "object",
+            "nullable": true
+          }
+        },
+        "required": [
+          "from",
+          "to",
+          "collected",
+          "collectedCount",
+          "collectedLastYear",
+          "reversed",
+          "reversedCount",
+          "outstandingAssessments",
+          "outstandingWater",
+          "waterBilled",
+          "waterCollected",
+          "target"
+        ]
+      },
+      "TrendPointDto": {
+        "type": "object",
+        "properties": {
+          "bucket": {
+            "type": "string"
+          },
+          "total": {
+            "type": "string"
+          },
+          "count": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "bucket",
+          "total",
+          "count"
+        ]
+      },
+      "TrendSeriesDto": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "points": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TrendPointDto"
+            }
+          }
+        },
+        "required": [
+          "key",
+          "label",
+          "points"
+        ]
+      },
+      "TrendsResponseDto": {
+        "type": "object",
+        "properties": {
+          "groupBy": {
+            "type": "string"
+          },
+          "by": {
+            "type": "string"
+          },
+          "buckets": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "series": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TrendSeriesDto"
+            }
+          }
+        },
+        "required": [
+          "groupBy",
+          "by",
+          "buckets",
+          "series"
+        ]
+      },
+      "AttainmentRevenueTypeDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "name"
+        ]
+      },
+      "TargetAttainmentRowResponseDto": {
+        "type": "object",
+        "properties": {
+          "period": {
+            "type": "string"
+          },
+          "revenueTypeId": {
+            "type": "string"
+          },
+          "revenueType": {
+            "$ref": "#/components/schemas/AttainmentRevenueTypeDto"
+          },
+          "collected": {
+            "type": "string"
+          },
+          "target": {
+            "type": "string"
+          },
+          "attainmentPct": {
+            "type": "object",
+            "nullable": true
+          }
+        },
+        "required": [
+          "period",
+          "revenueTypeId",
+          "revenueType",
+          "collected",
+          "target"
+        ]
+      },
+      "EfficiencyRowResponseDto": {
+        "type": "object",
+        "properties": {
+          "period": {
+            "type": "string"
+          },
+          "billed": {
+            "type": "string"
+          },
+          "collected": {
+            "type": "string"
+          },
+          "efficiencyPct": {
+            "type": "object",
+            "nullable": true
+          }
+        },
+        "required": [
+          "period",
+          "billed",
+          "collected"
+        ]
+      },
+      "ForecastPointDto": {
+        "type": "object",
+        "properties": {
+          "period": {
+            "type": "string"
+          },
+          "total": {
+            "type": "string"
+          },
+          "forecast": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "period",
+          "total",
+          "forecast"
+        ]
+      },
+      "ForecastSeriesResponseDto": {
+        "type": "object",
+        "properties": {
+          "model": {
+            "type": "string",
+            "enum": [
+              "ols-linear",
+              "holt-linear"
+            ]
+          },
+          "key": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "points": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ForecastPointDto"
+            }
+          },
+          "slope": {
+            "type": "number"
+          },
+          "intercept": {
+            "type": "number"
+          },
+          "r2": {
+            "type": "object",
+            "nullable": true
+          },
+          "n": {
+            "type": "number"
+          },
+          "caveat": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "model",
+          "key",
+          "label",
+          "points",
+          "slope",
+          "intercept",
+          "n",
+          "caveat"
+        ]
+      },
+      "ForecastResponseDto": {
+        "type": "object",
+        "properties": {
+          "model": {
+            "type": "string",
+            "enum": [
+              "ols-linear",
+              "holt-linear"
+            ]
+          },
+          "horizonMonths": {
+            "type": "number"
+          },
+          "series": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ForecastSeriesResponseDto"
+            }
+          }
+        },
+        "required": [
+          "model",
+          "horizonMonths",
+          "series"
+        ]
+      },
+      "RebuildDto": {
+        "type": "object",
+        "properties": {
+          "from": {
+            "type": "string",
+            "example": "2025-10-22"
+          },
+          "to": {
+            "type": "string",
+            "example": "2026-10-22"
+          }
+        },
+        "required": [
+          "from",
+          "to"
+        ]
+      },
+      "AlertResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "COLLECTION_DROP",
+              "REVERSAL_SPIKE",
+              "PAYMENT_PERMANENTLY_FAILED",
+              "FMIS_BATCH_FAILED",
+              "ABNORMAL_CONSUMPTION"
+            ]
+          },
+          "severity": {
+            "type": "string",
+            "enum": [
+              "INFO",
+              "WARNING",
+              "CRITICAL"
+            ]
+          },
+          "title": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "acknowledgedById": {
+            "type": "object",
+            "nullable": true
+          },
+          "acknowledgedAt": {
+            "type": "string",
+            "nullable": true,
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "severity",
+          "title",
+          "message",
+          "data",
+          "createdAt"
+        ]
+      },
+      "UnacknowledgedCountResponseDto": {
+        "type": "object",
+        "properties": {
+          "count": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "count"
+        ]
+      },
+      "TargetRevenueTypeDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "name"
+        ]
+      },
+      "RevenueTargetResponseDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "period": {
+            "type": "string"
+          },
+          "revenueTypeId": {
+            "type": "string"
+          },
+          "revenueType": {
+            "$ref": "#/components/schemas/TargetRevenueTypeDto"
+          },
+          "amount": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "period",
+          "revenueTypeId",
+          "revenueType",
+          "amount"
+        ]
+      },
+      "UpsertTargetDto": {
+        "type": "object",
+        "properties": {
+          "period": {
+            "type": "string",
+            "example": "2026-11"
+          },
+          "revenueTypeId": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "string",
+            "example": "2500000.00"
+          }
+        },
+        "required": [
+          "period",
+          "revenueTypeId",
+          "amount"
         ]
       },
       "BulkUploadResponseDto": {

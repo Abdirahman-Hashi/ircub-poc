@@ -165,6 +165,23 @@ Created by the phase 1 seed. Password for all: `Passw0rd!2026`.
 - FMIS → GL mappings: effective-dated revenue type → GL code rows; the latest row on or before
   the batch date is used.
 
+## Executive dashboard (phase 6)
+
+- Supervisors, administrators and auditors land on the dashboard: KPI cards (collected vs
+  the same period last year, reversals, outstanding assessments and water, water collection
+  efficiency, tax target attainment), revenue trends by revenue type or channel per
+  day/week/month, collections vs targets, water billed vs collected, and a forecast of the
+  next three months (OLS regression by default, Holt smoothing on toggle) with R² and a
+  caveat. Everything reads pre-aggregated daily summaries rebuilt hourly and within five
+  seconds of a payment, reversal or billing change; `/dashboard/trends` for 12 months answers
+  in about 12 ms (p50) on the seed data (`pnpm --filter api bench`).
+- Alerts: collections drop and reversal spike (z-scores against the trailing 30 days,
+  evaluated every 5 minutes or on demand), permanently failed payments, failed FMIS batches
+  and abnormal consumption. They arrive live over Server-Sent Events into the dashboard panel
+  and the header bell; acknowledge them from the panel.
+- Targets: monthly targets per revenue type with inline edits and CSV import
+  (`period, revenue_type_code, amount`).
+
 ## Assumptions
 
 Recorded as they are made in `docs/ASSUMPTIONS.md` and copied here in phase 7.
