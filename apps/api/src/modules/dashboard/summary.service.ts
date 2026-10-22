@@ -48,7 +48,9 @@ export class SummaryService implements OnModuleDestroy {
         { from, to },
       );
     }
-    const rows = await rebuildDailySummaries(this.prisma, from, to);
+    // Delete and re-insert in one transaction: readers never see a half-rebuilt window and two
+    // rebuilds of the same day (cron vs dirty-day) serialise instead of tripping the unique key.
+    const rows = await this.prisma.$transaction((tx) => rebuildDailySummaries(tx, from, to));
     this.logger.log({ msg: 'summaries rebuilt', from, to, rows });
     return rows;
   }

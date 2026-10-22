@@ -24,6 +24,7 @@ import { toPageSlice, toPaginated } from '../../common/pagination/pagination.rul
 import { AppConfigService } from '../../config/app-config.service';
 import { PrismaService } from '../../prisma/prisma.service';
 import { isPayable, outstandingOf } from '../assessments/assessments.rules';
+import { SummaryService } from '../dashboard/summary.service';
 import { FxService } from '../fx/fx.service';
 import { PaymentsService } from '../payments/payments.service';
 import { SystemConfigKey } from '../system-config/system-config.keys';
@@ -68,6 +69,7 @@ export class BulkUploadsService {
     private readonly fx: FxService,
     private readonly systemConfig: SystemConfigService,
     private readonly config: AppConfigService,
+    private readonly summaries: SummaryService,
   ) {}
 
   template(): string {
@@ -347,6 +349,9 @@ export class BulkUploadsService {
       if (assessment === undefined) {
         continue; // validated earlier; defensive
       }
+      // Imported payments are often back-dated: the dashboard summaries of each paid day are
+      // rebuilt once the import commits (debounced), like every other payment path.
+      this.summaries.markDirty(data.paid_at);
       await this.payments.recordConfirmedPayment(tx, {
         assessmentId: assessment.id,
         billId: null,

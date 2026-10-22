@@ -9,9 +9,11 @@ only, a monthly forecast, and real-time anomaly alerts over SSE.
 - `DailyCollectionSummary` (day × revenue type × channel) and `DailyBillingSummary` (day)
   are rebuilt from `Payment`, `Reversal` and `Bill` by `rebuildDailySummaries`
   (`summary.rebuild.ts`): CONFIRMED and REVERSED payments by `paidAt`, approved reversals by
-  decision date, released bills by `periodEnd`. Hourly cron for the last two days;
-  `markDirty(day)` after any payment, reversal or billing change rebuilds that day after a
-  5 s debounce; `POST /dashboard/rebuild` for any range (`config.manage`).
+  decision date, released bills by `periodEnd`, delete-and-insert in one transaction so a
+  reader never sees a half-rebuilt window. Hourly cron for the last two days;
+  `markDirty(day)` after any payment (manual, online, bulk), reversal or billing change
+  rebuilds that day after a 5 s debounce; `POST /dashboard/rebuild` for any range
+  (`config.manage`).
 - Dashboard endpoints never read raw payments: overview, trends (day/week/month × revenue
   type/channel), target attainment (WATER excluded: bills, not targets) and water
   collection efficiency come from the summaries; outstanding balances are two aggregates

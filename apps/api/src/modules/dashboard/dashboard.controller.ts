@@ -51,6 +51,7 @@ export class DashboardController {
 
   @Get(DASHBOARD_API.TARGETS)
   @RequirePermission(PERMISSIONS.DASHBOARD_VIEW)
+  @Header('Cache-Control', DASHBOARD_API.CACHE_CONTROL)
   @ApiOperation({ summary: 'Collected vs target per revenue type and month' })
   @ApiResponse({ status: HttpStatus.OK, type: [TargetAttainmentRowResponseDto] })
   targets(@Query() query: PeriodRangeQueryDto): Promise<TargetAttainmentRowResponseDto[]> {
@@ -59,6 +60,7 @@ export class DashboardController {
 
   @Get(DASHBOARD_API.EFFICIENCY)
   @RequirePermission(PERMISSIONS.DASHBOARD_VIEW)
+  @Header('Cache-Control', DASHBOARD_API.CACHE_CONTROL)
   @ApiOperation({ summary: 'Water billed vs collected per month' })
   @ApiResponse({ status: HttpStatus.OK, type: [EfficiencyRowResponseDto] })
   efficiency(@Query() query: DateRangeQueryDto): Promise<EfficiencyRowResponseDto[]> {
@@ -67,6 +69,7 @@ export class DashboardController {
 
   @Get(DASHBOARD_API.FORECAST)
   @RequirePermission(PERMISSIONS.DASHBOARD_VIEW)
+  @Header('Cache-Control', DASHBOARD_API.CACHE_CONTROL)
   @ApiOperation({
     summary: 'Monthly forecast: OLS regression (default) or Holt smoothing, with R² and caveat',
   })
