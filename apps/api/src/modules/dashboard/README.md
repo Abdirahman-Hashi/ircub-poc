@@ -28,8 +28,10 @@ only, a monthly forecast, and real-time anomaly alerts over SSE.
   today's approved reversals vs trailing daily counts, `z ≥` thresholds → REVERSAL_SPIKE.
   Payments, FMIS and billing raise PAYMENT_PERMANENTLY_FAILED, FMIS_BATCH_FAILED and
   ABNORMAL_CONSUMPTION through `AlertsService.raise`. One open alert per type and
-  de-duplication key (the day for anomalies, the entity for events). `alert.created` goes to
-  users holding `alerts.view`.
+  `dedupeKey`, guaranteed by the partial unique index `alert_open_dedupe_key` (a racing
+  evaluator's unique violation is treated as "already open"), not only by the pre-check; the
+  key is the day for anomalies and the entity for events. `alert.created` goes to users
+  holding `alerts.view`.
 
 **Endpoints.** `GET /dashboard/overview|trends|targets|efficiency|forecast`
 (`dashboard.view`), `POST /dashboard/rebuild` (`config.manage`); `GET /alerts`,

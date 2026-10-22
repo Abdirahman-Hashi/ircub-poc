@@ -1,16 +1,20 @@
 import { AlertSeverity, AlertType } from '@ircub/shared';
 
 import { SSE_EVENT } from '../../common/sse/event-names';
+import { PRISMA_ERROR } from '../../prisma/prisma.constants';
 
 import { AlertsService } from './alerts.service';
 
-function build(openExists: boolean) {
+function build(openExists: boolean, createError?: Error) {
   const created: Record<string, unknown>[] = [];
   const emitted: unknown[] = [];
   const prisma = {
     alert: {
       findFirst: jest.fn().mockResolvedValue(openExists ? { id: 'existing' } : null),
       create: jest.fn().mockImplementation(({ data }: { data: Record<string, unknown> }) => {
+        if (createError !== undefined) {
+          return Promise.reject(createError);
+        }
         created.push(data);
         return Promise.resolve({
           id: 'new',
@@ -48,10 +52,14 @@ describe('AlertsService.raise', () => {
     const { service, created, emitted, prisma } = build(false);
     const alert = await service.raise(input);
     expect(alert?.type).toBe(AlertType.COLLECTION_DROP);
-    expect(created[0]?.data).toEqual({ day: '2026-10-22', dedupeKey: '2026-10-22' });
+    expect(created[0]).toMatchObject({ data: { day: '2026-10-22' }, dedupeKey: '2026-10-22' });
     expect(prisma.alert.findFirst).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: expect.objectContaining({ type: AlertType.COLLECTION_DROP, acknowledgedAt: null }),
+        where: expect.objectContaining({
+          type: AlertType.COLLECTION_DROP,
+          dedupeKey: '2026-10-22',
+          acknowledgedAt: null,
+        }),
       }),
     );
     expect(emitted[0]).toMatchObject({
@@ -64,6 +72,15 @@ describe('AlertsService.raise', () => {
     const { service, created, emitted } = build(true);
     expect(await service.raise(input)).toBeNull();
     expect(created).toHaveLength(0);
+    expect(emitted).toHaveLength(0);
+  });
+
+  it('treats a unique violation from a racing evaluator as "already open"', async () => {
+    const { service, emitted } = build(
+      false,
+      Object.assign(new Error('unique'), { code: PRISMA_ERROR.UNIQUE_VIOLATION }),
+    );
+    expect(await service.raise(input)).toBeNull();
     expect(emitted).toHaveLength(0);
   });
 });

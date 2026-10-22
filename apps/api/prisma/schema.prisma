@@ -982,6 +982,8 @@ model RevenueTarget {
   @@map("revenue_target")
 }
 
+/// One open alert per (type, dedupeKey): enforced by the partial unique index
+/// `alert_open_dedupe_key` (hand-written in the migration; Prisma cannot express `WHERE`).
 model Alert {
   id               String        @id @default(uuid()) @db.Uuid
   type             AlertType
@@ -989,6 +991,8 @@ model Alert {
   title            String
   message          String
   data             Json
+  /// What the alert is about (a day, a payment, a batch, a cycle); drives de-duplication.
+  dedupeKey        String        @map("dedupe_key")
   createdAt        DateTime      @default(now()) @map("created_at")
   acknowledgedById String?       @map("acknowledged_by_id") @db.Uuid
   acknowledgedAt   DateTime?     @map("acknowledged_at")

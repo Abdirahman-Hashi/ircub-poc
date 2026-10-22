@@ -10,6 +10,7 @@ import { toDecimal } from '../../common/money/money.rules';
 import { parseSort, toPageSlice, toPaginated } from '../../common/pagination/pagination.rules';
 import { EventBus } from '../../common/sse/event-bus';
 import { SSE_EVENT } from '../../common/sse/event-names';
+import { PRISMA_ERROR } from '../../prisma/prisma.constants';
 import { PrismaService } from '../../prisma/prisma.service';
 import { toDateKey } from '../fmis/fmis.rules';
 import { utcDayBounds } from '../reconciliation/reconciliation.rules';
@@ -155,28 +156,40 @@ export class AlertsService {
     return raised;
   }
 
-  /** Creates the alert unless an open one with the same type and key exists; emits SSE. */
+  /**
+   * Creates the alert unless an open one with the same type and key exists; emits SSE. The
+   * partial unique index `alert_open_dedupe_key` is the guarantee: two evaluators racing on
+   * the same key get one alert, the loser's unique violation is treated as "already open".
+   */
   async raise(input: RaiseAlertInput): Promise<AlertResponseDto | null> {
     const open = await this.prisma.alert.findFirst({
-      where: {
-        type: input.type,
-        acknowledgedAt: null,
-        data: { path: ['dedupeKey'], equals: input.dedupeKey },
-      },
+      where: { type: input.type, dedupeKey: input.dedupeKey, acknowledgedAt: null },
       select: { id: true },
     });
     if (open !== null) {
       return null;
     }
-    const alert = await this.prisma.alert.create({
-      data: {
-        type: input.type,
-        severity: input.severity,
-        title: input.title,
-        message: input.message,
-        data: { ...input.data, dedupeKey: input.dedupeKey },
-      },
-    });
+    let alert: AlertRow;
+    try {
+      alert = await this.prisma.alert.create({
+        data: {
+          type: input.type,
+          severity: input.severity,
+          title: input.title,
+          message: input.message,
+          data: input.data,
+          dedupeKey: input.dedupeKey,
+        },
+      });
+    } catch (error: unknown) {
+      if (
+        (error as Prisma.PrismaClientKnownRequestError | null)?.code ===
+        PRISMA_ERROR.UNIQUE_VIOLATION
+      ) {
+        return null;
+      }
+      throw error;
+    }
     this.events.emit(SSE_EVENT.ALERT_CREATED, {
       alertId: alert.id,
       type: alert.type,
