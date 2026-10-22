@@ -39,6 +39,8 @@ export interface CreateWaterAccountInput {
 export interface ReplaceMeterInput {
   readonly newSerial: string;
   readonly initialReading: number;
+  /** Closing reading on the old meter, recorded before the swap. */
+  readonly finalReading?: number;
 }
 
 export interface ReadingInput {

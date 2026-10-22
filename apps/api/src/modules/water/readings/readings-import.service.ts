@@ -150,8 +150,8 @@ export class ReadingsImportService {
     if (!result.ok) {
       return reject(
         READING_COLUMN.READING_VALUE,
-        READING_REASON.READING_BELOW_PREVIOUS,
-        WATER_MESSAGES.READING_BELOW_PREVIOUS,
+        READING_REASON[result.reason],
+        WATER_MESSAGES[result.reason],
       );
     }
     context.latestByMeter.set(meter.id, { value: row.reading_value, date: readingDate });

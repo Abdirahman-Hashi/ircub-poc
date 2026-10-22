@@ -12,6 +12,8 @@ export const WATER_MESSAGES = {
   READING_NOT_FOUND: 'Reading not found.',
   READING_BELOW_PREVIOUS:
     'Reading is below the previous reading; use ROLLOVER or REPLACEMENT if the meter wrapped or was replaced.',
+  READING_INVALID_ROLLOVER:
+    'A ROLLOVER reading must be below the previous reading and within the dial capacity.',
   READING_DUPLICATE_DATE: 'A reading already exists for this meter on this date.',
   READING_IN_FUTURE: 'Reading date cannot be in the future.',
   READING_BEFORE_PREVIOUS: 'Reading date is before the latest reading.',

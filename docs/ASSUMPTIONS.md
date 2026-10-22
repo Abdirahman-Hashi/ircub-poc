@@ -40,8 +40,21 @@ Phase 7 copies this list into the README.
   channel's own reference; if "BULK" must be the channel, it is one constant change.
 
 - We assume water payments always quote a bill's control number, so "unallocated payments"
-  do not exist and arrears are simply the unpaid remainder of earlier released bills; if
-  account-level prepayments are needed, `Bill.paymentsApplied` is the field to fill.
+  do not exist and arrears are the account's outstanding balance, Σ own charges − Σ payments
+  over earlier released bills, because each bill's `totalDue` already rolls up the arrears
+  before it and summing `totalDue − paidAmount` per bill would charge the same debt once per
+  cycle (found in the 2026-10-22 self-review); if account-level prepayments are needed,
+  `Bill.paymentsApplied` is the field to fill.
+- We assume paying the latest bill in full settles the arrears it rolled up (older bills keep
+  their own `paidAmount` but the account balance is zero), because customers pay one control
+  number; if per-bill settlement is required, payments must cascade onto older bills.
+- We assume a confirmed abnormal flag means "hold this bill back", so the cycle is released
+  without it and the bill goes out on its own when the flag is later cleared, because a
+  single unresolved investigation must not block a whole month's billing; if held bills
+  should instead be cancelled, the clear-flag path changes.
+- We assume a ROLLOVER reading is only plausible when the new value is below the previous
+  one and within the dial's capacity, because otherwise a mislabelled normal reading would
+  bill a whole dial of water; if meters can skip past zero between reads, the bound relaxes.
 - We assume one bill per account per calendar month covering every reading in the month
   (consumption summed, previous reading = last reading before the month); if a utility wants
   bills per reading, the cycle loop changes, not the tariff rules.

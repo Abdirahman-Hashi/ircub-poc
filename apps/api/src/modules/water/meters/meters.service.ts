@@ -12,6 +12,7 @@ import type { MeterWithLatest } from '../water-views.types';
 import type { InstallMeterDto } from './dto/install-meter.dto';
 import type { MeterResponseDto } from './dto/meter.response.dto';
 import type { ReplaceMeterDto } from './dto/replace-meter.dto';
+import type { TransactionClient } from '../../../prisma/prisma.types';
 import type { Prisma } from '@prisma/client';
 
 /** Meters per account; replacement links old and new so the first new reading uses `initialReading` (D13). */
@@ -46,8 +47,8 @@ export class MetersService {
     return toMeterView(row);
   }
 
-  /** Old meter → REPLACED; new meter on the same account carries `replacesMeterId`. */
-  async replace(id: string, dto: ReplaceMeterDto): Promise<MeterResponseDto> {
+  /** The meter to replace (not already replaced), with the new serial checked to be free. */
+  async replaceableOrThrow(id: string, newSerial: string): Promise<MeterWithLatest> {
     const old = await this.findOrThrow(id);
     if (old.status === MeterStatus.REPLACED) {
       throw new AppException(
@@ -57,20 +58,31 @@ export class MetersService {
         { id },
       );
     }
-    await this.assertSerialFree(dto.newSerial);
-    const created = await this.prisma.$transaction(async (tx) => {
-      await tx.meter.update({ where: { id }, data: { status: MeterStatus.REPLACED } });
-      return tx.meter.create({
-        data: {
-          accountId: old.accountId,
-          serial: dto.newSerial.trim(),
-          maxDigits: dto.maxDigits ?? old.maxDigits,
-          initialReading: dto.initialReading,
-          installedAt: dto.installedAt ?? new Date(),
-          replacesMeterId: old.id,
-        },
-        include: METER_INCLUDE,
-      });
+    await this.assertSerialFree(newSerial);
+    return old;
+  }
+
+  /**
+   * Old meter → REPLACED; new meter on the same account carries `replacesMeterId`. Runs inside
+   * the caller's transaction so a closing reading on the old meter commits with the swap
+   * (`ReadingsService.replaceMeter`).
+   */
+  async replaceWithin(
+    tx: TransactionClient,
+    old: MeterWithLatest,
+    dto: ReplaceMeterDto,
+  ): Promise<MeterResponseDto> {
+    await tx.meter.update({ where: { id: old.id }, data: { status: MeterStatus.REPLACED } });
+    const created = await tx.meter.create({
+      data: {
+        accountId: old.accountId,
+        serial: dto.newSerial.trim(),
+        maxDigits: dto.maxDigits ?? old.maxDigits,
+        initialReading: dto.initialReading,
+        installedAt: dto.installedAt ?? new Date(),
+        replacesMeterId: old.id,
+      },
+      include: METER_INCLUDE,
     });
     this.logger.log({
       msg: 'meter replaced',

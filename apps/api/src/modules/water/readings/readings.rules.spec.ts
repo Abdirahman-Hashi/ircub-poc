@@ -51,6 +51,25 @@ describe('computeConsumption', () => {
     ).toEqual({ ok: true, consumption: 15 });
   });
 
+  it('ROLLOVER: rejected unless the dial actually wrapped (current below previous and within capacity)', () => {
+    expect(
+      computeConsumption({
+        previousReading: 1200,
+        currentReading: 1260,
+        type: ReadingType.ROLLOVER,
+        meter,
+      }),
+    ).toEqual({ ok: false, reason: 'READING_INVALID_ROLLOVER' });
+    expect(
+      computeConsumption({
+        previousReading: 9_990,
+        currentReading: 10_000,
+        type: ReadingType.ROLLOVER,
+        meter: { maxDigits: 4, initialReading: 0 },
+      }),
+    ).toEqual({ ok: false, reason: 'READING_INVALID_ROLLOVER' });
+  });
+
   it('REPLACEMENT: current − new meter initial reading', () => {
     expect(
       computeConsumption({

@@ -197,30 +197,47 @@ describe('water billing (e2e)', () => {
       .expect(409);
     expect(blocked.body.code).toBe(ErrorCode.BILLING_CYCLE_HAS_FLAGGED_BILLS);
 
-    // Every flagged bill in the cycle (ours plus the seeded abnormal cases) must be reviewed before release.
-    const flagged = await request(app.getHttpServer())
-      .get('/bills')
-      .query({ cycleId, flagged: 'true', pageSize: 100 })
+    // Confirming the flag holds the bill back: the cycle can go out without it.
+    await request(app.getHttpServer())
+      .post(`/bills/${billId}/confirm-flag`)
+      .set('Authorization', bearer(water))
+      .send({ note: 'Investigate on site' })
+      .expect(201);
+    const released = await request(app.getHttpServer())
+      .post(`/billing-cycles/${cycleId}/release`)
+      .set('Authorization', bearer(water))
+      .expect(201);
+    expect(released.body.status).toBe(BillingCycleStatus.RELEASED);
+    expect(released.body.stats.held).toBe(1);
+    const held = await request(app.getHttpServer())
+      .get(`/bills/${billId}`)
       .set('Authorization', bearer(water))
       .expect(200);
-    for (const row of flagged.body.items as { id: string }[]) {
-      await request(app.getHttpServer())
-        .post(`/bills/${row.id}/clear-flag`)
-        .set('Authorization', bearer(water))
-        .send({ note: 'Verified on site' })
-        .expect(201);
-    }
+    expect(held.body).toMatchObject({
+      status: BillStatus.FLAGGED,
+      flagged: true,
+      releasedAt: null,
+    });
+
+    // Clearing the flag after the cycle went out releases the held bill on its own.
+    const cleared = await request(app.getHttpServer())
+      .post(`/bills/${billId}/clear-flag`)
+      .set('Authorization', bearer(water))
+      .send({ note: 'Verified on site' })
+      .expect(201);
+    expect(cleared.body).toMatchObject({ status: BillStatus.RELEASED, flagged: false });
+    expect(cleared.body.releasedAt).not.toBeNull();
     const notFlagged = await request(app.getHttpServer())
       .post(`/bills/${billId}/clear-flag`)
       .set('Authorization', bearer(water))
       .send({ note: 'again' })
       .expect(409);
     expect(notFlagged.body.code).toBe(ErrorCode.BILL_NOT_FLAGGED);
-    const released = await request(app.getHttpServer())
-      .post(`/billing-cycles/${cycleId}/release`)
+    const cycleAfter = await request(app.getHttpServer())
+      .get(`/billing-cycles/${cycleId}`)
       .set('Authorization', bearer(water))
-      .expect(201);
-    expect(released.body.status).toBe(BillingCycleStatus.RELEASED);
+      .expect(200);
+    expect(cycleAfter.body.stats.held).toBe(0);
 
     const pdf = await request(app.getHttpServer())
       .get(`/bills/${billId}/pdf`)
@@ -299,13 +316,33 @@ describe('water billing (e2e)', () => {
     expect(pdf.headers['content-type']).toContain('application/pdf');
   });
 
-  it('replaces a meter and counts the first reading from the new initial reading', async () => {
+  it('rejects a ROLLOVER that did not wrap the dial', async () => {
+    const res = await request(app.getHttpServer())
+      .post('/readings')
+      .set('Authorization', bearer(water))
+      .send({
+        meterId,
+        readingDate: day(new Date()),
+        readingValue: 1300,
+        type: ReadingType.ROLLOVER,
+      })
+      .expect(422);
+    expect(res.body.code).toBe(ErrorCode.READING_INVALID_ROLLOVER);
+  });
+
+  it('replaces a meter, closing the old one with a final reading, and counts the first reading from the new initial reading', async () => {
     const replaced = await request(app.getHttpServer())
       .post(`/meters/${meterId}/replace`)
       .set('Authorization', bearer(water))
-      .send({ newSerial: `${meterSerial}-B`, initialReading: 50 })
+      .send({ newSerial: `${meterSerial}-B`, initialReading: 50, finalReading: 1130 })
       .expect(201);
     expect(replaced.body.replacesMeterId).toBe(meterId);
+    const closing = await request(app.getHttpServer())
+      .get('/readings')
+      .query({ meterId, sort: 'readingDate:desc', pageSize: 1 })
+      .set('Authorization', bearer(water))
+      .expect(200);
+    expect(closing.body.items[0]).toMatchObject({ readingValue: 1130, consumption: 5 });
     const reading = await request(app.getHttpServer())
       .post('/readings')
       .set('Authorization', bearer(water))

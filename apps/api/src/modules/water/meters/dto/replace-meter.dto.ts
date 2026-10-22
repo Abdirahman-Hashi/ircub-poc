@@ -27,4 +27,13 @@ export class ReplaceMeterDto {
   @Type(() => Date)
   @IsDate()
   installedAt?: Date;
+
+  @ApiPropertyOptional({
+    description:
+      'Closing reading taken from the old meter at replacement; recorded as its final NORMAL reading on the installation date so the consumption since its last read is billed',
+  })
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  finalReading?: number;
 }

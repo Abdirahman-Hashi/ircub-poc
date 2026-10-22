@@ -37,7 +37,7 @@ export interface MeterDial {
 
 export type ConsumptionResult =
   | { readonly ok: true; readonly consumption: number }
-  | { readonly ok: false; readonly reason: 'READING_BELOW_PREVIOUS' };
+  | { readonly ok: false; readonly reason: 'READING_BELOW_PREVIOUS' | 'READING_INVALID_ROLLOVER' };
 
 export interface ReadingContext {
   readonly previousReading: number;

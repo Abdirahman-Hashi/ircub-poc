@@ -22,6 +22,8 @@ import type { ReadingFilterDto } from './dto/reading-filter.dto';
 import type { ReadingPreviewResponseDto } from './dto/reading-preview.response.dto';
 import type { PreviousReadingState, RecordReadingInput } from './readings.types';
 import type { TransactionClient } from '../../../prisma/prisma.types';
+import type { MeterResponseDto } from '../meters/dto/meter.response.dto';
+import type { ReplaceMeterDto } from '../meters/dto/replace-meter.dto';
 import type { Prisma } from '@prisma/client';
 
 /** Meter readings with the D13 rules; `recordReading` is shared by single capture and the CSV importer. */
@@ -70,6 +72,28 @@ export class ReadingsService {
       }),
     );
     return toReadingView(row);
+  }
+
+  /**
+   * Replace a meter, optionally closing the old one with a final reading taken at the swap so
+   * the water used since its last read is still billed. Both commit together.
+   */
+  async replaceMeter(id: string, dto: ReplaceMeterDto, actorId: string): Promise<MeterResponseDto> {
+    const old = await this.meters.replaceableOrThrow(id, dto.newSerial);
+    return this.prisma.$transaction(async (tx) => {
+      if (dto.finalReading !== undefined) {
+        await this.recordReading(tx, {
+          meter: old,
+          readingDate: dto.installedAt ?? new Date(),
+          readingValue: dto.finalReading,
+          type: ReadingType.NORMAL,
+          source: ReadingSource.MANUAL,
+          capturedById: actorId,
+          bulkUploadId: null,
+        });
+      }
+      return this.meters.replaceWithin(tx, old, dto);
+    });
   }
 
   /**
@@ -214,8 +238,8 @@ export class ReadingsService {
     });
     if (!result.ok) {
       throw new AppException(
-        ErrorCode.READING_BELOW_PREVIOUS,
-        WATER_MESSAGES.READING_BELOW_PREVIOUS,
+        ErrorCode[result.reason],
+        WATER_MESSAGES[result.reason],
         HttpStatus.UNPROCESSABLE_ENTITY,
         {
           meterId: meter.id,

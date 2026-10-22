@@ -328,13 +328,19 @@ function ReplaceMeterModal(props: {
 }): ReactElement {
   const [serial, setSerial] = useState('');
   const [initial, setInitial] = useState<number | string>(0);
+  const [finalReading, setFinalReading] = useState<number | string>('');
   const replace = useMutation({
     mutationFn: () =>
-      replaceMeter(props.meter?.id ?? '', { newSerial: serial, initialReading: Number(initial) }),
+      replaceMeter(props.meter?.id ?? '', {
+        newSerial: serial,
+        initialReading: Number(initial),
+        ...(finalReading === '' ? {} : { finalReading: Number(finalReading) }),
+      }),
     onSuccess: async () => {
       notifySuccess('Meter replaced');
       setSerial('');
       setInitial(0);
+      setFinalReading('');
       await props.onReplaced();
     },
     onError: notifyError,
@@ -348,8 +354,16 @@ function ReplaceMeterModal(props: {
       <Stack>
         <Text size="sm" c="dimmed">
           The old meter is marked REPLACED. The first reading on the new meter counts from its
-          initial reading.
+          initial reading. A closing reading on the old meter bills the water used since its last
+          read.
         </Text>
+        <NumberInput
+          label="Closing reading on the old meter (optional)"
+          description={`Last recorded: ${props.meter?.lastReading?.readingValue ?? props.meter?.initialReading ?? 0}`}
+          value={finalReading}
+          onChange={setFinalReading}
+          min={0}
+        />
         <TextInput
           label="New meter serial"
           value={serial}
