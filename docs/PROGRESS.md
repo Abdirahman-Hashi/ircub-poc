@@ -739,7 +739,14 @@ idempotency).
   One pitfall found and fixed on the way: a host-side dev API still bound to port 3000 made
   the first run talk to the wrong process; nothing in the images needed changing.
 
-**Test counts:** api unit 174 · api e2e 64 (11 suites) · mocks 13 · web 23 · CI green.
+**Test counts:** api unit 177 · api e2e 64 (11 suites) · mocks 13 · web 23 · CI green.
+
+**Final self-review** (`docs/REVIEW-2026-10-22-final.md`): all P0/P1 items of the first review
+verified closed by an independent read; two residuals found and fixed the same day (dashboard
+"billed" now sums each bill's own charges, not `totalDue`; a bill superseded by a later
+released bill no longer accepts payments, `BILL_SUPERSEDED`), plus `GET /audit/verify`
+failing when the chain-head row is missing, the README assumption headings and the
+"crons only while awake" note, and a `.mailmap`. Merged unit + e2e line coverage 93 %.
 
 **Brief requirements — status**
 

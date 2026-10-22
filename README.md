@@ -202,7 +202,7 @@ container and builds the three Docker images on every push.
 
 ## Assumptions
 
-## Domain
+### Domain
 
 - We assume the local currency is the Somali Shilling (SOS) because the case study is a
   Federal Member State; it is a single config value, so changing it affects only seed data
@@ -290,7 +290,7 @@ credit, currency, reference }] }` and returns `{ fmisReference }`; it is a mock.
   of confirmed online payments with the mocks on every run when they are reachable; when the
   mocks are down the seed logs it and the statements only know payments made live.
 
-## Security
+### Security
 
 - We assume the role-level SoD rule (`reversals.capture` ⟂ `reversals.approve`) applies to every
   user including System Administrators, because a superuser exemption would defeat the control;
@@ -373,7 +373,7 @@ credit, currency, reference }] }` and returns `{ fmisReference }`; it is a mock.
   per-event incremental update, because a full-day recompute is cheap (one query per table)
   and cannot drift from the source rows.
 
-## Security (phase 4)
+### Security (phase 4)
 
 - We assume the shared HMAC secret with the channels (`MOCK_SHARED_SECRET`) stands in for the
   per-channel credentials a real bank or mobile-money provider would issue; the callback is
@@ -382,7 +382,7 @@ credit, currency, reference }] }` and returns `{ fmisReference }`; it is a mock.
   acceptable because `EventSource` cannot send headers and the token lives 15 minutes; a
   production deployment would use a one-time stream ticket.
 
-## Operations
+### Operations
 
 - We assume the business "day" for jobs, summaries and reconciliation is the UTC calendar date
   because all services run in one timezone-agnostic container set; if the Ministry needs
@@ -412,13 +412,17 @@ credit, currency, reference }] }` and returns `{ fmisReference }`; it is a mock.
 - **Anomaly baselines** scale daily totals by the fraction of the day elapsed; intra-day
   shape is not modelled. The forecast has no seasonality or confidence bands.
 - **Ledger model.** Paying the latest water bill settles the arrears it rolled up; older
-  bills keep their own paid amount. There is no account-level prepayment or credit note.
+  bills are superseded (they keep their own paid amount and no longer accept payments). There
+  is no account-level prepayment or credit note.
 - **Journal date vs payment date.** Late payments are posted in the next day's batch with
   the batch date as journal date (the line keeps the payment's own date).
 - **Deliberately out of scope** (D25/D26): multi-state tenancy, i18n, mobile-first layouts,
   production secrets management, horizontal scaling, real document formats.
-- **Hosted demo** sleeps when idle (~1 min cold start) and its file storage is ephemeral;
-  Docker Compose is the evaluation route.
+- **Hosted demo** sleeps after 15 minutes idle; the first request takes about a minute (open
+  the web URL and wait for the "API is waking up…" overlay to clear). Scheduled jobs (FX
+  refresh, nightly batches, reconciliation, summaries, alerts) run only while the api is awake;
+  the UI buttons do the same work on demand. Its file storage is ephemeral. Docker Compose is
+  the evaluation route.
 
 ## Security notes
 
