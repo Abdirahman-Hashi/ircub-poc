@@ -92,3 +92,23 @@ export const WATER_DEMO = {
     },
   ],
 } as const;
+
+/** Online-channel demo payments (phase 4, D15/D16). */
+export const CHANNEL_DEMO = {
+  PAYMENTS: 300,
+  HISTORY_DAYS: 60,
+  USD_RATIO: 0.2,
+  MIN_SHARE: 0.1,
+  MAX_SHARE: 0.6,
+  PERMANENTLY_FAILED: 2,
+  FAILED: 3,
+  /** Amount cents that trigger the mock scenarios (apps/mocks/CLAUDE.md). */
+  FAILED_SUFFIX: '.99',
+  NO_CALLBACK_STATUS_ERROR_SUFFIX: '.66',
+  REF_LENGTH: 10,
+  /** The seed registers the payments with the mocks so statements know them; short timeout. */
+  MOCKS_TIMEOUT_MS: 2_000,
+  SEED_STATEMENT_PATH: '/__seed-statement',
+  /** First assessments are reserved for the sample CSV and e2e tests (see DEMO.RESERVED_UNPAID). */
+  SKIP_OLDEST: DEMO.RESERVED_UNPAID,
+} as const;

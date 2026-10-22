@@ -4,6 +4,7 @@ import { PrismaClient } from '@prisma/client';
 
 import { applyAuditExtension } from '../src/common/audit/audit.extension';
 
+import { seedChannelPayments } from './seed/channel-payments.seed';
 import { seedDemoData } from './seed/demo-data.seed';
 import { seedFxRate } from './seed/fx.seed';
 import { seedPermissions } from './seed/permissions.seed';
@@ -38,6 +39,9 @@ async function main(): Promise<void> {
     console.info(`seed: demo data ${await seedDemoData(prisma)}`);
     console.info(`seed: tariffs ${await seedTariffs(prisma)}`);
     console.info(`seed: water demo ${await seedWaterDemo(prisma)}`);
+    console.info(
+      `seed: channel payments ${await seedChannelPayments(prisma, process.env.MOCKS_BASE_URL)}`,
+    );
   } finally {
     await base.$disconnect();
   }
