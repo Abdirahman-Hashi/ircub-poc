@@ -704,4 +704,93 @@ constants in rules files, tunables vs SystemConfig, payments CSV export, extra i
 idempotency).
 
 ## Phase 7 — deliverables & deployment
-_(pending)_
+
+**Built**
+- Quality sweep: lint, typecheck, unit (api 174, mocks 13, web 23) and e2e (64 in 11 suites)
+  green; no `console.log`/TODO left in `src`; every list endpoint paginated with the brief's
+  filters; `GET /audit/verify` on the seeded dev database → `{ ok: true, checked: 9254 }`.
+- OpenAPI: every operation now declares the error envelope (`ErrorResponseDto`, the
+  `ErrorCode` enum) as its default response; `docs/openapi.json` re-exported (136 operations).
+- Postman: `pnpm postman:export` (`openapi-to-postmanv2`) → `docs/postman/IRCUB.postman_collection.json`
+  grouped by tag, bearer auth from `{{accessToken}}`, a pre-request script that logs in as the
+  seeded administrator; `IRCUB.postman_environment.json` and `docs/postman/README.md`.
+- ERD and data model: `pnpm erd` parses `schema.prisma` into Mermaid (`docs/erd.md`, 39
+  models, 41 relations), rendered to `docs/erd.svg`; `docs/data-model.md` explains the bounded
+  contexts and the invariants the database enforces.
+- Seed on boot: the api image compiles the seed and starts through `docker-entrypoint.sh`
+  (`migrate deploy` → seed `--if-empty` when `SEED_ON_BOOT=true` → serve); existing users are
+  the marker, so restarts never reseed. Compose and the Render blueprint set the flag.
+- README (final): demo links, eight Playwright screenshots in `docs/screenshots/`, stack table
+  with justifications, Mermaid architecture diagram, getting started (Compose one-liner, local
+  dev, seeded users, demo scenarios), tests, a requirement → implementation → test walkthrough,
+  assumptions (copied from `docs/ASSUMPTIONS.md`), known limitations, security notes, AI
+  assistance declaration, licence.
+- Deployment: `render.yaml` (api + mocks as Docker web services, SPA as a static site with
+  `/api/*` rewrite and SPA fallback, generated secrets, `fromService` wiring, Neon
+  `DATABASE_URL` set at deploy time) and `docs/DEPLOYMENT.md` with the Compose verification
+  steps and the Neon/Render click-path.
+- Compose verification from a fresh project (`docker compose -p ircub-verify up --build`):
+  first boot applied the 9 migrations and seeded (200 payers, 1,500 assessments, 900 +
+  305 payments, 120 water accounts, 360 bills, 31 journal batches, 1,199 summary rows, 80
+  targets); `GET /api/health` through nginx and `GET /ready` (db + jobs up); seeded login; a
+  12.00 mobile-money payment initiated through the API was CONFIRMED after 4 s by the mock's
+  signed callback crossing containers (`API_PUBLIC_URL=http://api:3000`); `GET /audit/verify`
+  → `{ ok: true, checked: 7403, headSeq: 7403 }`; SPA index and `/dashboard` fallback 200.
+  One pitfall found and fixed on the way: a host-side dev API still bound to port 3000 made
+  the first run talk to the wrong process; nothing in the images needed changing.
+
+**Test counts:** api unit 174 · api e2e 64 (11 suites) · mocks 13 · web 23 · CI green.
+
+**Brief requirements — status**
+
+| Module | Requirement | Status |
+| --- | --- | --- |
+| 1 | Hierarchical roles, permissions configurable in the DB, custom roles, SoD | done |
+| 1 | Secure login/logout, password policy, optional 2FA, role-based menus and API control | done |
+| 2 | Unique TIN; payer → many obligations, accounts, meters; duplicate detection with review; 360° profile | done |
+| 3 | Revenue types with rates and GL codes; assessments with unique control numbers | done |
+| 3 | Bulk uploader: validate before save, per-row reasons, dry run | done |
+| 3 | Audit tracking (who/when/before/after), separate tamper-evident table, web screen | done |
+| 3 | Advanced filters (payer, type, amount range, channel, status, date range) | done |
+| 4 | Readings single + CSV; below-previous rejected unless rollover/replacement | done |
+| 4 | Monthly cycle: tiered tariff, arrears, payments applied; PDF; mock SMS/e-mail | done |
+| 4 | Abnormal consumption > 200 % of 3-month average blocks release; exception report | done |
+| 4 | Customer statement with running balance | done |
+| 5 | Mock bank/mobile money; USD + SOS with dynamic FX from a separate mock; initiate → callback → verify → update | done |
+| 5 | Retry up to 3 → permanently failed → supervisor notified | done |
+| 5 | Daily channel reconciliation vs statement file | done |
+| 6 | Configurable revenue type → GL mapping; daily batches with four statuses | done |
+| 6 | Post to mock FMIS, reference stored, never posted twice; reconciliation per GL/day with drill-down | done |
+| 7 | Trends by type and channel; collections vs targets; billed vs collected | done |
+| 7 | Next-quarter forecast (OLS + Holt, justified); real-time anomaly alerts; pre-aggregated; SSE | done |
+| — | Hosted demo link | partial: blueprint and guide ready; the candidate creates the Render/Neon accounts and applies `render.yaml` (free-tier accounts could not be created from this environment) |
+
+**Submission checklist (brief)**
+- [x] Source code in a Git repository with a meaningful commit history (Conventional Commits, phases visible, tag `v0.1.0-poc`)
+- [x] README with setup steps, technology stack, assumptions and known limitations
+- [x] ERD (`docs/erd.svg`, `docs/erd.md`) and seed/test data scripts (`apps/api/prisma/seed.ts`, `docs/samples/*.csv`)
+- [x] API documentation (`docs/openapi.json`, Swagger `/docs`) and a Postman collection (`docs/postman/`)
+- [x] Automated tests and instructions to run them (README "Running tests", CI)
+- [x] Deployment option: Docker Compose (verified) · hosted link: blueprint committed, deploy pending the candidate's accounts
+- [x] AI assistance declared
+
+**Decisions and deviations (why)**
+- **ERD generator (D23):** `prisma-erd-generator` runs on every `prisma generate` and needs
+  `@mermaid-js/mermaid-cli` + puppeteer, which would land in the Docker builds and CI; a
+  60-line parser (`apps/api/scripts/erd.ts`) produces the same Mermaid, and the SVG is
+  rendered once with a headless browser and committed.
+- **Seed on boot** uses "users exist" as the marker instead of a dedicated marker row: the
+  seeders are already idempotent and the first seeded table is the natural sentinel.
+- **Hosted demo** is a blueprint plus click-path rather than a live URL: account creation
+  on Render and Neon needs the candidate's identity; everything else (images, env wiring,
+  rewrites, seeding) is committed and the same images passed the Compose verification.
+
+**Packages added** (rule 11): `openapi-to-postmanv2` 6.4.1 (api dev, D22); `@faker-js/faker`
+moved from dev to runtime dependencies so the container can seed.
+
+**Open items / limitations**
+- The Render deployment itself (and therefore pg-boss on Neon) has not been exercised; the
+  guide marks it as the step the candidate performs.
+- `docs/erd.svg` is a committed render; regenerate with `pnpm erd` + a Mermaid renderer after
+  schema changes.
+- Screenshots were taken from the seeded dev database on 2026-10-22; dates in them move.
