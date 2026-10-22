@@ -8,6 +8,8 @@ export interface PaymentStatusCheckPayload {
 
 export interface FmisPostBatchPayload {
   readonly batchId: string;
+  /** Demo: ask the mock FMIS to fail (retry path). */
+  readonly forceFailure?: boolean;
 }
 
 export interface ChannelReconcilePayload {
