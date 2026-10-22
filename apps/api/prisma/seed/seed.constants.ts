@@ -1,3 +1,5 @@
+import { REVENUE_TYPE_CODES } from '@ircub/shared';
+
 /** Fixed faker seed so every environment gets identical demo data (standards §6). */
 export const FAKER_SEED = 42;
 
@@ -39,7 +41,7 @@ export const DEMO = {
   OFFICER_EMAIL: 'officer@ircub.test',
   SUPERVISOR_EMAIL: 'supervisor@ircub.test',
   CUSTOMER_EMAIL: 'customer1@ircub.test',
-  WATER_TYPE_CODE: 'WATER',
+  WATER_TYPE_CODE: REVENUE_TYPE_CODES.WATER,
 } as const;
 
 /** Water demo data (D24): sizes, tariffs in USD-equivalent, and seasonality per month (Jan..Dec). */
@@ -111,4 +113,13 @@ export const CHANNEL_DEMO = {
   SEED_STATEMENT_PATH: '/__seed-statement',
   /** First assessments are reserved for the sample CSV and e2e tests (see DEMO.RESERVED_UNPAID). */
   SKIP_OLDEST: DEMO.RESERVED_UNPAID,
+} as const;
+
+/** FMIS demo data (phase 5, D17). */
+export const FMIS_DEMO = {
+  /** Mappings apply to every historical batch. */
+  MAPPING_EFFECTIVE_FROM: new Date('1970-01-01T00:00:00.000Z'),
+  HISTORY_DAYS: 31,
+  MOCKS_TIMEOUT_MS: 2_000,
+  FAILED_ERROR: 'FMIS unavailable (seeded demo failure; use Retry)',
 } as const;

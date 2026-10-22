@@ -6,6 +6,7 @@ import { applyAuditExtension } from '../src/common/audit/audit.extension';
 
 import { seedChannelPayments } from './seed/channel-payments.seed';
 import { seedDemoData } from './seed/demo-data.seed';
+import { seedGlMappings, seedJournalBatches } from './seed/fmis.seed';
 import { seedFxRate } from './seed/fx.seed';
 import { seedPermissions } from './seed/permissions.seed';
 import { seedRevenueTypes } from './seed/revenue-types.seed';
@@ -41,6 +42,10 @@ async function main(): Promise<void> {
     console.info(`seed: water demo ${await seedWaterDemo(prisma)}`);
     console.info(
       `seed: channel payments ${await seedChannelPayments(prisma, process.env.MOCKS_BASE_URL)}`,
+    );
+    console.info(`seed: gl mappings ${await seedGlMappings(prisma)}`);
+    console.info(
+      `seed: journal batches ${await seedJournalBatches(prisma, process.env.MOCKS_BASE_URL)}`,
     );
   } finally {
     await base.$disconnect();
