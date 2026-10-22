@@ -68,6 +68,11 @@ describe('AuditService.verify', () => {
     });
   });
 
+  it('refuses to vouch for the chain when the head row is missing', async () => {
+    const service = build(chain(2), null);
+    expect(await service.verify()).toEqual({ ok: false, checked: 2, firstBrokenSeq: 3 });
+  });
+
   it('reports a tampered row', async () => {
     const rows = chain(3);
     const tampered = rows.map((r) => (r.seq === BigInt(2) ? { ...r, entityId: 'x' } : r));

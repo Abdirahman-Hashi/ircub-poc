@@ -64,7 +64,9 @@ export class AuditService {
       where: { id: AUDIT.CHAIN_HEAD_ID },
     });
     if (head === null) {
-      return walked;
+      // The head row is created by the migration; without it the tail cannot be vouched for.
+      this.logger.error({ msg: 'audit chain head row missing' });
+      return { ok: false, checked: walked.checked, firstBrokenSeq: Number(walked.lastSeq) + 1 };
     }
     const headSeq = Number(head.lastSeq);
     if (head.lastSeq !== walked.lastSeq || head.lastHash !== walked.lastHash) {
