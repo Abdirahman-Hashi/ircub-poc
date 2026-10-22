@@ -13,6 +13,10 @@ export const CSV_TEMPLATES = {
     columns: ['meter_serial', 'reading_date', 'reading_value', 'type'],
     optionalColumns: [] as readonly string[],
   },
+  REVENUE_TARGETS: {
+    fileName: 'revenue-targets-template.csv',
+    columns: ['period', 'revenue_type_code', 'amount'],
+  },
   CHANNEL_STATEMENT: {
     fileName: 'channel-statement.csv',
     columns: ['txn_ref', 'date', 'amount', 'currency', 'control_number', 'status'],

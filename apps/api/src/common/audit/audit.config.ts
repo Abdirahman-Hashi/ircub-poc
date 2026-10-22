@@ -35,4 +35,6 @@ export const AUDITED_MODELS: AuditedModelMap = {
   GlMapping: {},
   JournalBatch: {},
   JournalLine: {},
+  RevenueTarget: {},
+  Alert: {},
 };

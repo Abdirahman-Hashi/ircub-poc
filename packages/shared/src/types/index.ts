@@ -1,6 +1,7 @@
 export * from './admin.types';
 export * from './auth.types';
 export * from './channel.types';
+export * from './dashboard.types';
 export * from './error.types';
 export * from './fmis.types';
 export * from './health.types';

@@ -6,3 +6,4 @@ export * from './api.constants';
 export * from './channel.constants';
 export * from './fmis.constants';
 export * from './revenue.constants';
+export * from './dashboard.constants';

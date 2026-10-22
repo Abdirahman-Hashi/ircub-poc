@@ -389,9 +389,11 @@ model RevenueType {
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
-  assessments  Assessment[]
-  glMappings   GlMapping[]
-  journalLines JournalLine[]
+  assessments              Assessment[]
+  glMappings               GlMapping[]
+  journalLines             JournalLine[]
+  dailyCollectionSummaries DailyCollectionSummary[]
+  revenueTargets           RevenueTarget[]
 
   @@index([active])
   @@map("revenue_type")
@@ -928,4 +930,70 @@ model JournalLine {
   @@index([batchId])
   @@index([glCode])
   @@map("journal_line")
+}
+
+/// Pre-aggregated collections per day, revenue type and channel (D18). Rebuilt from payments;
+/// never written by business flows directly.
+model DailyCollectionSummary {
+  id            String         @id @default(uuid()) @db.Uuid
+  date          DateTime       @db.Date
+  revenueTypeId String         @map("revenue_type_id") @db.Uuid
+  channel       PaymentChannel
+  currency      Currency       @default(SOS)
+  total         Decimal        @default(0) @db.Decimal(18, 2)
+  count         Int            @default(0)
+  reversedTotal Decimal        @default(0) @map("reversed_total") @db.Decimal(18, 2)
+  reversedCount Int            @default(0) @map("reversed_count")
+  updatedAt     DateTime       @updatedAt @map("updated_at")
+
+  revenueType RevenueType @relation(fields: [revenueTypeId], references: [id], onDelete: Cascade)
+
+  @@unique([date, revenueTypeId, channel])
+  @@index([date])
+  @@index([revenueTypeId, date])
+  @@map("daily_collection_summary")
+}
+
+/// Water billed (bills by period end) vs collected (bill payments by paid date) per day.
+model DailyBillingSummary {
+  id             String   @id @default(uuid()) @db.Uuid
+  date           DateTime @unique @db.Date
+  billedTotal    Decimal  @default(0) @map("billed_total") @db.Decimal(18, 2)
+  collectedTotal Decimal  @default(0) @map("collected_total") @db.Decimal(18, 2)
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  @@map("daily_billing_summary")
+}
+
+model RevenueTarget {
+  id            String   @id @default(uuid()) @db.Uuid
+  /// `YYYY-MM`
+  period        String
+  revenueTypeId String   @map("revenue_type_id") @db.Uuid
+  amount        Decimal  @db.Decimal(18, 2)
+  createdById   String?  @map("created_by_id") @db.Uuid
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  revenueType RevenueType @relation(fields: [revenueTypeId], references: [id], onDelete: Cascade)
+
+  @@unique([period, revenueTypeId])
+  @@index([period])
+  @@map("revenue_target")
+}
+
+model Alert {
+  id               String        @id @default(uuid()) @db.Uuid
+  type             AlertType
+  severity         AlertSeverity
+  title            String
+  message          String
+  data             Json
+  createdAt        DateTime      @default(now()) @map("created_at")
+  acknowledgedById String?       @map("acknowledged_by_id") @db.Uuid
+  acknowledgedAt   DateTime?     @map("acknowledged_at")
+
+  @@index([type, createdAt])
+  @@index([acknowledgedAt])
+  @@map("alert")
 }
