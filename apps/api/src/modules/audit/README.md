@@ -11,13 +11,21 @@ Rows are written by the Prisma extension in `common/audit`, never by this module
   model there in the same commit as its Prisma model.
 - The table has an append-only trigger; the production grant (INSERT + SELECT only) is in the
   migration as documentation.
+- `createMany` rows get their uuid assigned by the extension before the insert (Prisma only
+  returns a count), so each audit row names the real entity.
+- `GET /audit/verify` recomputes every hash from genesis **and** compares the last row with
+  `audit_chain_head`: deleting the newest rows is reported as a break at `headSeq`.
 - Known trade-off: audit rows are written in their own transaction right after the mutation;
   a rolled-back interactive transaction leaves its audit rows behind.
 
 **Endpoints.**
 
 - `GET /audit?entity&entityId&actorId&from&to&page&pageSize&sort` — `audit.view`
-- `GET /audit/verify` — `audit.view` — `{ ok, checked, firstBrokenSeq? }`
+- `GET /audit/verify` — `audit.view` — `{ ok, checked, firstBrokenSeq?, headSeq? }`
 
-**Testing.** Unit: `common/audit/audit.rules.spec.ts` (canonical JSON, hash, tamper detection).
+**Web.** `features/audit/AuditPage.tsx`: filters (entity, entity id, actor, dates), field-level
+before/after diff per row (`audit.rules.ts#diffSnapshots`) and the "Verify chain" button.
+
+**Testing.** Unit: `common/audit/audit.rules.spec.ts` (canonical JSON, hash, tamper detection),
+`audit.service.spec.ts` (intact chain, truncated tail, tampered row).
 E2E: `test/audit.e2e-spec.ts` (mutations produce chained rows; verify ok).

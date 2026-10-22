@@ -45,7 +45,10 @@ export interface AuditChainRow extends AuditHashInput {
 export interface ChainVerificationResult {
   readonly ok: boolean;
   readonly checked: number;
+  /** First sequence whose hash or link is wrong, or the first sequence missing from a truncated tail. */
   readonly firstBrokenSeq?: number;
+  /** Sequence the chain head says exists; differs from `checked` when rows were removed. */
+  readonly headSeq?: number;
 }
 
 export type EntityRecord = Record<string, unknown>;

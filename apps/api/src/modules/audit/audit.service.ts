@@ -52,9 +52,36 @@ export class AuditService {
 
   /**
    * Recomputes every hash from genesis in batches. Streams in seq order so memory stays
-   * flat regardless of log size; stops at the first broken link.
+   * flat regardless of log size; stops at the first broken link. Finally the tail is compared
+   * with the chain head, so deleting the newest rows is reported as a break too.
    */
   async verify(): Promise<ChainVerificationResult> {
+    const walked = await this.walkChain();
+    if (!walked.ok) {
+      return walked;
+    }
+    const head = await this.prisma.auditChainHead.findUnique({
+      where: { id: AUDIT.CHAIN_HEAD_ID },
+    });
+    if (head === null) {
+      return walked;
+    }
+    const headSeq = Number(head.lastSeq);
+    if (head.lastSeq !== walked.lastSeq || head.lastHash !== walked.lastHash) {
+      this.logger.warn({ msg: 'audit chain tail does not match the head', headSeq });
+      return {
+        ok: false,
+        checked: walked.checked,
+        firstBrokenSeq: Number(walked.lastSeq) + 1,
+        headSeq,
+      };
+    }
+    return { ok: true, checked: walked.checked, headSeq };
+  }
+
+  private async walkChain(): Promise<
+    ChainVerificationResult & { readonly lastSeq: bigint; readonly lastHash: string }
+  > {
     let cursorSeq = BigInt(0);
     let checked = 0;
     let prevHash = AUDIT.GENESIS_HASH;
@@ -76,12 +103,18 @@ export class AuditService {
           msg: 'audit chain broken at batch boundary',
           seq: first.seq.toString(),
         });
-        return { ok: false, checked: checked + 1, firstBrokenSeq: Number(first.seq) };
+        return {
+          ok: false,
+          checked: checked + 1,
+          firstBrokenSeq: Number(first.seq),
+          lastSeq: cursorSeq,
+          lastHash: prevHash,
+        };
       }
       const result = verifyChainFrom(rows, prevHash, cursorSeq);
       checked += result.checked;
       if (!result.ok) {
-        return { ...result, checked };
+        return { ...result, checked, lastSeq: cursorSeq, lastHash: prevHash };
       }
       const last = rows[rows.length - 1];
       if (last === undefined) {
@@ -90,7 +123,7 @@ export class AuditService {
       prevHash = last.hash;
       cursorSeq = last.seq;
     }
-    return { ok: true, checked };
+    return { ok: true, checked, lastSeq: cursorSeq, lastHash: prevHash };
   }
 }
 

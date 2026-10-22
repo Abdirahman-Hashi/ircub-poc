@@ -1,3 +1,5 @@
+import { randomUUID } from 'node:crypto';
+
 import { Prisma, type PrismaClient } from '@prisma/client';
 
 import { AuditAction } from '@ircub/shared';
@@ -110,8 +112,16 @@ export function createAuditExtension(base: PrismaClient, writer: AuditWriter) {
               return result;
             }
             case 'createMany': {
-              const result = await query(args);
-              const rows = Array.isArray(mutation.data) ? (mutation.data as EntityRecord[]) : [];
+              // Prisma returns only a count for createMany, so ids are assigned here first:
+              // the audit row then names the real entity instead of "undefined".
+              const rows = (
+                Array.isArray(mutation.data) ? (mutation.data as EntityRecord[]) : []
+              ).map((row) =>
+                config.idFields === undefined && row.id === undefined
+                  ? { ...row, id: randomUUID() }
+                  : row,
+              );
+              const result = await query({ ...args, data: rows });
               for (const row of rows) {
                 await writer.append({
                   entity: model,
