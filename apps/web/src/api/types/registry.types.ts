@@ -1,4 +1,6 @@
 import type {
+  ReconciliationLineView,
+  ReconciliationRunView,
   AssessmentStatus,
   Currency,
   DuplicateFlagStatus,
@@ -105,4 +107,32 @@ export interface ReversalListParams {
 export interface PageParams {
   readonly page: number;
   readonly pageSize: number;
+}
+
+export interface ReconciliationRunParams {
+  readonly page: number;
+  readonly pageSize: number;
+  readonly channel?: string;
+  readonly status?: string;
+  readonly dateFrom?: string;
+  readonly dateTo?: string;
+}
+
+export interface RunReconciliationInput {
+  readonly channel: PaymentChannel;
+  readonly date: string;
+  readonly perturb?: boolean;
+}
+
+export interface ChannelStatementView {
+  readonly id: string;
+  readonly channel: PaymentChannel;
+  readonly statementDate: string;
+  readonly fileName: string;
+  readonly lineCount: number;
+  readonly createdAt: string;
+}
+
+export interface ReconciliationRunDetail extends ReconciliationRunView {
+  readonly lines: readonly ReconciliationLineView[];
 }

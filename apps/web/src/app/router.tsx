@@ -7,12 +7,14 @@ import { ComingSoonPage } from '../components/ComingSoonPage';
 import { ChangePasswordPage } from '../features/account/ChangePasswordPage';
 import { MfaPage } from '../features/account/MfaPage';
 import { ConfigPage } from '../features/admin/ConfigPage';
+import { DemoPage } from '../features/admin/DemoPage';
 import { RolesPage } from '../features/admin/RolesPage';
 import { SodRulesPage } from '../features/admin/SodRulesPage';
 import { UsersPage } from '../features/admin/UsersPage';
 import { ForbiddenPage } from '../features/auth/ForbiddenPage';
 import { LoginPage } from '../features/auth/LoginPage';
 import { BulkUploadPage } from '../features/bulk/BulkUploadPage';
+import { FxPage } from '../features/fx/FxPage';
 import { HomePage } from '../features/home/HomePage';
 import { DuplicatesPage } from '../features/payers/DuplicatesPage';
 import { PayerProfilePage } from '../features/payers/PayerProfilePage';
@@ -20,6 +22,8 @@ import { PayersPage } from '../features/payers/PayersPage';
 import { RegisterPayerPage } from '../features/payers/RegisterPayerPage';
 import { CapturePaymentPage } from '../features/payments/CapturePaymentPage';
 import { PaymentsPage } from '../features/payments/PaymentsPage';
+import { ReconciliationPage } from '../features/reconciliation/ReconciliationPage';
+import { ReconciliationRunPage } from '../features/reconciliation/ReconciliationRunPage';
 import { AssessmentsPage } from '../features/revenue/AssessmentsPage';
 import { NewAssessmentPage } from '../features/revenue/NewAssessmentPage';
 import { RevenueTypesPage } from '../features/revenue/RevenueTypesPage';
@@ -114,6 +118,13 @@ const routeTree = rootRoute.addChildren([
       page(ROUTES.WATER_CYCLE_DETAIL, guarded(PERMISSIONS.BILLS_VIEW, BillingCycleDetailPage)),
       page(ROUTES.WATER_TARIFFS, guarded(PERMISSIONS.CONFIG_MANAGE, TariffsPage)),
       page(ROUTES.WATER_ACCOUNT_DETAIL, guarded(PERMISSIONS.BILLS_VIEW, WaterAccountDetailPage)),
+      page(ROUTES.FX, guarded(PERMISSIONS.FX_VIEW, FxPage)),
+      page(ROUTES.RECONCILIATION, guarded(PERMISSIONS.RECONCILIATION_VIEW, ReconciliationPage)),
+      page(
+        ROUTES.RECONCILIATION_RUN,
+        guarded(PERMISSIONS.RECONCILIATION_VIEW, ReconciliationRunPage),
+      ),
+      page(ROUTES.DEMO, guarded(PERMISSIONS.CONFIG_MANAGE, DemoPage)),
       page(ROUTES.FMIS, guarded(PERMISSIONS.FMIS_VIEW, placeholder('FMIS'))),
       page(ROUTES.AUDIT, guarded(PERMISSIONS.AUDIT_VIEW, placeholder('Audit log'))),
       page(ROUTES.ME, guarded(PERMISSIONS.SELF_VIEW, MyProfilePage)),

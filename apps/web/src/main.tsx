@@ -13,6 +13,7 @@ import { createRoot } from 'react-dom/client';
 import { router } from './app/router';
 import { ApiWakingOverlay } from './components/ApiWakingOverlay';
 import { AuthProvider } from './lib/auth';
+import { LiveEventsProvider } from './lib/live-events';
 import { theme } from './theme';
 
 const queryClient = new QueryClient({
@@ -31,7 +32,9 @@ createRoot(container).render(
       <QueryClientProvider client={queryClient}>
         <ApiWakingOverlay>
           <AuthProvider>
-            <RouterProvider router={router} />
+            <LiveEventsProvider>
+              <RouterProvider router={router} />
+            </LiveEventsProvider>
           </AuthProvider>
         </ApiWakingOverlay>
       </QueryClientProvider>

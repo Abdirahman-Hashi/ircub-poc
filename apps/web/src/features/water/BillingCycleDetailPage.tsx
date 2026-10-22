@@ -30,7 +30,7 @@ import { MoneyText } from '../../components/MoneyText';
 import { PageHeader } from '../../components/PageHeader';
 import { StatusBadge } from '../../components/StatusBadge';
 import { useCan } from '../../lib/auth';
-import { ENV } from '../../lib/env.constants';
+import { mocksUrl } from '../../lib/mocks-url';
 import { notifyError, notifySuccess } from '../../lib/notify';
 
 import { BillsTable } from './WaterAccountDetailPage';
@@ -40,19 +40,6 @@ import type { BillView } from '../../api/types';
 const LOCAL = 'SOS';
 const PAGE = 100;
 const MOCKS_OUTBOX_PATH = '/outbox';
-const MOCKS_PORT_FALLBACK = '3100';
-
-/** The mocks app is served beside the API; derive its outbox URL for the demo link. */
-function outboxUrl(): string {
-  try {
-    const api = new URL(ENV.API_URL, window.location.origin);
-    api.port = MOCKS_PORT_FALLBACK;
-    api.pathname = MOCKS_OUTBOX_PATH;
-    return api.toString();
-  } catch {
-    return MOCKS_OUTBOX_PATH;
-  }
-}
 
 export function BillingCycleDetailPage(): ReactElement {
   const cycleId = useParams({ strict: false }).cycleId ?? '';
@@ -155,8 +142,8 @@ export function BillingCycleDetailPage(): ReactElement {
         <Alert color="teal">
           Released. Notifications sent so far: <strong>{data.stats.notificationsSent ?? 0}</strong>.
           See them in the mock gateway outbox:{' '}
-          <Anchor href={outboxUrl()} target="_blank" rel="noreferrer">
-            {outboxUrl()}
+          <Anchor href={mocksUrl(MOCKS_OUTBOX_PATH)} target="_blank" rel="noreferrer">
+            {mocksUrl(MOCKS_OUTBOX_PATH)}
           </Anchor>
         </Alert>
       )}

@@ -2,6 +2,9 @@ import {
   IconBuildingBank,
   IconArrowBackUp,
   IconCash,
+  IconCurrencyDollar,
+  IconScale,
+  IconTestPipe,
   IconChartBar,
   IconFileUpload,
   IconListDetails,
@@ -58,6 +61,13 @@ export const NAV_ITEMS: readonly NavItem[] = [
     icon: IconDroplet,
     permission: PERMISSIONS.BILLS_VIEW,
   },
+  { label: 'FX rates', to: ROUTES.FX, icon: IconCurrencyDollar, permission: PERMISSIONS.FX_VIEW },
+  {
+    label: 'Reconciliation',
+    to: ROUTES.RECONCILIATION,
+    icon: IconScale,
+    permission: PERMISSIONS.RECONCILIATION_VIEW,
+  },
   { label: 'FMIS', to: ROUTES.FMIS, icon: IconBuildingBank, permission: PERMISSIONS.FMIS_VIEW },
   { label: 'Audit log', to: ROUTES.AUDIT, icon: IconHistory, permission: PERMISSIONS.AUDIT_VIEW },
   {
@@ -65,6 +75,12 @@ export const NAV_ITEMS: readonly NavItem[] = [
     to: ROUTES.ADMIN_USERS,
     icon: IconSettings,
     permission: PERMISSIONS.USERS_MANAGE,
+  },
+  {
+    label: 'Demo helper',
+    to: ROUTES.DEMO,
+    icon: IconTestPipe,
+    permission: PERMISSIONS.CONFIG_MANAGE,
   },
   { label: 'My account', to: ROUTES.ME, icon: IconUser, permission: PERMISSIONS.SELF_VIEW },
 ];
