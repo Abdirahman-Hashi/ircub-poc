@@ -2,6 +2,7 @@ import { Currency, FmisReconciliationStatus, JournalBatchStatus } from '@ircub/s
 
 import {
   collectionLine,
+  eligibilityWindowStart,
   daysBetween,
   netCreditByGl,
   netCreditFromLedger,
@@ -44,12 +45,11 @@ describe('journal lines', () => {
     id: 'p1',
     controlNumber: '000000000195',
     localAmount: '2500',
-    currency: Currency.SOS,
     revenueTypeId: 'rt',
   };
 
-  it('debits cash and credits the revenue GL for a collection, two decimals', () => {
-    expect(collectionLine(payment, '4100', '1010')).toEqual({
+  it('debits cash and credits the revenue GL for a collection, two decimals, in the local currency', () => {
+    expect(collectionLine(payment, '4100', '1010', Currency.SOS)).toEqual({
       paymentId: 'p1',
       reversalId: null,
       revenueTypeId: 'rt',
@@ -63,7 +63,7 @@ describe('journal lines', () => {
   });
 
   it('a reversal swaps debit and credit, keeps the amount positive and links the reversal', () => {
-    const reversed = reversalLine(collectionLine(payment, '4100', '1010'), 'rev-1');
+    const reversed = reversalLine(collectionLine(payment, '4100', '1010', Currency.SOS), 'rev-1');
     expect(reversed).toMatchObject({
       paymentId: null,
       reversalId: 'rev-1',
@@ -75,8 +75,8 @@ describe('journal lines', () => {
 
   it('builds a balanced FMIS payload: one debit and one credit entry per line', () => {
     const payload = toFmisPayload([
-      collectionLine(payment, '4100', '1010'),
-      collectionLine({ ...payment, id: 'p2', localAmount: '10.5' }, '4200', '1010'),
+      collectionLine(payment, '4100', '1010', Currency.SOS),
+      collectionLine({ ...payment, id: 'p2', localAmount: '10.5' }, '4200', '1010', Currency.SOS),
     ]);
     expect(payload).toHaveLength(4);
     const debit = payload.reduce((sum, line) => sum + Number(line.debit), 0);
@@ -150,5 +150,13 @@ describe('reconciliation', () => {
       '2026-03-01',
     ]);
     expect(daysBetween('2026-03-02', '2026-03-01')).toEqual([]);
+  });
+});
+
+describe('eligibilityWindowStart', () => {
+  it('starts the sweep catchUpDays before the batch date, or on the date itself for 0', () => {
+    expect(eligibilityWindowStart('2026-10-21', 31).toISOString()).toBe('2026-09-20T00:00:00.000Z');
+    expect(eligibilityWindowStart('2026-10-21', 0).toISOString()).toBe('2026-10-21T00:00:00.000Z');
+    expect(eligibilityWindowStart('2026-03-01', 1).toISOString()).toBe('2026-02-28T00:00:00.000Z');
   });
 });

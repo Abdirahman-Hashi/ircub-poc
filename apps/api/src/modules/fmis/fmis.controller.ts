@@ -50,7 +50,7 @@ export class FmisController {
   @ApiResponse({ status: HttpStatus.CREATED, type: JournalBatchResponseDto })
   @ApiResponse({ status: HttpStatus.CONFLICT, description: 'DUPLICATE_POSTING' })
   build(@Body() dto: BuildBatchDto): Promise<JournalBatchResponseDto | null> {
-    return this.batches.buildForDate(dto.date, dto.forceFailure ?? false);
+    return this.batches.buildForDate(dto.date, dto.forceFailure ?? false, dto.catchUp ?? true);
   }
 
   @Post(`${FMIS_API.BATCHES}/${FMIS_API.BUILD_RANGE}`)
@@ -58,7 +58,7 @@ export class FmisController {
   @ApiOperation({ summary: 'Build one batch per day in a range (backfill / demo)' })
   @ApiResponse({ status: HttpStatus.CREATED, type: BuildRangeResponseDto })
   buildRange(@Body() dto: BuildRangeDto): Promise<BuildRangeResponseDto> {
-    return this.batches.buildRange(dto.from, dto.to);
+    return this.batches.buildRange(dto.from, dto.to, dto.catchUp ?? true);
   }
 
   @Post(`${FMIS_API.BATCHES}/:id/${FMIS_API.RETRY}`)

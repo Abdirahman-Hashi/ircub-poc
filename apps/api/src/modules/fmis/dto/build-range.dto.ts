@@ -1,5 +1,5 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { Matches } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsBoolean, IsOptional, Matches } from 'class-validator';
 
 import { FMIS_API } from '../fmis.constants';
 
@@ -11,4 +11,9 @@ export class BuildRangeDto {
   @ApiProperty({ example: '2026-10-21' })
   @Matches(FMIS_API.DATE_PATTERN)
   to!: string;
+
+  @ApiPropertyOptional({ default: true, description: 'See POST /fmis/batches/build' })
+  @IsOptional()
+  @IsBoolean()
+  catchUp?: boolean;
 }

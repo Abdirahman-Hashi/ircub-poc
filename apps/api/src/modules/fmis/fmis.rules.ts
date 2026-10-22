@@ -1,8 +1,9 @@
 import { FmisReconciliationStatus, JournalBatchStatus } from '@ircub/shared';
-import type { FmisJournalLine, FmisLedgerEntry } from '@ircub/shared';
+import type { Currency, FmisJournalLine, FmisLedgerEntry } from '@ircub/shared';
 
 import { AMOUNT_SCALE } from '../../common/money/money.constants';
 import { toDecimal } from '../../common/money/money.rules';
+import { PRISMA_ERROR } from '../../prisma/prisma.constants';
 
 import { FMIS_API } from './fmis.constants';
 
@@ -16,7 +17,7 @@ import type {
 } from './fmis.types';
 
 /** Prisma's code for a unique-constraint violation. */
-export const PRISMA_UNIQUE_VIOLATION = 'P2002';
+export const PRISMA_UNIQUE_VIOLATION = PRISMA_ERROR.UNIQUE_VIOLATION;
 
 /** Latest mapping whose `effectiveFrom` is on or before the date; null when none applies yet. */
 export function resolveMapping<T extends MappingCandidate>(
@@ -35,11 +36,16 @@ export function resolveMapping<T extends MappingCandidate>(
   return best;
 }
 
-/** Collection line: debit the cash control GL, credit the revenue GL (D17). */
+/**
+ * Collection line: debit the cash control GL, credit the revenue GL (D17). The amount is the
+ * payment's local amount, so the line is always denominated in the local currency even when
+ * the payer paid in USD.
+ */
 export function collectionLine(
   payment: EligiblePayment,
   glCode: string,
   cashGl: string,
+  localCurrency: Currency,
 ): LineDraft {
   return {
     paymentId: payment.id,
@@ -49,9 +55,16 @@ export function collectionLine(
     debitGl: cashGl,
     creditGl: glCode,
     amount: toDecimal(payment.localAmount).toFixed(AMOUNT_SCALE),
-    currency: payment.currency,
+    currency: localCurrency,
     reference: payment.controlNumber,
   };
+}
+
+/** First day (inclusive) a batch for `date` sweeps: `catchUpDays` before it, or the day itself. */
+export function eligibilityWindowStart(date: string, catchUpDays: number): Date {
+  const start = new Date(`${date}T00:00:00.000Z`);
+  start.setUTCDate(start.getUTCDate() - Math.max(0, catchUpDays));
+  return start;
 }
 
 /** Reversal line mirrors the original by swapping debit and credit (never a negative amount). */

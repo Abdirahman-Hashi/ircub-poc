@@ -114,6 +114,20 @@ Phase 7 copies this list into the README.
   source of truth afterwards, because effective dating needs history the revenue type row
   cannot hold; if a reviewer wants the type's code to override, `resolveMapping` would take it
   as a fallback.
+- We assume a journal batch for day D also sweeps confirmed payments from the previous
+  `FMIS_CATCH_UP_DAYS` (31) days that still have no journal line, because late callbacks and
+  back-dated captures would otherwise never reach the FMIS (one COLLECTIONS batch per day
+  forbids a second batch for their own day); the line keeps the payment's own `paidAt` for
+  traceability while the journal date is the batch date. If the FMIS requires journals dated
+  on the payment day, the index becomes `(batch_date, kind, sequence)` and catch-up batches
+  get their own date.
+- We assume journal lines are denominated in the local currency (the posted amount is the
+  payment's `localAmount`), because the FMIS ledger is kept in SOS; the original USD amount
+  and rate stay on the payment for the audit trail.
+- We assume a late `SUCCESS` from a channel for a payment IRCUB had already marked `FAILED`
+  or `PERMANENTLY_FAILED` must be applied, because the channel did collect the money; if the
+  Ministry prefers manual handling, the settlement rule returns `DUPLICATE` for those states
+  and a supervisor alert replaces the automatic application.
 - We assume one COLLECTIONS batch per day (partial unique index) and that a payment confirmed
   after its day's batch was built waits for a manual build or is reported as
   `DUPLICATE_POSTING`, because a second batch for the same day would blur the daily

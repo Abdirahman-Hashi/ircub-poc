@@ -27,12 +27,11 @@ export interface MappingCandidate {
   readonly effectiveFrom: Date;
 }
 
-/** A confirmed payment with no journal line yet. */
+/** A confirmed payment with no journal line yet; `localAmount` is what gets posted. */
 export interface EligiblePayment {
   readonly id: string;
   readonly controlNumber: string;
   readonly localAmount: DecimalLike;
-  readonly currency: Currency;
   readonly revenueTypeId: string;
 }
 

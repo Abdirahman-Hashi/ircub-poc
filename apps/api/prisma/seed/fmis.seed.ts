@@ -158,7 +158,14 @@ async function buildDay(
     if (revenueTypeId === null || glCode === null) {
       continue;
     }
-    drafts.push(collectionLine({ ...payment, revenueTypeId }, glCode, context.cashGl));
+    drafts.push(
+      collectionLine(
+        { ...payment, revenueTypeId },
+        glCode,
+        context.cashGl,
+        SYSTEM_CONFIG_DEFAULTS[SystemConfigKey.LOCAL_CURRENCY],
+      ),
+    );
   }
   if (drafts.length === 0) {
     return;

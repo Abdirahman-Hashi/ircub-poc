@@ -27,6 +27,7 @@ import { FMIS_MESSAGES } from './fmis.messages';
 import {
   collectionLine,
   daysBetween,
+  eligibilityWindowStart,
   PRISMA_UNIQUE_VIOLATION,
   reversalLine,
   statusAfterReversal,
@@ -78,9 +79,18 @@ export class JournalBatchService {
     });
   }
 
-  /** Builds and enqueues posting; `null` when nothing is eligible. */
-  async buildForDate(date: string, forceFailure = false): Promise<JournalBatchResponseDto | null> {
-    const batch = await this.createBatch(date);
+  /**
+   * Builds and enqueues posting; `null` when nothing is eligible. With `catchUp` (the default)
+   * the batch also sweeps confirmed payments from the previous `FMIS_CATCH_UP_DAYS` days that
+   * still have no journal line: late callbacks and back-dated captures are posted on the next
+   * build instead of never.
+   */
+  async buildForDate(
+    date: string,
+    forceFailure = false,
+    catchUp = true,
+  ): Promise<JournalBatchResponseDto | null> {
+    const batch = await this.createBatch(date, catchUp);
     if (batch === null) {
       return null;
     }
@@ -90,11 +100,11 @@ export class JournalBatchService {
   }
 
   /** Seed / backfill: one batch per day in the range; days with nothing eligible are skipped. */
-  async buildRange(from: string, to: string): Promise<BuildRangeResponseDto> {
+  async buildRange(from: string, to: string, catchUp = true): Promise<BuildRangeResponseDto> {
     const days = this.rangeDays(from, to, FMIS_API.MAX_BUILD_DAYS);
     const built: JournalBatchResponseDto[] = [];
     for (const day of days) {
-      const batch = await this.buildForDate(day);
+      const batch = await this.buildForDate(day, false, catchUp);
       if (batch !== null) {
         built.push(batch);
       }
@@ -277,19 +287,23 @@ export class JournalBatchService {
     return batch;
   }
 
-  private async createBatch(date: string): Promise<JournalBatch | null> {
-    const cashGl = await this.systemConfig.get(SystemConfigKey.CASH_GL_CODE);
+  private async createBatch(date: string, catchUp: boolean): Promise<JournalBatch | null> {
+    const [cashGl, localCurrency, catchUpDays] = await Promise.all([
+      this.systemConfig.get(SystemConfigKey.CASH_GL_CODE),
+      this.systemConfig.get(SystemConfigKey.LOCAL_CURRENCY),
+      this.systemConfig.get(SystemConfigKey.FMIS_CATCH_UP_DAYS),
+    ]);
     const onDate = new Date(date);
     try {
       return await this.prisma.$transaction(async (tx) => {
-        const eligible = await this.eligiblePayments(tx, date);
+        const eligible = await this.eligiblePayments(tx, date, catchUp ? catchUpDays : 0);
         if (eligible.length === 0) {
           return null;
         }
         const drafts: LineDraft[] = [];
         for (const payment of eligible) {
           const mapping = await this.mappings.resolve(tx, payment.revenueTypeId, onDate);
-          drafts.push(collectionLine(payment, mapping.glCode, cashGl));
+          drafts.push(collectionLine(payment, mapping.glCode, cashGl, localCurrency));
         }
         const batch = await tx.journalBatch.create({
           data: {
@@ -325,20 +339,26 @@ export class JournalBatchService {
     }
   }
 
-  /** CONFIRMED payments paid on the day with no journal line (LEFT JOIN … IS NULL). */
-  private async eligiblePayments(tx: TransactionClient, date: string): Promise<EligiblePayment[]> {
-    const { start, end } = utcDayBounds(date);
+  /**
+   * CONFIRMED payments with no journal line (LEFT JOIN … IS NULL) paid on the day, or within
+   * the catch-up window before it.
+   */
+  private async eligiblePayments(
+    tx: TransactionClient,
+    date: string,
+    catchUpDays: number,
+  ): Promise<EligiblePayment[]> {
+    const { end } = utcDayBounds(date);
     const rows = await tx.payment.findMany({
       where: {
         status: PaymentStatus.CONFIRMED,
-        paidAt: { gte: start, lt: end },
+        paidAt: { gte: eligibilityWindowStart(date, catchUpDays), lt: end },
         journalLine: null,
       },
       select: {
         id: true,
         controlNumber: true,
         localAmount: true,
-        currency: true,
         assessment: { select: { revenueTypeId: true } },
         billId: true,
       },
@@ -361,7 +381,6 @@ export class JournalBatchService {
         id: row.id,
         controlNumber: row.controlNumber,
         localAmount: row.localAmount,
-        currency: row.currency,
         revenueTypeId,
       };
     });

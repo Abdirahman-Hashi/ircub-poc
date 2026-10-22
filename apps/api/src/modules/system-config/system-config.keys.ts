@@ -33,6 +33,7 @@ export enum SystemConfigKey {
   CASH_GL_CODE = 'CASH_GL_CODE',
   FMIS_POST_RETRY_LIMIT = 'FMIS_POST_RETRY_LIMIT',
   FMIS_POST_RETRY_DELAY_SECONDS = 'FMIS_POST_RETRY_DELAY_SECONDS',
+  FMIS_CATCH_UP_DAYS = 'FMIS_CATCH_UP_DAYS',
 
   ANOMALY_Z_WARNING = 'ANOMALY_Z_WARNING',
   ANOMALY_Z_CRITICAL = 'ANOMALY_Z_CRITICAL',
@@ -70,6 +71,7 @@ export interface SystemConfigValues {
   [SystemConfigKey.CASH_GL_CODE]: string;
   [SystemConfigKey.FMIS_POST_RETRY_LIMIT]: number;
   [SystemConfigKey.FMIS_POST_RETRY_DELAY_SECONDS]: number;
+  [SystemConfigKey.FMIS_CATCH_UP_DAYS]: number;
 
   [SystemConfigKey.ANOMALY_Z_WARNING]: number;
   [SystemConfigKey.ANOMALY_Z_CRITICAL]: number;
@@ -107,6 +109,7 @@ export const SYSTEM_CONFIG_DEFAULTS: Readonly<SystemConfigValues> = {
   [SystemConfigKey.CASH_GL_CODE]: '1010',
   [SystemConfigKey.FMIS_POST_RETRY_LIMIT]: 3,
   [SystemConfigKey.FMIS_POST_RETRY_DELAY_SECONDS]: 30,
+  [SystemConfigKey.FMIS_CATCH_UP_DAYS]: 31,
 
   [SystemConfigKey.ANOMALY_Z_WARNING]: 2,
   [SystemConfigKey.ANOMALY_Z_CRITICAL]: 3,
@@ -155,6 +158,8 @@ export const SYSTEM_CONFIG_DESCRIPTIONS: Readonly<Record<SystemConfigKey, string
     'Posting attempts before a journal batch is marked FAILED.',
   [SystemConfigKey.FMIS_POST_RETRY_DELAY_SECONDS]:
     'Base delay between FMIS posting retries (exponential backoff).',
+  [SystemConfigKey.FMIS_CATCH_UP_DAYS]:
+    'Days before a batch date whose still-unposted confirmed payments the batch also sweeps (late callbacks, back-dated captures).',
 
   [SystemConfigKey.ANOMALY_Z_WARNING]: 'Absolute z-score that raises a WARNING alert.',
   [SystemConfigKey.ANOMALY_Z_CRITICAL]: 'Absolute z-score that raises a CRITICAL alert.',

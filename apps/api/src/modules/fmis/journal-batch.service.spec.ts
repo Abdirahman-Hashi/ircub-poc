@@ -99,7 +99,9 @@ function build(options: {
       get: jest
         .fn()
         .mockImplementation((key: string) =>
-          Promise.resolve(key === 'CASH_GL_CODE' ? '1010' : RETRY_LIMIT),
+          Promise.resolve(
+            key === 'CASH_GL_CODE' ? '1010' : key === 'LOCAL_CURRENCY' ? 'SOS' : RETRY_LIMIT,
+          ),
         ),
     } as never,
     {

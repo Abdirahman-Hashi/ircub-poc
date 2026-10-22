@@ -60,6 +60,7 @@ describe('fmis posting and reconciliation (e2e)', () => {
   /** Day whose number ends in 13 → the mock FMIS fails the posting. */
   const FAILING_DAY = `${month}-13`;
   const CLEAN_DAY = `${month}-14`;
+  const CATCH_UP_DAY = `${month}-20`;
 
   const bearer = (s: TestSession): string => `Bearer ${s.accessToken}`;
   const getBatch = async (id: string) =>
@@ -153,7 +154,8 @@ describe('fmis posting and reconciliation (e2e)', () => {
       .expect(201);
     expect(again.body).toEqual({});
     // A new payment on a day that already has its batch: the partial unique index refuses a second
-    // COLLECTIONS batch, surfaced as DUPLICATE_POSTING (it waits for the next build of a later day).
+    // COLLECTIONS batch, surfaced as DUPLICATE_POSTING; the next build of a later day sweeps it up
+    // (catch-up, proven below).
     await capture(`${day}T12:00:00.000Z`, '50.00');
     const duplicate = await request(app.getHttpServer())
       .post('/fmis/batches/build')
@@ -189,8 +191,9 @@ describe('fmis posting and reconciliation (e2e)', () => {
     const batch = await request(app.getHttpServer())
       .post('/fmis/batches/build')
       .set('Authorization', bearer(supervisor))
-      .send({ date: otherDay })
+      .send({ date: otherDay, catchUp: false }) // only the 28th, so the batch has exactly one line
       .expect(201);
+    expect(batch.body.lineCount).toBe(1);
     await untilStatus(String(batch.body.id), JournalBatchStatus.POSTED, POST_TIMEOUT_MS);
     expect(paid.body.status).toBe('CONFIRMED');
 
@@ -228,6 +231,33 @@ describe('fmis posting and reconciliation (e2e)', () => {
     // Single-line batch: all lines reversed → REVERSED.
     expect(original.status).toBe(JournalBatchStatus.REVERSED);
     expect(original.reversedByBatchId).toBe(mirror?.id);
+  });
+
+  it('a later build sweeps payments confirmed after their own day was batched (catch-up)', async () => {
+    // The 200.00 and 50.00 payments of `day` were confirmed after that day's batch existed.
+    const built = await request(app.getHttpServer())
+      .post('/fmis/batches/build')
+      .set('Authorization', bearer(supervisor))
+      .send({ date: CATCH_UP_DAY })
+      .expect(201);
+    expect(built.body).toMatchObject({ lineCount: 2, totalLocal: '250' });
+    const posted = await untilStatus(
+      String(built.body.id),
+      JournalBatchStatus.POSTED,
+      POST_TIMEOUT_MS,
+    );
+    expect(
+      (posted.lines as { payment: { controlNumber: string } }[]).map(
+        (line) => line.payment.controlNumber,
+      ),
+    ).toEqual([assessment.controlNumber, assessment.controlNumber]);
+    // Nothing is left to sweep: a second build for a later day finds no eligible payment.
+    const again = await request(app.getHttpServer())
+      .post('/fmis/batches/build')
+      .set('Authorization', bearer(supervisor))
+      .send({ date: `${month}-21` })
+      .expect(201);
+    expect(again.body).toEqual({});
   });
 
   it(

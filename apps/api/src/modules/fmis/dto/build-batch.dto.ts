@@ -12,4 +12,13 @@ export class BuildBatchDto {
   @IsOptional()
   @IsBoolean()
   forceFailure?: boolean;
+
+  @ApiPropertyOptional({
+    default: true,
+    description:
+      'Also sweep unposted confirmed payments from the previous FMIS_CATCH_UP_DAYS days (late callbacks, back-dated captures)',
+  })
+  @IsOptional()
+  @IsBoolean()
+  catchUp?: boolean;
 }

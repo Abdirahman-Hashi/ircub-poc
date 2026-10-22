@@ -10,13 +10,18 @@ reference traceability.
 - `GlMappingsService.resolve(revenueTypeId, date)` picks the latest `effectiveFrom ≤ date`
   (`resolveMapping`). The revenue type's `glCode` is only the seed default; the mapping table
   is the source of truth. Codes are 4–6 digits.
-- `JournalBatchService.buildForDate` selects, in one transaction, CONFIRMED payments paid on
-  the UTC day with no `JournalLine` (relation filter = `LEFT JOIN … IS NULL`), resolves the
-  revenue type (assessment → its type; bill → `WATER`), writes a `PENDING` batch and one line
-  per payment (debit cash control GL from `CASH_GL_CODE`, credit the revenue GL). The unique
-  `JournalLine.paymentId` and the partial unique index on one COLLECTIONS batch per day are
-  the hard double-posting guard; a violation is reported as `DUPLICATE_POSTING` (409). No
-  eligible payment → no batch (`null`). Cron `30 0 * * *` builds yesterday.
+- `JournalBatchService.buildForDate` selects, in one transaction, CONFIRMED payments with no
+  `JournalLine` (relation filter = `LEFT JOIN … IS NULL`) paid on the UTC day **or within the
+  previous `FMIS_CATCH_UP_DAYS` days** (`catchUp`, default on): a payment confirmed after its
+  own day's batch went out (late callback, back-dated capture or bulk upload) is posted by
+  the next build instead of never. It resolves the revenue type (assessment → its type; bill
+  → `WATER`), writes a `PENDING` batch and one line per payment (debit cash control GL from
+  `CASH_GL_CODE`, credit the revenue GL, amount = the payment's local amount, currency =
+  `LOCAL_CURRENCY` even for USD payments). The unique `JournalLine.paymentId` and the partial
+  unique index on one COLLECTIONS batch per day are the hard double-posting guard; a
+  violation is reported as `DUPLICATE_POSTING` (409). No eligible payment → no batch
+  (`null`). Cron `30 0 * * *` builds yesterday. The seed builds its history day by day
+  without catch-up so each demo batch holds its own day.
 - `FmisPosterService` (`fmis.post-batch`): POSTED or REVERSED → no-op; otherwise posts the
   payload (`toFmisPayload`: a debit entry and a credit entry per line, always balanced) with
   the batch id as idempotency key, stores `fmisReference`/`postedAt`; on error counts the
