@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
+import { Decimal } from 'decimal.js';
 import request from 'supertest';
 
 import { createTestApp, loginAs, SEED, type TestSession } from './helpers/test-app';
@@ -90,11 +91,18 @@ describe('bulk upload (e2e)', () => {
       currency: string;
       localAmount: string;
       status: string;
+      fxRate: string;
     }[];
     expect(payments.body.total).toBe(16);
     expect(fromUpload.every((p) => p.status === 'CONFIRMED')).toBe(true);
     const usdRow = fromUpload.find((p) => p.currency === 'USD');
-    expect(usdRow?.localAmount).toBe('1143'); // 2 USD × 571.5
+    // 2 USD at the rate the row was converted with (live when the mock FX is up, stored otherwise).
+    expect(usdRow?.localAmount).toBe(
+      new Decimal(usdRow?.fxRate ?? '0')
+        .mul(2)
+        .toDecimalPlaces(2, Decimal.ROUND_HALF_EVEN)
+        .toFixed(),
+    );
   });
 
   it('rejects a file with missing columns and a non-CSV upload', async () => {

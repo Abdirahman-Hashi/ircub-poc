@@ -1,3 +1,4 @@
+import { Decimal } from 'decimal.js';
 import request from 'supertest';
 
 import {
@@ -20,6 +21,10 @@ describe('revenue collection (e2e)', () => {
   let officer: TestSession;
   let supervisor: TestSession;
   let assessment: AssessmentView;
+  /** The USD→SOS rate is whatever the FX service used for this payment (live or stored); derive expectations from it. */
+  let usdLocal: Decimal;
+  const money = (value: Decimal): string =>
+    value.toDecimalPlaces(2, Decimal.ROUND_HALF_EVEN).toFixed();
 
   beforeAll(async () => {
     app = await createTestApp();
@@ -76,15 +81,15 @@ describe('revenue collection (e2e)', () => {
       channel: PaymentChannel.BANK,
       channelTxnRef: `BNK-${Date.now()}`,
     }).expect(201);
-    expect(usd.body.fxRate).toBe('571.5');
-    expect(usd.body.localAmount).toBe('5715');
+    usdLocal = new Decimal(usd.body.localAmount);
+    expect(usd.body.localAmount).toBe(money(new Decimal(usd.body.fxRate).mul(10)));
 
     const detail = await request(app.getHttpServer())
       .get(`/assessments/${assessment.id}`)
       .set('Authorization', bearer(officer))
       .expect(200);
     expect(detail.body.status).toBe(AssessmentStatus.PART_PAID);
-    expect(detail.body.paidAmount).toBe('55715');
+    expect(detail.body.paidAmount).toBe(money(usdLocal.plus(50000)));
     expect(detail.body.payments).toHaveLength(2);
   });
 
@@ -95,7 +100,9 @@ describe('revenue collection (e2e)', () => {
       channel: PaymentChannel.CASH,
     }).expect(422);
     expect(over.body.code).toBe(ErrorCode.OVERPAYMENT);
-    expect(over.body.details.outstanding).toBe('94285');
+    expect(over.body.details.outstanding).toBe(
+      money(new Decimal(150000).minus(usdLocal).minus(50000)),
+    );
 
     const noRef = await capture({
       amount: '10.00',
@@ -190,7 +197,7 @@ describe('revenue collection (e2e)', () => {
       .get(`/assessments/${assessment.id}`)
       .set('Authorization', bearer(officer))
       .expect(200);
-    expect(detail.body.paidAmount).toBe('5725'); // 55715 + 10 − 50000
+    expect(detail.body.paidAmount).toBe(money(usdLocal.plus(10))); // usd + 50000 + 10 − 50000
     expect(detail.body.status).toBe(AssessmentStatus.PART_PAID);
 
     const again = await request(app.getHttpServer())
