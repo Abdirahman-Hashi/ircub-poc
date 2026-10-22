@@ -33,10 +33,13 @@ export interface ChannelStatusResponse {
   readonly clientRef?: string;
 }
 
+/** A channel's final word on a payment: PENDING is not an outcome. */
+export type FinalChannelOutcome = Exclude<ChannelOutcome, 'PENDING'>;
+
 /** Body the channel posts to `callbackUrl`, signed in `x-signature`. */
 export interface ChannelCallbackPayload {
   readonly txnRef: string;
-  readonly status: 'SUCCESS' | 'FAILED';
+  readonly status: FinalChannelOutcome;
   readonly amount: MoneyString;
   readonly currency: Currency;
   readonly controlNumber: string;

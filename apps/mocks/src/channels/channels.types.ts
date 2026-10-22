@@ -1,4 +1,10 @@
-import type { ChannelOutcome, Currency, PaymentChannel, ScenarioOutcome } from '@ircub/shared';
+import type {
+  ChannelOutcome,
+  Currency,
+  FinalChannelOutcome,
+  PaymentChannel,
+  ScenarioOutcome,
+} from '@ircub/shared';
 
 export interface MockPayment {
   readonly txnRef: string;
@@ -27,7 +33,7 @@ export interface StatementLine {
 
 /** What the amount suffix implies for a new payment. */
 export interface AmountScenario {
-  readonly outcome: 'SUCCESS' | 'FAILED';
+  readonly outcome: FinalChannelOutcome;
   readonly sendCallback: boolean;
   readonly statusCheckErrors: boolean;
 }

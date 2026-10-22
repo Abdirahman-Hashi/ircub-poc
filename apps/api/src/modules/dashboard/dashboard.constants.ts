@@ -10,6 +10,7 @@ export const DASHBOARD_API = {
   REBUILD: 'rebuild',
   ALERTS_PATH: 'alerts',
   ACK: 'ack',
+  UNACKNOWLEDGED_COUNT: 'unacknowledged-count',
   EVALUATE: 'evaluate',
   TARGETS_PATH: 'targets',
   IMPORT: 'import',

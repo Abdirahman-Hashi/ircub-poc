@@ -9,6 +9,7 @@ import {
   type PaymentChannel,
   type ScenarioOutcome,
   ScenarioOutcome as Outcomes,
+  FinalChannelOutcome,
 } from '@ircub/shared';
 
 import { MocksConfigService } from '../config/mocks-config.service';
@@ -88,9 +89,9 @@ export class ChannelsService {
     if (payment.status === ChannelOutcome.PENDING) {
       const outcome =
         forced === Outcomes.FAILED
-          ? 'FAILED'
+          ? ChannelOutcome.FAILED
           : forced === Outcomes.SUCCESS
-            ? 'SUCCESS'
+            ? ChannelOutcome.SUCCESS
             : amountScenario.outcome;
       const sendsCallback = amountScenario.sendCallback && forced !== Outcomes.NO_CALLBACK;
       if (!sendsCallback) {
@@ -159,18 +160,19 @@ export class ChannelsService {
     payment.paidAt = outcome === ChannelOutcome.SUCCESS ? new Date().toISOString() : null;
   }
 
-  private async sendCallback(payment: MockPayment, outcome: 'SUCCESS' | 'FAILED'): Promise<void> {
+  private async sendCallback(payment: MockPayment, outcome: FinalChannelOutcome): Promise<void> {
     const forced = payment.scenario ?? this.store.scenarios.get(payment.txnRef)?.outcome ?? null;
     if (forced === Outcomes.NO_CALLBACK) {
       this.logger.log({ msg: 'callback suppressed by scenario', txnRef: payment.txnRef });
       return;
     }
     const finalOutcome =
-      forced === Outcomes.FAILED ? 'FAILED' : forced === Outcomes.SUCCESS ? 'SUCCESS' : outcome;
-    this.settle(
-      payment,
-      finalOutcome === 'SUCCESS' ? ChannelOutcome.SUCCESS : ChannelOutcome.FAILED,
-    );
+      forced === Outcomes.FAILED
+        ? ChannelOutcome.FAILED
+        : forced === Outcomes.SUCCESS
+          ? ChannelOutcome.SUCCESS
+          : outcome;
+    this.settle(payment, finalOutcome);
     const body: ChannelCallbackPayload = {
       txnRef: payment.txnRef,
       status: finalOutcome,

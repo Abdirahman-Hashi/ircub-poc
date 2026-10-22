@@ -3,6 +3,7 @@ import { createHmac, timingSafeEqual } from 'node:crypto';
 import { Decimal } from 'decimal.js';
 
 import { CHANNEL, ChannelOutcome, SCENARIO_SUFFIX } from '@ircub/shared';
+import type { FinalChannelOutcome } from '@ircub/shared';
 
 import { CHANNEL_MOCK } from '../mocks.constants';
 
@@ -11,19 +12,19 @@ import type { AmountScenario, StatementLine } from './channels.types';
 /** `.99` → FAILED; `.77` → no callback, status PENDING twice then SUCCESS; `.66` → no callback, status always 500. */
 export function scenarioForAmount(amount: string): AmountScenario {
   if (amount.endsWith(SCENARIO_SUFFIX.FAILED)) {
-    return { outcome: 'FAILED', sendCallback: true, statusCheckErrors: false };
+    return { outcome: ChannelOutcome.FAILED, sendCallback: true, statusCheckErrors: false };
   }
   if (amount.endsWith(SCENARIO_SUFFIX.NO_CALLBACK)) {
-    return { outcome: 'SUCCESS', sendCallback: false, statusCheckErrors: false };
+    return { outcome: ChannelOutcome.SUCCESS, sendCallback: false, statusCheckErrors: false };
   }
   if (amount.endsWith(SCENARIO_SUFFIX.NO_CALLBACK_STATUS_ERROR)) {
-    return { outcome: 'SUCCESS', sendCallback: false, statusCheckErrors: true };
+    return { outcome: ChannelOutcome.SUCCESS, sendCallback: false, statusCheckErrors: true };
   }
-  return { outcome: 'SUCCESS', sendCallback: true, statusCheckErrors: false };
+  return { outcome: ChannelOutcome.SUCCESS, sendCallback: true, statusCheckErrors: false };
 }
 
 /** Status reported on the n-th check (1-based) for a no-callback payment: PENDING twice, then the outcome. */
-export function statusOnCheck(check: number, finalOutcome: 'SUCCESS' | 'FAILED'): ChannelOutcome {
+export function statusOnCheck(check: number, finalOutcome: FinalChannelOutcome): ChannelOutcome {
   return check <= CHANNEL_MOCK.PENDING_CHECKS_BEFORE_SUCCESS
     ? ChannelOutcome.PENDING
     : finalOutcome;

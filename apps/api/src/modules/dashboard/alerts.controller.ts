@@ -38,7 +38,7 @@ export class AlertsController {
     return this.alerts.list(filter);
   }
 
-  @Get('unacknowledged-count')
+  @Get(DASHBOARD_API.UNACKNOWLEDGED_COUNT)
   @ApiOperation({ summary: 'Open alert count for the header bell' })
   @ApiResponse({ status: HttpStatus.OK, type: UnacknowledgedCountResponseDto })
   async unacknowledged(): Promise<UnacknowledgedCountResponseDto> {
