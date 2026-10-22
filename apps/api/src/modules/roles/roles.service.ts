@@ -91,21 +91,29 @@ export class RolesService {
           HttpStatus.BAD_REQUEST,
         );
       }
-      // A new parent changes what every holder of this role (and its children) can do.
-      const affected = await this.permissions.userIdsWithRoles([
-        ...collectDescendantRoleIds(id, graph),
-      ]);
-      await this.sod.assertNoConflict(affected, { roleParentId: new Map([[id, dto.parentId]]) });
     }
+    const reparented = dto.parentId !== undefined && dto.parentId !== role.parentId;
+    // A new parent changes what every holder of this role (and its children) can do.
+    const affected = reparented
+      ? await this.permissions.userIdsWithRoles([...collectDescendantRoleIds(id, graph)])
+      : [];
 
-    const updated = await this.prisma.role.update({
-      where: { id },
-      data: {
-        ...(dto.name === undefined ? {} : { name: dto.name }),
-        ...(dto.description === undefined ? {} : { description: dto.description }),
-        ...(dto.parentId === undefined ? {} : { parentId: dto.parentId }),
-      },
-      include: ROLE_INCLUDE,
+    const updated = await this.prisma.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT id FROM role WHERE id = ${id}::uuid FOR UPDATE`;
+      if (reparented) {
+        await this.sod.assertNoConflict(affected, {
+          roleParentId: new Map([[id, dto.parentId ?? null]]),
+        });
+      }
+      return tx.role.update({
+        where: { id },
+        data: {
+          ...(dto.name === undefined ? {} : { name: dto.name }),
+          ...(dto.description === undefined ? {} : { description: dto.description }),
+          ...(dto.parentId === undefined ? {} : { parentId: dto.parentId }),
+        },
+        include: ROLE_INCLUDE,
+      });
     });
     return toResponse(updated, await this.permissions.loadRoleGraph());
   }
@@ -127,9 +135,11 @@ export class RolesService {
     const affected = await this.permissions.userIdsWithRoles([
       ...collectDescendantRoleIds(id, graph),
     ]);
-    await this.sod.assertNoConflict(affected, { rolePermissionCodes: new Map([[id, codes]]) });
 
     const updated = await this.prisma.$transaction(async (tx) => {
+      // SoD is evaluated under the role's row lock so concurrent permission edits serialise.
+      await tx.$queryRaw`SELECT id FROM role WHERE id = ${id}::uuid FOR UPDATE`;
+      await this.sod.assertNoConflict(affected, { rolePermissionCodes: new Map([[id, codes]]) });
       await tx.rolePermission.deleteMany({ where: { roleId: id } });
       if (permissions.length > 0) {
         await tx.rolePermission.createMany({

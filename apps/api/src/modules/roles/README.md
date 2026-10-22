@@ -10,7 +10,7 @@
 - Built-in roles (`isSystem`) can have permissions edited but cannot be deleted; custom
   roles cannot be deleted while users hold them or child roles exist.
 - Changing a role's permissions or parent re-evaluates SoD for every user holding the role
-  or any descendant role, _before_ the write.
+  or any descendant role, _before_ the write and under the role's row lock.
 - Changes apply on the next request — permissions are resolved per request, never cached
   across requests.
 

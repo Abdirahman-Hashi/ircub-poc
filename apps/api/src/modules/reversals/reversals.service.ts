@@ -22,6 +22,7 @@ import type { DecideReversalDto } from './dto/decide-reversal.dto';
 import type { ReversalFilterDto } from './dto/reversal-filter.dto';
 import type { ReversalResponseDto } from './dto/reversal.response.dto';
 import type { ReversalWithPayment } from './reversals.types';
+import type { TransactionClient } from '../../prisma/prisma.types';
 import type { Prisma } from '@prisma/client';
 
 const REVERSAL_INCLUDE = { payment: { include: PAYMENT_INCLUDE } } as const;
@@ -83,8 +84,12 @@ export class ReversalsService {
   }
 
   async approve(id: string, dto: DecideReversalDto, actorId: string): Promise<ReversalResponseDto> {
-    const reversal = await this.pendingForDecision(id, actorId);
+    await this.pendingForDecision(id, actorId);
     const updated = await this.prisma.$transaction(async (tx) => {
+      // Re-check under the row lock: two approvals racing on the same reversal would otherwise
+      // both reduce the ledger.
+      await this.lockForUpdate(tx, id);
+      const reversal = await this.pendingForDecision(id, actorId, tx);
       if (reversal.payment.assessmentId !== null) {
         await this.assessments.reversePayment(
           tx,
@@ -116,26 +121,30 @@ export class ReversalsService {
     this.logger.log({
       msg: 'reversal approved',
       reversalId: id,
-      paymentId: reversal.paymentId,
+      paymentId: updated.paymentId,
       approvedById: actorId,
     });
     // FMIS mirror (phase 5): outside the ledger transaction so a posting problem never undoes the approval.
-    await this.journals.onReversalApproved(id, reversal.paymentId);
+    await this.journals.onReversalApproved(id, updated.paymentId);
     this.summaries.markDirty(new Date());
     return this.toView(updated);
   }
 
   async reject(id: string, dto: DecideReversalDto, actorId: string): Promise<ReversalResponseDto> {
     await this.pendingForDecision(id, actorId);
-    const updated = await this.prisma.reversal.update({
-      where: { id },
-      data: {
-        status: ReversalStatus.REJECTED,
-        approvedById: actorId,
-        decidedAt: new Date(),
-        decisionNote: dto.note ?? null,
-      },
-      include: REVERSAL_INCLUDE,
+    const updated = await this.prisma.$transaction(async (tx) => {
+      await this.lockForUpdate(tx, id);
+      await this.pendingForDecision(id, actorId, tx);
+      return tx.reversal.update({
+        where: { id },
+        data: {
+          status: ReversalStatus.REJECTED,
+          approvedById: actorId,
+          decidedAt: new Date(),
+          decisionNote: dto.note ?? null,
+        },
+        include: REVERSAL_INCLUDE,
+      });
     });
     this.logger.log({ msg: 'reversal rejected', reversalId: id, decidedById: actorId });
     return this.toView(updated);
@@ -179,8 +188,12 @@ export class ReversalsService {
   }
 
   /** Shared pre-conditions for approve/reject, including the hard SoD rule. */
-  private async pendingForDecision(id: string, deciderId: string): Promise<ReversalWithPayment> {
-    const reversal = await this.findOrThrow(id);
+  private async pendingForDecision(
+    id: string,
+    deciderId: string,
+    client: PrismaService | TransactionClient = this.prisma,
+  ): Promise<ReversalWithPayment> {
+    const reversal = await this.findOrThrow(id, client);
     if (isDecided(reversal.status)) {
       throw new AppException(
         ErrorCode.REVERSAL_ALREADY_DECIDED,
@@ -205,8 +218,15 @@ export class ReversalsService {
     return reversal;
   }
 
-  private async findOrThrow(id: string): Promise<ReversalWithPayment> {
-    const row = await this.prisma.reversal.findUnique({ where: { id }, include: REVERSAL_INCLUDE });
+  private async lockForUpdate(tx: TransactionClient, id: string): Promise<void> {
+    await tx.$queryRaw`SELECT id FROM reversal WHERE id = ${id}::uuid FOR UPDATE`;
+  }
+
+  private async findOrThrow(
+    id: string,
+    client: PrismaService | TransactionClient = this.prisma,
+  ): Promise<ReversalWithPayment> {
+    const row = await client.reversal.findUnique({ where: { id }, include: REVERSAL_INCLUDE });
     if (row === null) {
       throw new AppException(
         ErrorCode.NOT_FOUND,

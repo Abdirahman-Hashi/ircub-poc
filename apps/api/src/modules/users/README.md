@@ -6,8 +6,9 @@
 
 - Create and reset issue a policy-compliant temporary password, returned exactly once.
 - Role assignment is a full replacement and goes through `SodService.assertNoConflict`
-  _before_ any write, so a conflicting set is rejected with `SOD_VIOLATION` and nothing
-  (including audit rows) is persisted.
+  _before_ any write and under the user's row lock, so a conflicting set is rejected with
+  `SOD_VIOLATION`, nothing (including audit rows) is persisted, and two concurrent
+  assignments cannot both pass the check against the same stale state.
 - Deactivation revokes every refresh token; a deactivated user cannot log in or refresh.
   Administrators cannot deactivate themselves.
 - Every mutation is audited with `passwordHash`/`mfaSecret` redacted.

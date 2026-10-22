@@ -9,8 +9,10 @@ per-record segregation-of-duties rule (brief Module 1 & 3, D7).
 - **SoD hard rule:** `capturedById === deciderId` → `403 SOD_VIOLATION` on approve _and_
   reject, checked in the service regardless of permissions (the role-level rule in
   `modules/sod` is the second, configurable layer).
-- Approve runs in one transaction: payment → `REVERSED`, assessment `paidAmount` reduced and
-  status recomputed (`reversePayment` rule, row locked). Audit rows capture before/after.
+- Approve and reject lock the reversal row and re-check "still pending" and the SoD rule
+  inside the transaction, so two concurrent decisions cannot both apply. Approve then runs
+  payment → `REVERSED`, assessment/bill `paidAmount` reduced and status recomputed
+  (`reversePayment` rule, row locked). Audit rows capture before/after.
 - Phase 5 adds the FMIS reversing journal batch on approval.
 
 **Endpoints.** `GET /reversals`, `GET /reversals/:id` (`payments.view`); `POST /reversals`

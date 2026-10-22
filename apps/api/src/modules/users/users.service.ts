@@ -116,12 +116,17 @@ export class UsersService {
     return toResponse(updated);
   }
 
-  /** Full replacement of a user's roles; rejected with SOD_VIOLATION before any write. */
+  /**
+   * Full replacement of a user's roles; rejected with SOD_VIOLATION before any write. The
+   * SoD check runs under the user's row lock so two concurrent assignments serialise instead
+   * of both passing a check against the same stale state.
+   */
   async setRoles(id: string, roleIds: readonly string[]): Promise<UserResponseDto> {
     await this.findOrThrow(id);
     await this.assertRolesExist(roleIds);
-    await this.sod.assertNoConflict([id], { userRoleIds: new Map([[id, roleIds]]) });
     const updated = await this.prisma.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT id FROM "user" WHERE id = ${id}::uuid FOR UPDATE`;
+      await this.sod.assertNoConflict([id], { userRoleIds: new Map([[id, roleIds]]) });
       await this.replaceRoles(tx, id, roleIds);
       return tx.user.findUniqueOrThrow({ where: { id }, include: USER_INCLUDE });
     });
