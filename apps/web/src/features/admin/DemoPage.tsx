@@ -2,13 +2,9 @@ import { Anchor, Card, Code, List, Stack, Table, Text } from '@mantine/core';
 
 import { PageHeader } from '../../components/PageHeader';
 import { mocksUrl } from '../../lib/mocks-url';
+import { MOCKS_PATHS } from '../../lib/mocks-url.constants';
 
 import type { ReactElement } from 'react';
-
-const MOCKS = {
-  OUTBOX: '/outbox',
-  DOCS: '/docs',
-} as const;
 
 /** How to drive the mock channels during a demo (apps/mocks/CLAUDE.md). */
 export function DemoPage(): ReactElement {
@@ -88,14 +84,14 @@ export function DemoPage(): ReactElement {
         <List size="sm">
           <List.Item>
             Outbox (SMS and e-mail the system sent):{' '}
-            <Anchor href={mocksUrl(MOCKS.OUTBOX)} target="_blank" rel="noreferrer">
-              {mocksUrl(MOCKS.OUTBOX)}
+            <Anchor href={mocksUrl(MOCKS_PATHS.OUTBOX)} target="_blank" rel="noreferrer">
+              {mocksUrl(MOCKS_PATHS.OUTBOX)}
             </Anchor>
           </List.Item>
           <List.Item>
             Mock API docs:{' '}
-            <Anchor href={mocksUrl(MOCKS.DOCS)} target="_blank" rel="noreferrer">
-              {mocksUrl(MOCKS.DOCS)}
+            <Anchor href={mocksUrl(MOCKS_PATHS.DOCS)} target="_blank" rel="noreferrer">
+              {mocksUrl(MOCKS_PATHS.DOCS)}
             </Anchor>
           </List.Item>
         </List>

@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';
 import { type ReactElement, useState } from 'react';
 
-import { ReadingType } from '@ircub/shared';
+import { MeterStatus, ReadingType } from '@ircub/shared';
 
 import { QUERY_KEYS } from '../../api/query-keys.constants';
 import { createReading, listWaterAccounts, previewReading } from '../../api/water.api';
@@ -37,7 +37,7 @@ export function NewReadingPage(): ReactElement {
   });
   const meterOptions = (accounts.data?.items ?? []).flatMap((account) =>
     account.meters
-      .filter((m) => m.status === 'ACTIVE')
+      .filter((m) => m.status === MeterStatus.ACTIVE)
       .map((m) => ({
         value: m.id,
         label: `${m.serial} · ${account.accountNumber} · ${account.payer.name}`,

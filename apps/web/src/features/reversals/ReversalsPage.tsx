@@ -10,11 +10,11 @@ import { MoneyText } from '../../components/MoneyText';
 import { PageHeader } from '../../components/PageHeader';
 import { StatusBadge } from '../../components/StatusBadge';
 import { useAuth, useCan } from '../../lib/auth';
+import { LOCAL_CURRENCY } from '../../lib/currency.constants';
 import { formatDateTime } from '../../lib/format';
 import { notifyError, notifySuccess } from '../../lib/notify';
 import { INITIAL_PAGINATION, toPageParams } from '../../lib/pagination';
 
-const LOCAL = 'SOS';
 const QUEUE_PAGE_SIZE = 50;
 
 export function ReversalsPage(): ReactElement {
@@ -81,7 +81,7 @@ export function ReversalsPage(): ReactElement {
               <Table.Td ff="monospace">{r.payment.controlNumber}</Table.Td>
               <Table.Td>{r.payment.payer.name}</Table.Td>
               <Table.Td>
-                <MoneyText amount={r.payment.localAmount} currency={LOCAL} />
+                <MoneyText amount={r.payment.localAmount} currency={LOCAL_CURRENCY} />
               </Table.Td>
               <Table.Td>{r.reason}</Table.Td>
               <Table.Td>

@@ -2,7 +2,7 @@ import { PaymentChannel, PaymentStatus } from '@ircub/shared';
 
 export const ONLINE_CHANNELS = [PaymentChannel.BANK, PaymentChannel.MOBILE_MONEY] as const;
 
-export const LOCAL_CURRENCY = 'SOS';
+export { LOCAL_CURRENCY } from '../../lib/currency.constants';
 
 export const MONEY_DECIMALS = 2;
 

@@ -10,7 +10,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Link, useNavigate } from '@tanstack/react-router';
 import { type ReactElement, useMemo, useState } from 'react';
 
-import { PERMISSIONS, WaterAccountStatus } from '@ircub/shared';
+import { MeterStatus, PERMISSIONS, WaterAccountStatus } from '@ircub/shared';
 
 import { QUERY_KEYS } from '../../api/query-keys.constants';
 import { listWaterAccounts } from '../../api/water.api';
@@ -21,13 +21,13 @@ import { MoneyText } from '../../components/MoneyText';
 import { PageHeader } from '../../components/PageHeader';
 import { StatusBadge } from '../../components/StatusBadge';
 import { useCan } from '../../lib/auth';
+import { LOCAL_CURRENCY } from '../../lib/currency.constants';
 import { INITIAL_PAGINATION, toPageParams } from '../../lib/pagination';
 
 import type { WaterAccountView } from '../../api/types';
 import type { FilterField, FilterValues } from '../../components/FilterBar.types';
 import type { MRT_ColumnDef } from 'mantine-react-table';
 
-const LOCAL = 'SOS';
 const FILTERS: readonly FilterField[] = [
   { name: 'search', label: 'Search', kind: 'text', placeholder: 'Account, payer, TIN or meter' },
   {
@@ -69,18 +69,20 @@ export function WaterAccountsPage(): ReactElement {
       {
         id: 'meter',
         header: 'Meter',
-        accessorFn: (row) => row.meters.find((m) => m.status === 'ACTIVE')?.serial ?? '—',
+        accessorFn: (row) => row.meters.find((m) => m.status === MeterStatus.ACTIVE)?.serial ?? '—',
       },
       {
         id: 'last',
         header: 'Last reading',
         accessorFn: (row) =>
-          row.meters.find((m) => m.status === 'ACTIVE')?.lastReading?.readingValue ?? '—',
+          row.meters.find((m) => m.status === MeterStatus.ACTIVE)?.lastReading?.readingValue ?? '—',
       },
       {
         id: 'outstanding',
         header: 'Outstanding',
-        Cell: ({ row }) => <MoneyText amount={row.original.outstanding} currency={LOCAL} />,
+        Cell: ({ row }) => (
+          <MoneyText amount={row.original.outstanding} currency={LOCAL_CURRENCY} />
+        ),
       },
       {
         accessorKey: 'status',

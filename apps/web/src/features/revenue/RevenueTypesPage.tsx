@@ -16,11 +16,10 @@ import {
 } from '../../api/revenue-types.api';
 import { MoneyText } from '../../components/MoneyText';
 import { PageHeader } from '../../components/PageHeader';
+import { LOCAL_CURRENCY } from '../../lib/currency.constants';
 import { notifyError, notifySuccess } from '../../lib/notify';
 
 import { type RevenueTypeForm, revenueTypeSchema } from './revenue-type.schema';
-
-const LOCAL = 'SOS';
 
 export function RevenueTypesPage(): ReactElement {
   const queryClient = useQueryClient();
@@ -96,7 +95,7 @@ export function RevenueTypesPage(): ReactElement {
                 {t.rateType === RateType.PERCENT ? (
                   `${t.rate} % of base`
                 ) : (
-                  <MoneyText amount={t.rate} currency={LOCAL} ta="left" />
+                  <MoneyText amount={t.rate} currency={LOCAL_CURRENCY} ta="left" />
                 )}
               </Table.Td>
               <Table.Td ff="monospace">{t.glCode}</Table.Td>
@@ -176,7 +175,7 @@ export function RevenueTypesPage(): ReactElement {
               label={
                 form.watch('rateType') === RateType.PERCENT
                   ? 'Rate (% of base amount)'
-                  : `Amount (${LOCAL})`
+                  : `Amount (${LOCAL_CURRENCY})`
               }
               {...form.register('rate')}
               error={form.formState.errors.rate?.message}

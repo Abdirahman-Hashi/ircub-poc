@@ -18,13 +18,13 @@ import { QUERY_KEYS } from '../../api/query-keys.constants';
 import { createTariff, listTariffs, updateTariff } from '../../api/water.api';
 import { MoneyText } from '../../components/MoneyText';
 import { PageHeader } from '../../components/PageHeader';
+import { LOCAL_CURRENCY } from '../../lib/currency.constants';
 import { notifyError, notifySuccess } from '../../lib/notify';
 
 import { tierErrors } from './tariffs.rules';
 
 import type { TariffTierInput } from '../../api/types/water.types';
 
-const LOCAL = 'SOS';
 const DEFAULT_TIERS: TariffTierInput[] = [
   { fromUnit: 0, toUnit: 10, ratePerUnit: '' },
   { fromUnit: 10, toUnit: null, ratePerUnit: '' },
@@ -75,7 +75,7 @@ export function TariffsPage(): ReactElement {
                 <Text size="sm" c="dimmed">
                   Fixed charge
                 </Text>
-                <MoneyText amount={category.fixedCharge} currency={LOCAL} size="sm" />
+                <MoneyText amount={category.fixedCharge} currency={LOCAL_CURRENCY} size="sm" />
               </Group>
             </div>
             <Button
@@ -102,7 +102,7 @@ export function TariffsPage(): ReactElement {
                   <Table.Td>{tier.fromUnit}</Table.Td>
                   <Table.Td>{tier.toUnit ?? '∞'}</Table.Td>
                   <Table.Td>
-                    <MoneyText amount={tier.ratePerUnit} currency={LOCAL} />
+                    <MoneyText amount={tier.ratePerUnit} currency={LOCAL_CURRENCY} />
                   </Table.Td>
                 </Table.Tr>
               ))}
@@ -181,7 +181,7 @@ function TariffModal(props: {
             }}
           />
           <TextInput
-            label={`Fixed charge (${LOCAL})`}
+            label={`Fixed charge (${LOCAL_CURRENCY})`}
             value={fixedCharge}
             onChange={(e) => {
               setFixedCharge(e.currentTarget.value);

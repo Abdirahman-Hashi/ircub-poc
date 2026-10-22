@@ -14,13 +14,13 @@ import { QUERY_KEYS } from '../../api/query-keys.constants';
 import { listRevenueTypes } from '../../api/revenue-types.api';
 import { ROUTES } from '../../app/routes.constants';
 import { PageHeader } from '../../components/PageHeader';
+import { LOCAL_CURRENCY } from '../../lib/currency.constants';
 import { formatMoney } from '../../lib/format';
 import { notifyError, notifySuccess } from '../../lib/notify';
 
 import { type NewAssessmentForm, newAssessmentSchema } from './assessment.schema';
 
 const PAYER_SEARCH_LIMIT = 20;
-const LOCAL = 'SOS';
 const PERCENT = 100;
 const MONEY_DECIMALS = 2;
 
@@ -124,7 +124,7 @@ export function NewAssessmentPage(): ReactElement {
                   label="Revenue type"
                   data={(types.data ?? []).map((t) => ({
                     value: t.id,
-                    label: `${t.name} (${t.rateType === RateType.PERCENT ? `${t.rate} %` : formatMoney(t.rate, LOCAL)})`,
+                    label: `${t.name} (${t.rateType === RateType.PERCENT ? `${t.rate} %` : formatMoney(t.rate, LOCAL_CURRENCY)})`,
                   }))}
                   value={field.value}
                   onChange={(v) => {
@@ -136,7 +136,7 @@ export function NewAssessmentPage(): ReactElement {
             />
             {selectedType?.rateType === RateType.PERCENT && (
               <TextInput
-                label={`Base amount (${LOCAL})`}
+                label={`Base amount (${LOCAL_CURRENCY})`}
                 placeholder="e.g. property value"
                 {...form.register('baseAmount')}
               />
@@ -163,7 +163,7 @@ export function NewAssessmentPage(): ReactElement {
               <Text fw={600}>
                 {preview === null
                   ? 'Amount preview: choose a revenue type'
-                  : `Amount: ${formatMoney(preview, LOCAL)}`}
+                  : `Amount: ${formatMoney(preview, LOCAL_CURRENCY)}`}
               </Text>
               <Text size="xs" c="dimmed">
                 The control number is generated on save.

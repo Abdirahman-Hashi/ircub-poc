@@ -17,7 +17,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useParams } from '@tanstack/react-router';
 import { type ReactElement, useState } from 'react';
 
-import { PERMISSIONS } from '@ircub/shared';
+import { BillStatus, MeterStatus, PERMISSIONS } from '@ircub/shared';
 
 import { QUERY_KEYS } from '../../api/query-keys.constants';
 import {
@@ -33,6 +33,7 @@ import { MoneyText } from '../../components/MoneyText';
 import { PageHeader } from '../../components/PageHeader';
 import { StatusBadge } from '../../components/StatusBadge';
 import { useCan } from '../../lib/auth';
+import { LOCAL_CURRENCY } from '../../lib/currency.constants';
 import { downloadBlob } from '../../lib/download';
 import { formatDate } from '../../lib/format';
 import { notifyError, notifySuccess } from '../../lib/notify';
@@ -41,7 +42,6 @@ import { ConsumptionChart } from './ConsumptionChart';
 
 import type { BillView, MeterView, StatementView } from '../../api/types';
 
-const LOCAL = 'SOS';
 const HISTORY_PAGE = 24;
 
 export function WaterAccountDetailPage(): ReactElement {
@@ -73,7 +73,7 @@ export function WaterAccountDetailPage(): ReactElement {
     return <Text c="red">Could not load account.</Text>;
   }
   const data = account.data;
-  const activeMeter = data.meters.find((m) => m.status === 'ACTIVE');
+  const activeMeter = data.meters.find((m) => m.status === MeterStatus.ACTIVE);
 
   return (
     <Stack>
@@ -92,7 +92,13 @@ export function WaterAccountDetailPage(): ReactElement {
           <Text size="sm" c="dimmed">
             Outstanding
           </Text>
-          <MoneyText amount={data.outstanding} currency={LOCAL} fz="xl" fw={700} ta="left" />
+          <MoneyText
+            amount={data.outstanding}
+            currency={LOCAL_CURRENCY}
+            fz="xl"
+            fw={700}
+            ta="left"
+          />
         </Card>
         <Card withBorder>
           <Text size="sm" c="dimmed">
@@ -147,7 +153,7 @@ export function WaterAccountDetailPage(): ReactElement {
                     <StatusBadge status={meter.status} />
                   </Table.Td>
                   <Table.Td>
-                    {canRegister && meter.status === 'ACTIVE' && (
+                    {canRegister && meter.status === MeterStatus.ACTIVE && (
                       <Button
                         size="xs"
                         variant="light"
@@ -235,7 +241,7 @@ export function BillsTable({
               <StatusBadge status={bill.status} />
             </Table.Td>
             <Table.Td>
-              {bill.status !== 'DRAFT' && bill.status !== 'FLAGGED' && (
+              {bill.status !== BillStatus.DRAFT && bill.status !== BillStatus.FLAGGED && (
                 <Button
                   size="xs"
                   variant="subtle"

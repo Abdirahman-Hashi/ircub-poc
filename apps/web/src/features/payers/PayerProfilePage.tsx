@@ -7,7 +7,7 @@ import {
 } from '@tanstack/react-query';
 import { useParams, Link } from '@tanstack/react-router';
 
-import { PayerStatus, PERMISSIONS } from '@ircub/shared';
+import { MeterStatus, PayerStatus, PERMISSIONS } from '@ircub/shared';
 
 import { getPayerProfile, reactivatePayer, suspendPayer } from '../../api/payers.api';
 import { QUERY_KEYS } from '../../api/query-keys.constants';
@@ -17,6 +17,7 @@ import { MoneyText } from '../../components/MoneyText';
 import { PageHeader } from '../../components/PageHeader';
 import { StatusBadge } from '../../components/StatusBadge';
 import { useCan } from '../../lib/auth';
+import { LOCAL_CURRENCY } from '../../lib/currency.constants';
 import { formatDate, formatDateTime } from '../../lib/format';
 import { notifyError, notifySuccess } from '../../lib/notify';
 import { BillsTable, StatementTable } from '../water/WaterAccountDetailPage';
@@ -24,7 +25,6 @@ import { BillsTable, StatementTable } from '../water/WaterAccountDetailPage';
 import type { BillView, PayerProfile, StatementView } from '../../api/types';
 import type { ReactElement } from 'react';
 
-const LOCAL_CURRENCY_FALLBACK = 'SOS';
 const WEIGHT_BOLD = 700;
 const WEIGHT_MEDIUM = 500;
 
@@ -78,7 +78,7 @@ export function ProfileView({
   readonly portal?: boolean;
 }): ReactElement {
   const { payer, balances } = profile;
-  const currency = profile.assessments[0]?.currency ?? LOCAL_CURRENCY_FALLBACK;
+  const currency = profile.assessments[0]?.currency ?? LOCAL_CURRENCY;
   return (
     <Stack>
       <PageHeader
@@ -242,7 +242,7 @@ function WaterAccountSection({
     queryFn: () =>
       portal ? getMyStatement(summary.account.id) : getStatement(summary.account.id, {}),
   });
-  const activeMeter = summary.account.meters.find((m) => m.status === 'ACTIVE');
+  const activeMeter = summary.account.meters.find((m) => m.status === MeterStatus.ACTIVE);
   return (
     <Card withBorder>
       <Stack>

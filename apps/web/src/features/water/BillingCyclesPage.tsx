@@ -13,11 +13,11 @@ import { MoneyText } from '../../components/MoneyText';
 import { PageHeader } from '../../components/PageHeader';
 import { StatusBadge } from '../../components/StatusBadge';
 import { useCan } from '../../lib/auth';
+import { LOCAL_CURRENCY } from '../../lib/currency.constants';
 import { formatDateTime } from '../../lib/format';
 import { notifyError, notifySuccess } from '../../lib/notify';
 import { INITIAL_PAGINATION, toPageParams } from '../../lib/pagination';
 
-const LOCAL = 'SOS';
 const PERIOD_PATTERN = /^\d{4}-(0[1-9]|1[0-2])$/;
 const PERIOD_LENGTH = 7;
 
@@ -91,7 +91,7 @@ export function BillingCyclesPage(): ReactElement {
               <Table.Td>{cycle.stats.flagged}</Table.Td>
               <Table.Td>{cycle.stats.skipped.length}</Table.Td>
               <Table.Td>
-                <MoneyText amount={cycle.stats.totalBilled} currency={LOCAL} />
+                <MoneyText amount={cycle.stats.totalBilled} currency={LOCAL_CURRENCY} />
               </Table.Td>
               <Table.Td>
                 <Button

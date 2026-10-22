@@ -30,16 +30,16 @@ import { MoneyText } from '../../components/MoneyText';
 import { PageHeader } from '../../components/PageHeader';
 import { StatusBadge } from '../../components/StatusBadge';
 import { useCan } from '../../lib/auth';
+import { LOCAL_CURRENCY } from '../../lib/currency.constants';
 import { mocksUrl } from '../../lib/mocks-url';
+import { MOCKS_PATHS } from '../../lib/mocks-url.constants';
 import { notifyError, notifySuccess } from '../../lib/notify';
 
 import { BillsTable } from './WaterAccountDetailPage';
 
 import type { BillView } from '../../api/types';
 
-const LOCAL = 'SOS';
 const PAGE = 100;
-const MOCKS_OUTBOX_PATH = '/outbox';
 
 export function BillingCycleDetailPage(): ReactElement {
   const cycleId = useParams({ strict: false }).cycleId ?? '';
@@ -141,15 +141,21 @@ export function BillingCycleDetailPage(): ReactElement {
           <Text size="sm" c="dimmed">
             Total billed
           </Text>
-          <MoneyText amount={data.stats.totalBilled} currency={LOCAL} fz="xl" fw={700} ta="left" />
+          <MoneyText
+            amount={data.stats.totalBilled}
+            currency={LOCAL_CURRENCY}
+            fz="xl"
+            fw={700}
+            ta="left"
+          />
         </Card>
       </SimpleGrid>
       {data.status === BillingCycleStatus.RELEASED && (
         <Alert color="teal">
           Released. Notifications sent so far: <strong>{data.stats.notificationsSent ?? 0}</strong>.
           See them in the mock gateway outbox:{' '}
-          <Anchor href={mocksUrl(MOCKS_OUTBOX_PATH)} target="_blank" rel="noreferrer">
-            {mocksUrl(MOCKS_OUTBOX_PATH)}
+          <Anchor href={mocksUrl(MOCKS_PATHS.OUTBOX)} target="_blank" rel="noreferrer">
+            {mocksUrl(MOCKS_PATHS.OUTBOX)}
           </Anchor>
         </Alert>
       )}

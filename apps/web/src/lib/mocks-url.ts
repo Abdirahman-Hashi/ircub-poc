@@ -1,6 +1,5 @@
 import { ENV } from './env.constants';
-
-const MOCKS_PORT = '3100';
+import { MOCKS_PORT } from './mocks-url.constants';
 
 /** The mocks app is served beside the API in dev and Compose; derive its URL for demo links. */
 export function mocksUrl(path: string): string {
