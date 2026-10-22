@@ -1,4 +1,4 @@
-import type { PaymentStatus, SseEnvelope } from '@ircub/shared';
+import type { AlertSeverity, AlertType, PaymentStatus, SseEnvelope } from '@ircub/shared';
 
 export interface PaymentUpdatedEvent {
   readonly paymentId: string;
@@ -16,9 +16,17 @@ export interface PaymentPermanentlyFailedEvent {
   readonly attempts: number;
 }
 
+export interface AlertCreatedEvent {
+  readonly alertId: string;
+  readonly type: AlertType;
+  readonly severity: AlertSeverity;
+  readonly title: string;
+}
+
 export type LiveEvent =
   | SseEnvelope<'payment.updated', PaymentUpdatedEvent>
-  | SseEnvelope<'payment.permanently-failed', PaymentPermanentlyFailedEvent>;
+  | SseEnvelope<'payment.permanently-failed', PaymentPermanentlyFailedEvent>
+  | SseEnvelope<'alert.created', AlertCreatedEvent>;
 
 export type LiveEventListener = (event: LiveEvent) => void;
 

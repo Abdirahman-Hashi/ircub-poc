@@ -4,6 +4,7 @@ import { API } from '@ircub/shared';
 export const LIVE_EVENT = {
   PAYMENT_UPDATED: 'payment.updated',
   PAYMENT_PERMANENTLY_FAILED: 'payment.permanently-failed',
+  ALERT_CREATED: 'alert.created',
 } as const;
 
 export const LIVE_EVENTS = {

@@ -14,6 +14,7 @@ import { Link, Outlet, useNavigate, useRouterState } from '@tanstack/react-route
 
 import { PERMISSIONS } from '@ircub/shared';
 
+import { AlertsBell } from '../components/AlertsBell';
 import { EscalationsBell } from '../components/EscalationsBell';
 import { useAuth } from '../lib/auth';
 
@@ -52,6 +53,7 @@ export function AppShellLayout(): ReactElement {
             <Title order={4}>IRCUB</Title>
           </Group>
           <Group gap="sm">
+            {can(PERMISSIONS.ALERTS_VIEW) && <AlertsBell />}
             {can(PERMISSIONS.PAYMENTS_SUPERVISE) && <EscalationsBell />}
             <Menu shadow="md" width={220}>
               <Menu.Target>

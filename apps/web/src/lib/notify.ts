@@ -2,7 +2,13 @@ import { notifications } from '@mantine/notifications';
 
 import { ApiError } from './api-error';
 
-const COLORS = { ERROR: 'red', SUCCESS: 'teal' } as const;
+const COLORS = { ERROR: 'red', SUCCESS: 'teal', WARNING: 'orange', INFO: 'blue' } as const;
+
+const SEVERITY_COLOR: Readonly<Record<string, string>> = {
+  CRITICAL: COLORS.ERROR,
+  WARNING: COLORS.WARNING,
+  INFO: COLORS.INFO,
+};
 
 /** Shows the API's stable `code` and message so support can correlate with server logs. */
 export function notifyError(error: unknown): void {
@@ -21,6 +27,15 @@ export function notifyError(error: unknown): void {
     color: COLORS.ERROR,
     title: 'Error',
     message: error instanceof Error ? error.message : String(error),
+  });
+}
+
+/** A live alert from the dashboard stream, coloured by severity. */
+export function notifyAlert(severity: string, title: string): void {
+  notifications.show({
+    color: SEVERITY_COLOR[severity] ?? COLORS.INFO,
+    title: `${severity} alert`,
+    message: title,
   });
 }
 

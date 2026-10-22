@@ -14,6 +14,8 @@ import { UsersPage } from '../features/admin/UsersPage';
 import { ForbiddenPage } from '../features/auth/ForbiddenPage';
 import { LoginPage } from '../features/auth/LoginPage';
 import { BulkUploadPage } from '../features/bulk/BulkUploadPage';
+import { DashboardPage } from '../features/dashboard/DashboardPage';
+import { TargetsPage } from '../features/dashboard/TargetsPage';
 import { FmisReconciliationPage } from '../features/fmis/FmisReconciliationPage';
 import { GlMappingsPage } from '../features/fmis/GlMappingsPage';
 import { JournalBatchDetailPage } from '../features/fmis/JournalBatchDetailPage';
@@ -102,7 +104,8 @@ const routeTree = rootRoute.addChildren([
       page(ROUTES.ADMIN_ROLES, guarded(PERMISSIONS.ROLES_MANAGE, RolesPage)),
       page(ROUTES.ADMIN_SOD, guarded(PERMISSIONS.ROLES_MANAGE, SodRulesPage)),
       page(ROUTES.ADMIN_CONFIG, guarded(PERMISSIONS.CONFIG_MANAGE, ConfigPage)),
-      page(ROUTES.DASHBOARD, guarded(PERMISSIONS.DASHBOARD_VIEW, placeholder('Dashboard'))),
+      page(ROUTES.DASHBOARD, guarded(PERMISSIONS.DASHBOARD_VIEW, DashboardPage)),
+      page(ROUTES.DASHBOARD_TARGETS, guarded(PERMISSIONS.DASHBOARD_VIEW, TargetsPage)),
       page(ROUTES.PAYERS, guarded(PERMISSIONS.PAYERS_VIEW, PayersPage)),
       page(ROUTES.PAYER_NEW, guarded(PERMISSIONS.PAYERS_REGISTER, RegisterPayerPage)),
       page(ROUTES.PAYER_DUPLICATES, guarded(PERMISSIONS.PAYERS_REVIEW_DUPLICATES, DuplicatesPage)),

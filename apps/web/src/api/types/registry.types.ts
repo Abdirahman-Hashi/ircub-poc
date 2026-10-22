@@ -152,3 +152,28 @@ export interface CreateGlMappingInput {
   readonly glName: string;
   readonly effectiveFrom: string;
 }
+
+export interface TrendsParams {
+  readonly from: string;
+  readonly to: string;
+  readonly groupBy: string;
+  readonly by: string;
+}
+
+export interface ForecastParams {
+  readonly months?: number;
+  readonly model: string;
+  readonly by?: string;
+}
+
+export interface AlertListParams {
+  readonly page: number;
+  readonly pageSize: number;
+  readonly acknowledged?: boolean;
+}
+
+export interface UpsertTargetInput {
+  readonly period: string;
+  readonly revenueTypeId: string;
+  readonly amount: string;
+}

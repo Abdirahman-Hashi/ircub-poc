@@ -10,6 +10,7 @@ export const ROUTES = {
   ADMIN_SOD: '/admin/sod-rules',
   ADMIN_CONFIG: '/admin/config',
   DASHBOARD: '/dashboard',
+  DASHBOARD_TARGETS: '/dashboard/targets',
   PAYERS: '/payers',
   PAYER_NEW: '/payers/new',
   PAYER_DUPLICATES: '/payers/duplicates',

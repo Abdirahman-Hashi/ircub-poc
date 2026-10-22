@@ -70,6 +70,7 @@ export function LiveEventsProvider({ children }: { readonly children: ReactNode 
       };
       source.addEventListener(LIVE_EVENT.PAYMENT_UPDATED, onMessage);
       source.addEventListener(LIVE_EVENT.PAYMENT_PERMANENTLY_FAILED, onMessage);
+      source.addEventListener(LIVE_EVENT.ALERT_CREATED, onMessage);
       source.onerror = () => {
         setConnected(false);
         source?.close();

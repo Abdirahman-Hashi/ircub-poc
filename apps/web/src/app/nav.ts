@@ -4,6 +4,7 @@ import {
   IconCash,
   IconCurrencyDollar,
   IconScale,
+  IconTargetArrow,
   IconTestPipe,
   IconChartBar,
   IconFileUpload,
@@ -28,6 +29,12 @@ export const NAV_ITEMS: readonly NavItem[] = [
     to: ROUTES.DASHBOARD,
     icon: IconChartBar,
     permission: PERMISSIONS.DASHBOARD_VIEW,
+  },
+  {
+    label: 'Targets',
+    to: ROUTES.DASHBOARD_TARGETS,
+    icon: IconTargetArrow,
+    permission: PERMISSIONS.TARGETS_MANAGE,
   },
   { label: 'Payers', to: ROUTES.PAYERS, icon: IconUsers, permission: PERMISSIONS.PAYERS_VIEW },
   {

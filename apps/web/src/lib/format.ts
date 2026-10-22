@@ -12,6 +12,13 @@ export function formatMoney(amount: string | number, currency: string): string {
   return `${currency} ${formatted}`;
 }
 
+/** Chart axis ticks: `1.2M`, `350K` — large money values would otherwise overflow the axis. */
+export function formatCompact(value: number): string {
+  return new Intl.NumberFormat(LOCALE, { notation: 'compact', maximumFractionDigits: 1 }).format(
+    value,
+  );
+}
+
 export function formatDate(value: Date | string | null | undefined): string {
   if (value === null || value === undefined) {
     return '—';

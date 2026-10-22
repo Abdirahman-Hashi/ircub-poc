@@ -1,8 +1,11 @@
 import { Badge, Button, Card, Group, SimpleGrid, Stack, Text, Title } from '@mantine/core';
-import { Link } from '@tanstack/react-router';
+import { Link, Navigate } from '@tanstack/react-router';
+
+import { PERMISSIONS } from '@ircub/shared';
 
 import { NAV_ITEMS } from '../../app/nav';
 import { filterNav } from '../../app/nav.rules';
+import { ROUTES } from '../../app/routes.constants';
 import { useAuth } from '../../lib/auth';
 
 import type { ReactElement } from 'react';
@@ -11,6 +14,9 @@ import type { ReactElement } from 'react';
 export function HomePage(): ReactElement {
   const { user, roles, can } = useAuth();
   const items = filterNav(NAV_ITEMS, can);
+  if (can(PERMISSIONS.DASHBOARD_VIEW)) {
+    return <Navigate to={ROUTES.DASHBOARD} replace />;
+  }
   return (
     <Stack>
       <div>
