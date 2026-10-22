@@ -1,5 +1,5 @@
 import { faker } from '@faker-js/faker';
-import { addDays, min as earliest, subMonths } from 'date-fns';
+import { addDays, subMonths } from 'date-fns';
 import { Decimal } from 'decimal.js';
 
 import {
@@ -306,10 +306,14 @@ export async function seedWaterDemo(prisma: ExtendedPrismaClient): Promise<strin
           PaymentChannel.MOBILE_MONEY,
           PaymentChannel.BANK,
         ]);
-        const paidAt = earliest([
-          addDays(releasedAt, faker.number.int({ min: 1, max: WATER_DEMO.DUE_DAYS })),
-          new Date(),
-        ]);
+        const candidate = addDays(
+          releasedAt,
+          faker.number.int({ min: 1, max: WATER_DEMO.DUE_DAYS }),
+        );
+        const paidAt =
+          candidate > new Date()
+            ? faker.date.between({ from: releasedAt, to: new Date() })
+            : candidate;
         await prisma.payment.create({
           data: {
             controlNumber: bill.billNumber,

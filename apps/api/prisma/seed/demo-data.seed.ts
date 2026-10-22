@@ -1,5 +1,5 @@
 import { faker } from '@faker-js/faker';
-import { min as earliest, subDays, subMonths } from 'date-fns';
+import { subDays, subMonths } from 'date-fns';
 import { Decimal } from 'decimal.js';
 
 import {
@@ -163,6 +163,7 @@ export async function seedDemoData(prisma: ExtendedPrismaClient): Promise<string
     assessmentRows.slice(0, DEMO.RESERVED_UNPAID).map((a) => a.controlNumber),
   );
 
+  const now = new Date();
   // ── Payments against ~60 % of the non-reserved assessments ───────────────────
   const paymentRows: Prisma.PaymentCreateManyInput[] = [];
   const ledgerUpdates: { id: string; paidAmount: string; status: AssessmentStatus }[] = [];
@@ -189,11 +190,14 @@ export async function seedDemoData(prisma: ExtendedPrismaClient): Promise<string
     const isUsd = faker.datatype.boolean({ probability: DEMO.USD_RATIO });
     const channel =
       channels[faker.number.int({ min: 0, max: channels.length - 1 })] ?? PaymentChannel.CASH;
-    // Paid some days after assessment, but never in the future (lists sort by date desc).
-    const paidAt = earliest([
-      subDays(assessment.createdAt, -faker.number.int({ min: 1, max: DEMO.DUE_DAYS })),
-      new Date(),
-    ]);
+    // Paid some days after assessment; a date that would land in the future is drawn between
+    // the assessment and now instead, so recent payments spread over recent days.
+    const candidate = subDays(
+      assessment.createdAt,
+      -faker.number.int({ min: 1, max: DEMO.DUE_DAYS }),
+    );
+    const paidAt =
+      candidate > now ? faker.date.between({ from: assessment.createdAt, to: now }) : candidate;
     const amount = isUsd ? roundMoney(localAmount.div(SEED_FX_RATE)) : localAmount;
     const effectiveLocal = isUsd ? convertToLocal(amount, SEED_FX_RATE).localAmount : localAmount;
     const applied = applyPayment(
