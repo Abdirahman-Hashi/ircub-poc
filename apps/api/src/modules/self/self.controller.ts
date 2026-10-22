@@ -1,10 +1,12 @@
 import {
+  Body,
   Controller,
   Get,
   Header,
   HttpStatus,
   Param,
   ParseUUIDPipe,
+  Post,
   Query,
   StreamableFile,
 } from '@nestjs/common';
@@ -19,6 +21,9 @@ import { AppException } from '../../common/errors/app.exception';
 import { PrismaService } from '../../prisma/prisma.service';
 import { PayerProfileResponseDto } from '../payers/dto/payer-profile.response.dto';
 import { PayersService } from '../payers/payers.service';
+import { InitiatePaymentDto } from '../payments/dto/initiate-payment.dto';
+import { PaymentResponseDto } from '../payments/dto/payment.response.dto';
+import { PaymentInitiationService } from '../payments/payment-initiation.service';
 import { BillsService } from '../water/bills/bills.service';
 import { StatementQueryDto } from '../water/statements/dto/statement-query.dto';
 import { StatementResponseDto } from '../water/statements/dto/statement.response.dto';
@@ -43,6 +48,7 @@ export class SelfController {
     private readonly payers: PayersService,
     private readonly bills: BillsService,
     private readonly statements: StatementsService,
+    private readonly initiation: PaymentInitiationService,
   ) {}
 
   @Get()
@@ -82,6 +88,18 @@ export class SelfController {
     @Query() query: StatementQueryDto,
   ): Promise<StatementResponseDto> {
     return this.statements.build(id, query.from, query.to, await this.ownPayerId(user));
+  }
+
+  @Post(`${SELF_API.PAYMENTS}/${SELF_API.INITIATE}`)
+  @RequirePermission(PERMISSIONS.SELF_PAY)
+  @ApiOperation({ summary: 'Pay one of my own assessments or bills via bank or mobile money' })
+  @ApiResponse({ status: HttpStatus.CREATED, type: PaymentResponseDto })
+  @ApiResponse({ status: HttpStatus.FORBIDDEN, description: 'NOT_OWN_PAYER' })
+  async initiatePayment(
+    @Body() dto: InitiatePaymentDto,
+    @CurrentUser() user: AuthenticatedUser,
+  ): Promise<PaymentResponseDto> {
+    return this.initiation.initiate(dto, user.id, await this.ownPayerId(user));
   }
 
   private async ownPayerId(user: AuthenticatedUser): Promise<string> {

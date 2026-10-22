@@ -1,3 +1,4 @@
+import type { PaymentDetailResponseDto } from './dto/payment-detail.response.dto';
 import type { PaymentResponseDto } from './dto/payment.response.dto';
 import type { PaymentWithRelations } from './payments.types';
 
@@ -25,6 +26,16 @@ export function toPaymentView(row: PaymentWithRelations): PaymentResponseDto {
     capturedById: row.capturedById,
     bulkUploadId: row.bulkUploadId,
     failureReason: row.failureReason,
+    statusCheckAttempts: row.statusCheckAttempts,
     createdAt: row.createdAt,
   };
+}
+
+export function toPaymentDetail(row: PaymentWithRelations): PaymentDetailResponseDto {
+  return Object.assign(toPaymentView(row), {
+    channelRequestPayload: row.channelRequestPayload,
+    callbackPayload: row.callbackPayload,
+    lastStatusCheckAt: row.lastStatusCheckAt,
+    permanentlyFailedAt: row.permanentlyFailedAt,
+  });
 }

@@ -4,4 +4,6 @@ export const SELF_API = {
   PDF: 'pdf',
   WATER_ACCOUNTS: 'water-accounts',
   STATEMENT: 'statement',
+  PAYMENTS: 'payments',
+  INITIATE: 'initiate',
 } as const;

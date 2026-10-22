@@ -15,10 +15,11 @@ import { BillsService } from '../water/bills/bills.service';
 
 import { PAYMENTS_API } from './payments.constants';
 import { PAYMENTS_MESSAGES } from './payments.messages';
-import { PAYMENT_INCLUDE, toPaymentView } from './payments.view';
+import { PAYMENT_INCLUDE, toPaymentDetail, toPaymentView } from './payments.view';
 
 import type { CapturePaymentDto } from './dto/capture-payment.dto';
 import type { ControlNumberLookupResponseDto } from './dto/control-number-lookup.response.dto';
+import type { PaymentDetailResponseDto } from './dto/payment-detail.response.dto';
 import type { PaymentFilterDto } from './dto/payment-filter.dto';
 import type { PaymentResponseDto } from './dto/payment.response.dto';
 import type { ConfirmedPaymentInput, PaymentWithRelations } from './payments.types';
@@ -253,6 +254,10 @@ export class PaymentsService {
 
   async get(id: string): Promise<PaymentResponseDto> {
     return toPaymentView(await this.findOrThrow(id));
+  }
+
+  async getDetail(id: string): Promise<PaymentDetailResponseDto> {
+    return toPaymentDetail(await this.findOrThrow(id));
   }
 
   async findOrThrow(id: string): Promise<PaymentWithRelations> {

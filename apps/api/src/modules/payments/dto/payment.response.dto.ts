@@ -60,5 +60,8 @@ export class PaymentResponseDto implements PaymentView {
   failureReason!: string | null;
 
   @ApiProperty()
+  statusCheckAttempts!: number;
+
+  @ApiProperty()
   createdAt!: Date;
 }
