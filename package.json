@@ -19,7 +19,10 @@
     "typecheck": "pnpm --filter @ircub/shared build && pnpm -r --if-present typecheck",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "prepare": "husky"
+    "prepare": "husky",
+    "openapi:export": "pnpm --filter api openapi:export",
+    "postman:export": "pnpm --filter api postman:export",
+    "erd": "pnpm --filter api erd"
   },
   "lint-staged": {
     "*.{ts,tsx,mjs,cjs,js}": [

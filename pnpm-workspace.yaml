@@ -13,3 +13,6 @@ allowBuilds:
   esbuild: true
   prisma: true
   unrs-resolver: true
+
+minimumReleaseAgeExclude:
+  - openapi-to-postmanv2@6.4.1
