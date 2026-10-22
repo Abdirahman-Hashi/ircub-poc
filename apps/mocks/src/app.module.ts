@@ -5,6 +5,7 @@ import { ChannelsModule } from './channels/channels.module';
 import { MocksConfigModule } from './config/mocks-config.module';
 import { MocksConfigService } from './config/mocks-config.service';
 import { ControlModule } from './control/control.module';
+import { FmisModule } from './fmis/fmis.module';
 import { HealthModule } from './health/health.module';
 import { MOCKS_APP } from './mocks.constants';
 import { NotificationsModule } from './notifications/notifications.module';
@@ -33,6 +34,7 @@ import { StoreModule } from './store/store.module';
     RatesModule,
     NotificationsModule,
     ChannelsModule,
+    FmisModule,
   ],
 })
 export class AppModule {}

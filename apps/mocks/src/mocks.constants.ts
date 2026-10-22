@@ -51,6 +51,9 @@ export const PATHS = {
   PAYMENTS: 'payments',
   STATEMENTS: 'statements',
   SEED_STATEMENT: '__seed-statement',
+  FMIS: 'fmis',
+  JOURNALS: 'journals',
+  LEDGER: 'ledger',
 } as const;
 
 /** Channel simulation (apps/mocks/CLAUDE.md). */
@@ -74,4 +77,11 @@ export const NOTIFICATION_CHANNEL = {
   EMAIL: 'EMAIL',
   ACCEPTED: 'accepted',
   MESSAGE_PREFIX: 'msg-',
+} as const;
+
+/** FMIS simulation (apps/mocks/CLAUDE.md). */
+export const FMIS_MOCK = {
+  /** Characters of the batch id used in the deterministic FMIS reference. */
+  REFERENCE_ID_LENGTH: 8,
+  AMOUNT_DECIMALS: 2,
 } as const;
