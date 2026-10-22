@@ -3,16 +3,29 @@ import { Decimal } from 'decimal.js';
 import { roundMoney, toDecimal } from '../../../common/money/money.rules';
 import { WATER } from '../water.constants';
 
-import type { PeriodBounds, PreviousBillLedger } from '../water.types';
+import type { AccountLedgerBill, PeriodBounds } from '../water.types';
 
-/** Arrears = what is still owed on earlier bills (D14); payments already reduce `paidAmount`. */
-export function arrearsOf(previousBills: readonly PreviousBillLedger[]): Decimal {
-  return roundMoney(
-    previousBills.reduce((sum, bill) => {
-      const outstanding = toDecimal(bill.totalDue).minus(toDecimal(bill.paidAmount));
-      return outstanding.gt(0) ? sum.plus(outstanding) : sum;
-    }, new Decimal(0)),
+/** A bill's own charges: consumption plus the fixed service charge, never its arrears. */
+export function chargesOf(bill: AccountLedgerBill): Decimal {
+  return toDecimal(bill.consumptionCharge).plus(toDecimal(bill.fixedCharge));
+}
+
+/**
+ * What an account still owes = Σ own charges − Σ payments across its released bills, floored
+ * at zero. Every bill's `totalDue` already includes the arrears of the bills before it, so
+ * summing `totalDue − paidAmount` per bill would charge the same debt once per cycle.
+ */
+export function accountOutstanding(bills: readonly AccountLedgerBill[]): Decimal {
+  const net = bills.reduce(
+    (sum, bill) => sum.plus(chargesOf(bill)).minus(toDecimal(bill.paidAmount)),
+    new Decimal(0),
   );
+  return roundMoney(net.gt(0) ? net : new Decimal(0));
+}
+
+/** Arrears carried into a new bill (D14) are the account's outstanding balance before it. */
+export function arrearsOf(previousBills: readonly AccountLedgerBill[]): Decimal {
+  return accountOutstanding(previousBills);
 }
 
 export function totalDueOf(

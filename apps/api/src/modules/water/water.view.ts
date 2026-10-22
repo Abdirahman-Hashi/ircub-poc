@@ -2,6 +2,9 @@ import type { BillingCycleStats, TierLine } from '@ircub/shared';
 
 import { toDecimal } from '../../common/money/money.rules';
 
+import { accountOutstanding } from './billing/billing.rules';
+import { isReleasedBill } from './bills/bills.rules';
+
 import type { WaterAccountResponseDto } from './accounts/dto/water-account.response.dto';
 import type { BillingCycleResponseDto } from './billing/dto/billing-cycle.response.dto';
 import type { BillResponseDto } from './bills/dto/bill.response.dto';
@@ -37,7 +40,7 @@ export const ACCOUNT_INCLUDE = {
   payer: { select: { id: true, tin: true, name: true } },
   tariffCategory: { select: { id: true, code: true, name: true } },
   meters: { include: METER_INCLUDE, orderBy: { installedAt: 'asc' } },
-  bills: { select: { totalDue: true, paidAmount: true, status: true } },
+  bills: { select: { consumptionCharge: true, fixedCharge: true, paidAmount: true, status: true } },
 } satisfies Prisma.WaterAccountInclude;
 export const BILL_INCLUDE = {
   account: { select: { id: true, accountNumber: true, serviceAddress: true } },
@@ -95,12 +98,7 @@ export function toMeterView(row: MeterWithLatest): MeterResponseDto {
 }
 
 export function toAccountView(row: WaterAccountWithRelations): WaterAccountResponseDto {
-  const outstanding = row.bills.reduce((sum, bill) => {
-    const owed = toDecimal(bill.totalDue).minus(toDecimal(bill.paidAmount));
-    return bill.status === 'DRAFT' || bill.status === 'FLAGGED' || owed.lte(0)
-      ? sum
-      : sum.plus(owed);
-  }, toDecimal(0));
+  const outstanding = accountOutstanding(row.bills.filter((bill) => isReleasedBill(bill.status)));
   return {
     id: row.id,
     accountNumber: row.accountNumber,

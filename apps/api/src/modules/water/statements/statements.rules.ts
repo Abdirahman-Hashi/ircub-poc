@@ -12,6 +12,8 @@ import type {
 /**
  * Account statement: bills are debits (on release), payments credits (on paid date); the
  * opening balance is everything before `from`, then each line carries a running balance.
+ * A bill is debited at its own charges only: its arrears are already in the running
+ * balance, so debiting `totalDue` would show the same debt twice.
  */
 export function buildStatement(
   bills: readonly StatementBillInput[],
@@ -25,7 +27,7 @@ export function buildStatement(
       kind: 'BILL' as const,
       reference: bill.billNumber,
       description: `Water bill ${bill.period}`,
-      debit: roundMoney(bill.totalDue),
+      debit: roundMoney(toDecimal(bill.consumptionCharge).plus(toDecimal(bill.fixedCharge))),
       credit: new Decimal(0),
     })),
     ...payments.map((payment) => ({

@@ -1,6 +1,7 @@
 import { Decimal } from 'decimal.js';
 
 import {
+  accountOutstanding,
   arrearsOf,
   isValidPeriod,
   periodBounds,
@@ -10,30 +11,36 @@ import {
 } from './billing.rules';
 
 describe('arrears carry-forward', () => {
-  it('sums the unpaid remainder of earlier bills and ignores overpaid ones', () => {
-    const arrears = arrearsOf([
-      { totalDue: '1000', paidAmount: '400' }, // 600 owed
-      { totalDue: '500', paidAmount: '500' }, // settled
-      { totalDue: '200', paidAmount: '250' }, // overpaid → 0
-    ]);
-    expect(arrears.toFixed()).toBe('600');
+  const bill = (consumptionCharge: string, paidAmount: string, fixedCharge = '0') => ({
+    consumptionCharge,
+    fixedCharge,
+    paidAmount,
   });
 
-  it('carries across two cycles: cycle 2 arrears include cycle 1 remainder, cycle 3 includes both', () => {
-    const cycle1 = {
-      totalDue: totalDueOf(new Decimal('3000'), new Decimal('500'), new Decimal(0)),
-      paidAmount: '1000',
-    };
+  it('is the net of charges and payments across earlier bills, floored at zero', () => {
+    expect(arrearsOf([bill('1000', '400'), bill('500', '500')]).toFixed()).toBe('600');
+    expect(arrearsOf([bill('200', '250')]).toFixed()).toBe('0'); // overpaid → nothing owed
+    expect(arrearsOf([]).toFixed()).toBe('0');
+  });
+
+  it('carries the same debt forward exactly once across three cycles', () => {
+    // Cycle 1: 3000 + 500 billed, 1000 paid → 2500 owed.
+    const cycle1 = bill('3000', '1000', '500');
     const cycle2Arrears = arrearsOf([cycle1]);
     expect(cycle2Arrears.toFixed()).toBe('2500');
-    const cycle2 = {
-      totalDue: totalDueOf(new Decimal('2000'), new Decimal('500'), cycle2Arrears),
-      paidAmount: '0',
-    };
-    expect(cycle2.totalDue.toFixed()).toBe('5000');
-    // Cycle 3 sees cycle 1's remainder again only through cycle 2 if cycle 1 is still unpaid;
-    // the service passes every previous bill, so both are counted once each.
-    expect(arrearsOf([cycle1, cycle2]).toFixed()).toBe('7500');
+    // Cycle 2: 2000 + 500 of new charges on top of the 2500 → total due 5000, nothing paid.
+    const cycle2Total = totalDueOf(new Decimal('2000'), new Decimal('500'), cycle2Arrears);
+    expect(cycle2Total.toFixed()).toBe('5000');
+    const cycle2 = bill('2000', '0', '500');
+    // Cycle 3 owes 5000: cycle 1's remainder must not be counted again through cycle 2's total.
+    expect(arrearsOf([cycle1, cycle2]).toFixed()).toBe('5000');
+  });
+
+  it('treats a payment against the latest bill as settling the older arrears it rolled up', () => {
+    const cycle1 = bill('3000', '1000', '500'); // 2500 carried
+    const cycle2 = bill('2000', '5000', '500'); // paid in full, including cycle 1's 2500
+    expect(accountOutstanding([cycle1, cycle2]).toFixed()).toBe('0');
+    expect(arrearsOf([cycle1, cycle2]).toFixed()).toBe('0');
   });
 });
 

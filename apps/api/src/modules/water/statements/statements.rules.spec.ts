@@ -6,19 +6,22 @@ describe('buildStatement', () => {
       billNumber: 'B1',
       period: '2026-07',
       releasedAt: new Date('2026-08-01T00:00:00Z'),
-      totalDue: '1000',
+      consumptionCharge: '800',
+      fixedCharge: '200',
     },
     {
       billNumber: 'B2',
       period: '2026-08',
       releasedAt: new Date('2026-09-01T00:00:00Z'),
-      totalDue: '1200',
+      consumptionCharge: '1000',
+      fixedCharge: '200',
     },
     {
       billNumber: 'B3',
       period: '2026-09',
       releasedAt: new Date('2026-10-01T00:00:00Z'),
-      totalDue: '900',
+      consumptionCharge: '700',
+      fixedCharge: '200',
     },
   ];
   const payments = [
@@ -55,5 +58,20 @@ describe('buildStatement', () => {
     );
     expect(statement.lines.map((l) => l.kind)).toEqual(['OPENING', 'BILL', 'PAYMENT']);
     expect(statement.closingBalance.toFixed()).toBe('2000'); // 1000 opening + 1200 − 200
+  });
+
+  it('does not count arrears twice: an unpaid bill followed by one that carries its arrears', () => {
+    // B1 (1000) unpaid; B2's total due would be 1200 + 1000 arrears, but the statement debits 1200.
+    const statement = buildStatement(
+      bills.slice(0, 2),
+      [],
+      new Date('2026-08-01T00:00:00Z'),
+      new Date('2026-09-30T00:00:00Z'),
+    );
+    expect(statement.lines.map((l) => `${l.kind}:${l.balance.toFixed()}`)).toEqual([
+      'OPENING:0',
+      'BILL:1000',
+      'BILL:2200',
+    ]);
   });
 });

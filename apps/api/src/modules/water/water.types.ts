@@ -52,8 +52,13 @@ export interface AbnormalResult {
   readonly mean: number | null;
 }
 
-export interface PreviousBillLedger {
-  readonly totalDue: DecimalLike;
+/**
+ * What a bill contributes to the account ledger: its own charges and what was paid against
+ * it. `totalDue` is deliberately absent — it already rolls up earlier arrears.
+ */
+export interface AccountLedgerBill {
+  readonly consumptionCharge: DecimalLike;
+  readonly fixedCharge: DecimalLike;
   readonly paidAmount: DecimalLike;
 }
 
@@ -70,7 +75,8 @@ export interface StatementBillInput {
   readonly billNumber: string;
   readonly period: string;
   readonly releasedAt: Date;
-  readonly totalDue: DecimalLike;
+  readonly consumptionCharge: DecimalLike;
+  readonly fixedCharge: DecimalLike;
 }
 
 export interface StatementPaymentInput {

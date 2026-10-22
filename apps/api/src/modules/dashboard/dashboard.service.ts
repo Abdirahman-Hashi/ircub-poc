@@ -268,14 +268,16 @@ export class DashboardService {
       .toFixed(AMOUNT_SCALE);
   }
 
+  /** Σ own charges − Σ payments over released bills: `totalDue` would count arrears per cycle. */
   private async outstandingWater(): Promise<string> {
     const totals = await this.prisma.bill.aggregate({
-      where: { status: { in: [BillStatus.RELEASED, BillStatus.PART_PAID] } },
-      _sum: { totalDue: true, paidAmount: true },
+      where: { status: { in: [BillStatus.RELEASED, BillStatus.PART_PAID, BillStatus.PAID] } },
+      _sum: { consumptionCharge: true, fixedCharge: true, paidAmount: true },
     });
-    return toDecimal(totals._sum.totalDue ?? 0)
-      .minus(toDecimal(totals._sum.paidAmount ?? 0))
-      .toFixed(AMOUNT_SCALE);
+    const net = toDecimal(totals._sum.consumptionCharge ?? 0)
+      .plus(toDecimal(totals._sum.fixedCharge ?? 0))
+      .minus(toDecimal(totals._sum.paidAmount ?? 0));
+    return (net.gt(0) ? net : toDecimal(0)).toFixed(AMOUNT_SCALE);
   }
 
   private async targetTotal(

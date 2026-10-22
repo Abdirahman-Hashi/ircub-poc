@@ -3,7 +3,7 @@ import { access } from 'node:fs/promises';
 
 import { HttpStatus, Injectable, Logger } from '@nestjs/common';
 
-import { BillStatus, ErrorCode, type Paginated } from '@ircub/shared';
+import { AssessmentStatus, BillStatus, ErrorCode, type Paginated } from '@ircub/shared';
 
 import { AppException } from '../../../common/errors/app.exception';
 import { normaliseControlNumber } from '../../../common/ids/ids.rules';
@@ -132,7 +132,7 @@ export class BillsService {
       {
         amount: toDecimal(current.totalDue),
         paidAmount: toDecimal(current.paidAmount),
-        status: 'PENDING',
+        status: AssessmentStatus.PENDING,
       },
       localAmount,
     );
@@ -160,7 +160,7 @@ export class BillsService {
       {
         amount: toDecimal(current.totalDue),
         paidAmount: toDecimal(current.paidAmount),
-        status: 'PENDING',
+        status: AssessmentStatus.PENDING,
       },
       localAmount,
     );

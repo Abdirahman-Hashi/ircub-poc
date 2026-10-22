@@ -265,7 +265,7 @@ export async function seedWaterDemo(prisma: ExtendedPrismaClient): Promise<strin
       const charge = computeTieredCharge(reading.consumption, account.tariffCategory.tiers);
       const previousBills = await prisma.bill.findMany({
         where: { accountId: account.id },
-        select: { totalDue: true, paidAmount: true },
+        select: { consumptionCharge: true, fixedCharge: true, paidAmount: true },
       });
       const arrears = arrearsOf(previousBills);
       const fixedCharge = roundMoney(account.tariffCategory.fixedCharge);

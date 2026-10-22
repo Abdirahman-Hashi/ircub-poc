@@ -1,6 +1,13 @@
 import { HttpStatus, Injectable, Logger } from '@nestjs/common';
 
-import { DuplicateFlagStatus, ErrorCode, type Paginated, PayerStatus } from '@ircub/shared';
+import {
+  AssessmentStatus,
+  BillStatus,
+  DuplicateFlagStatus,
+  ErrorCode,
+  type Paginated,
+  PayerStatus,
+} from '@ircub/shared';
 
 import { AppException } from '../../common/errors/app.exception';
 import { IdsService } from '../../common/ids/ids.service';
@@ -123,12 +130,15 @@ export class PayersService {
     ]);
     const [totals, billTotals, accounts] = await Promise.all([
       this.prisma.assessment.aggregate({
-        where: { payerId: id, status: { not: 'CANCELLED' } },
+        where: { payerId: id, status: { not: AssessmentStatus.CANCELLED } },
         _sum: { amount: true, paidAmount: true },
       }),
       this.prisma.bill.aggregate({
-        where: { payerId: id, status: { in: ['RELEASED', 'PART_PAID', 'PAID'] } },
-        _sum: { totalDue: true, paidAmount: true },
+        where: {
+          payerId: id,
+          status: { in: [BillStatus.RELEASED, BillStatus.PART_PAID, BillStatus.PAID] },
+        },
+        _sum: { consumptionCharge: true, fixedCharge: true, paidAmount: true },
       }),
       this.prisma.waterAccount.findMany({
         where: { payerId: id },
@@ -149,11 +159,11 @@ export class PayersService {
         ).map(toBillView),
       })),
     );
-    // Bills carry arrears forward, so only the latest released bill per account is "owed" here;
-    // totals from the aggregate keep the simple assessed/paid picture for the summary cards.
-    const assessedTotal = roundMoney(totals._sum.amount ?? 0).plus(
-      roundMoney(billTotals._sum.totalDue ?? 0),
-    );
+    // Bills carry arrears forward inside `totalDue`, so the billed total is the sum of each
+    // bill's own charges; summing `totalDue` would count the same arrears once per cycle.
+    const assessedTotal = roundMoney(totals._sum.amount ?? 0)
+      .plus(roundMoney(billTotals._sum.consumptionCharge ?? 0))
+      .plus(roundMoney(billTotals._sum.fixedCharge ?? 0));
     const paidTotal = roundMoney(totals._sum.paidAmount ?? 0).plus(
       roundMoney(billTotals._sum.paidAmount ?? 0),
     );

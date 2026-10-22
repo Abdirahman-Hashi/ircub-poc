@@ -72,7 +72,8 @@ export class StatementsService {
         billNumber: bill.billNumber,
         period: bill.cycle.period,
         releasedAt: bill.releasedAt ?? bill.createdAt,
-        totalDue: bill.totalDue,
+        consumptionCharge: bill.consumptionCharge,
+        fixedCharge: bill.fixedCharge,
       })),
       payments
         .filter((payment) => payment.status === PaymentStatus.CONFIRMED)

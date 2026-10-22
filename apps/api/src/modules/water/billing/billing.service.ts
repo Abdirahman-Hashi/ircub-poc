@@ -253,7 +253,7 @@ export class BillingService {
         cycleId: { not: cycleId },
         status: { in: [BillStatus.RELEASED, BillStatus.PART_PAID, BillStatus.PAID] },
       },
-      select: { totalDue: true, paidAmount: true },
+      select: { consumptionCharge: true, fixedCharge: true, paidAmount: true },
     });
     const arrears = arrearsOf(previousBills);
     const fixedCharge = roundMoney(account.tariffCategory.fixedCharge);

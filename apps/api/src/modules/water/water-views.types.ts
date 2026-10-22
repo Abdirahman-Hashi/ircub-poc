@@ -41,7 +41,9 @@ export type WaterAccountWithRelations = Prisma.WaterAccountGetPayload<{
         };
       };
     };
-    bills: { select: { totalDue: true; paidAmount: true; status: true } };
+    bills: {
+      select: { consumptionCharge: true; fixedCharge: true; paidAmount: true; status: true };
+    };
   };
 }>;
 
