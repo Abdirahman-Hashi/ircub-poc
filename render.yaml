@@ -1,0 +1,104 @@
+# Render blueprint for the hosted demo (D25): two Docker web services (api, mocks) and the
+# SPA as a static site. The database is a Neon Postgres project (free tier), whose pooled
+# connection string is pasted into DATABASE_URL at deploy time. See docs/DEPLOYMENT.md.
+services:
+  - type: web
+    name: ircub-api
+    runtime: docker
+    plan: free
+    region: frankfurt
+    dockerfilePath: apps/api/Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: '3000'
+      - key: LOG_LEVEL
+        value: info
+      - key: DATABASE_URL
+        sync: false # Neon pooled URL with ?sslmode=require; set in the dashboard
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: JWT_ACCESS_TTL
+        value: '900'
+      - key: JWT_REFRESH_TTL
+        value: '604800'
+      - key: MOCK_SHARED_SECRET
+        fromService:
+          type: web
+          name: ircub-mocks
+          envVarKey: MOCK_SHARED_SECRET
+      - key: MOCKS_BASE_URL
+        fromService:
+          type: web
+          name: ircub-mocks
+          envVarKey: RENDER_EXTERNAL_URL
+      - key: API_PUBLIC_URL
+        fromService:
+          type: web
+          name: ircub-api
+          envVarKey: RENDER_EXTERNAL_URL
+      - key: CORS_ORIGIN
+        fromService:
+          type: web
+          name: ircub-web
+          envVarKey: RENDER_EXTERNAL_URL
+      - key: STORAGE_DIR
+        value: /app/storage
+      - key: SEED_ON_BOOT
+        value: 'true'
+
+  - type: web
+    name: ircub-mocks
+    runtime: docker
+    plan: free
+    region: frankfurt
+    dockerfilePath: apps/mocks/Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MOCKS_PORT
+        value: '3100'
+      - key: LOG_LEVEL
+        value: info
+      - key: MOCK_SHARED_SECRET
+        generateValue: true
+      - key: MOCK_CALLBACK_DELAY_MS
+        value: '3000'
+
+  - type: web
+    name: ircub-web
+    runtime: static
+    plan: free
+    buildCommand: corepack enable && pnpm install --frozen-lockfile --filter web... && pnpm --filter @ircub/shared build && pnpm --filter web build
+    staticPublishPath: apps/web/dist
+    autoDeploy: true
+    envVars:
+      - key: VITE_API_URL
+        value: '' # empty → the bundle calls same-origin /api, rewritten below
+      - key: NODE_VERSION
+        value: '22'
+    routes:
+      # Same-origin API: the SPA calls /api/*, Render forwards to the api service.
+      - type: rewrite
+        source: /api/*
+        destination: https://ircub-api.onrender.com/*
+      # SPA fallback.
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    headers:
+      - path: /assets/*
+        name: Cache-Control
+        value: public, max-age=31536000, immutable
+      - path: /index.html
+        name: Cache-Control
+        value: no-cache
