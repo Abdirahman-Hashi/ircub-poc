@@ -6,6 +6,8 @@ export const API = {
   REFRESH_COOKIE: 'ircub_refresh',
   /** Path prefix the nginx image proxies to the API container. */
   PROXY_PREFIX: '/api',
+  /** Query parameter carrying the access token for the SSE stream (EventSource has no headers). */
+  SSE_TOKEN_QUERY: 'access_token',
 } as const;
 
 export const HEALTH_STATUS = {

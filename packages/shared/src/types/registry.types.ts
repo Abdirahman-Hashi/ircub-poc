@@ -93,7 +93,16 @@ export interface PaymentView {
   readonly capturedById: string | null;
   readonly bulkUploadId: string | null;
   readonly failureReason: string | null;
+  readonly statusCheckAttempts: number;
   readonly createdAt: Date | string;
+}
+
+/** `GET /payments/:id` — adds the channel request/callback payloads for the auditor view. */
+export interface PaymentDetail extends PaymentView {
+  readonly channelRequestPayload: unknown;
+  readonly callbackPayload: unknown;
+  readonly lastStatusCheckAt: Date | string | null;
+  readonly permanentlyFailedAt: Date | string | null;
 }
 
 export interface AssessmentDetail extends AssessmentView {

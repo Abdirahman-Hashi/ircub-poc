@@ -151,6 +151,21 @@ export const NotificationStatus = {
 } as const;
 export type NotificationStatus = (typeof NotificationStatus)[keyof typeof NotificationStatus];
 
+export const ReconciliationRunStatus = {
+  COMPLETED: 'COMPLETED',
+  FAILED: 'FAILED',
+} as const;
+export type ReconciliationRunStatus =
+  (typeof ReconciliationRunStatus)[keyof typeof ReconciliationRunStatus];
+
+/** Outcome vocabulary of the external channels (bank / mobile money). */
+export const ChannelOutcome = {
+  SUCCESS: 'SUCCESS',
+  FAILED: 'FAILED',
+  PENDING: 'PENDING',
+} as const;
+export type ChannelOutcome = (typeof ChannelOutcome)[keyof typeof ChannelOutcome];
+
 export const ReconciliationLineStatus = {
   MATCHED: 'MATCHED',
   MISSING_IN_IRCUB: 'MISSING_IN_IRCUB',
