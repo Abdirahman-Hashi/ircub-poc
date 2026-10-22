@@ -26,7 +26,9 @@ statements with a running balance.
 - Account balance everywhere (payer 360°, account view, statement, dashboard outstanding)
   uses the same Σ charges − Σ payments rule (`billing.rules.ts#accountOutstanding`); a payment
   against the latest bill therefore settles the arrears it rolled up.
-- Bills take payments like assessments (same `applyPayment` rule, row locked); PDFs are
+- Bills take payments like assessments (same `applyPayment` rule, row locked), but only the
+  latest released bill of an account does: an older bill is superseded once a later one has
+  been released with its balance as arrears (`supersedingBill`, `BILL_SUPERSEDED`). PDFs are
   rendered lazily on first request if missing (seeded cycles).
 
 **Endpoints.** `tariffs`, `water-accounts` (+ `/statement`, `/statement.pdf`), `meters`

@@ -1,4 +1,4 @@
-import type { ReadingType } from '@ircub/shared';
+import type { BillStatus, ReadingType } from '@ircub/shared';
 
 import type { SKIP_REASON, TIER_VALIDATION } from './water.constants';
 import type { DecimalLike } from '../../common/money/money.types';
@@ -60,6 +60,12 @@ export interface AccountLedgerBill {
   readonly consumptionCharge: DecimalLike;
   readonly fixedCharge: DecimalLike;
   readonly paidAmount: DecimalLike;
+}
+
+/** What decides whether a bill still accepts payments relative to its account's other bills. */
+export interface BillLedgerPosition {
+  readonly periodStart: Date;
+  readonly status: BillStatus;
 }
 
 export interface PeriodBounds {

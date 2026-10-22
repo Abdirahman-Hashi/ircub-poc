@@ -16,7 +16,7 @@ import { BILL_INCLUDE, toBillView } from '../water.view';
 
 import { BillPdfService } from './bill-pdf.service';
 import { BILLS_API } from './bills.constants';
-import { isBillPayable, toBillStatus } from './bills.rules';
+import { isBillPayable, supersedingBill, toBillStatus } from './bills.rules';
 
 import type { BillPdfStream } from './bills.types';
 import type { BillWithRelations } from '../water-views.types';
@@ -117,6 +117,31 @@ export class BillsService {
     return relative;
   }
 
+  /**
+   * Refuses a bill whose balance a later released bill of the same account already carries
+   * (`supersedingBill`): the arrears live on the newer bill, so paying both would collect the
+   * same debt twice.
+   */
+  async assertCurrent(
+    client: PrismaService | TransactionClient,
+    bill: Pick<Bill, 'id' | 'accountId' | 'periodStart' | 'status'>,
+  ): Promise<void> {
+    const later = await client.bill.findMany({
+      where: { accountId: bill.accountId, periodStart: { gt: bill.periodStart } },
+      select: { periodStart: true, status: true, billNumber: true },
+      orderBy: { periodStart: 'asc' },
+    });
+    const newer = supersedingBill(bill, later);
+    if (newer !== null) {
+      throw new AppException(
+        ErrorCode.BILL_SUPERSEDED,
+        WATER_MESSAGES.BILL_SUPERSEDED,
+        HttpStatus.CONFLICT,
+        { billId: bill.id, supersededBy: newer.billNumber },
+      );
+    }
+  }
+
   /** Same ledger rules as assessments (`applyPayment`), mapped onto bill statuses; row locked. */
   async applyPayment(tx: TransactionClient, billId: string, localAmount: Decimal): Promise<Bill> {
     const current = await this.lockForUpdate(tx, billId);
@@ -128,6 +153,7 @@ export class BillsService {
         { billId, status: current.status },
       );
     }
+    await this.assertCurrent(tx, current);
     const result = applyPayment(
       {
         amount: toDecimal(current.totalDue),

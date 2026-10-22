@@ -26,6 +26,8 @@ export const WATER_MESSAGES = {
   BILL_NOT_FOUND: 'Bill not found.',
   BILL_NOT_FLAGGED: 'Bill is not flagged.',
   BILL_NOT_PAYABLE: 'Bill cannot receive payments in its current status.',
+  BILL_SUPERSEDED:
+    'A later bill for this account already carries this balance as arrears; pay that bill instead.',
   OVERPAYMENT: 'Payment exceeds the outstanding amount.',
   PDF_NOT_AVAILABLE: 'The PDF is only available for released bills.',
   STATEMENT_RANGE: 'The statement range is invalid.',

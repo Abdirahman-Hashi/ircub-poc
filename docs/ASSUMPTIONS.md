@@ -47,7 +47,12 @@ Phase 7 copies this list into the README.
   `Bill.paymentsApplied` is the field to fill.
 - We assume paying the latest bill in full settles the arrears it rolled up (older bills keep
   their own `paidAmount` but the account balance is zero), because customers pay one control
-  number; if per-bill settlement is required, payments must cascade onto older bills.
+  number; a bill is therefore **superseded** once a later bill of the account is released
+  and no longer accepts payments (`BILL_SUPERSEDED`), so the same debt cannot be collected
+  twice. If per-bill settlement is required, payments must cascade onto older bills.
+- We assume "water billed" in the dashboard means each bill's own charges (consumption plus
+  the fixed charge), not its `totalDue`, because the latter repeats carried arrears every
+  cycle and would understate collection efficiency.
 - We assume a confirmed abnormal flag means "hold this bill back", so the cycle is released
   without it and the bill goes out on its own when the flag is later cleared, because a
   single unresolved investigation must not block a whole month's billing; if held bills

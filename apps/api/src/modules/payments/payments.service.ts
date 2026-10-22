@@ -75,6 +75,7 @@ export class PaymentsService {
           { controlNumber },
         );
       }
+      await this.bills.assertCurrent(this.prisma, bill);
       return {
         controlNumber: bill.billNumber,
         kind: 'BILL',
