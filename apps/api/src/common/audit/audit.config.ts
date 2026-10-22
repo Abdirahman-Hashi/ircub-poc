@@ -30,4 +30,6 @@ export const AUDITED_MODELS: AuditedModelMap = {
   BillingCycle: {},
   Bill: {},
   Notification: {},
+  ChannelStatement: {},
+  ReconciliationRun: {},
 };

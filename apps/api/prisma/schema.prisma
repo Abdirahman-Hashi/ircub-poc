@@ -140,6 +140,11 @@ enum NotificationStatus {
   FAILED
 }
 
+enum ReconciliationRunStatus {
+  COMPLETED
+  FAILED
+}
+
 enum ReconciliationLineStatus {
   MATCHED
   MISSING_IN_IRCUB
@@ -441,8 +446,12 @@ model Payment {
   paidAt              DateTime?      @map("paid_at")
   capturedById        String?        @map("captured_by_id") @db.Uuid
   bulkUploadId        String?        @map("bulk_upload_id") @db.Uuid
+  /** What we sent to the channel (initiation); auditor view. */
+  channelRequestPayload Json?        @map("channel_request_payload")
   callbackPayload     Json?          @map("callback_payload")
   failureReason       String?        @map("failure_reason")
+  lastStatusCheckAt   DateTime?      @map("last_status_check_at")
+  permanentlyFailedAt DateTime?      @map("permanently_failed_at")
   createdAt           DateTime       @default(now()) @map("created_at")
   updatedAt           DateTime       @updatedAt @map("updated_at")
 
@@ -451,6 +460,7 @@ model Payment {
   payer      Payer       @relation(fields: [payerId], references: [id], onDelete: Restrict)
   bulkUpload BulkUpload? @relation(fields: [bulkUploadId], references: [id], onDelete: SetNull)
   reversals  Reversal[]
+  reconciliationLines ReconciliationLine[]
 
   /// Duplicate channel callbacks and duplicate bulk rows are no-ops at the database (D11).
   @@unique([channel, channelTxnRef])
@@ -507,7 +517,83 @@ model BulkUpload {
   @@map("bulk_upload")
 }
 
-/// Exchange-rate history (D9). Phase 4 refreshes it from the mock FX API.
+/// A channel's daily statement as fetched or uploaded (D16); the file is kept for the audit trail.
+model ChannelStatement {
+  id            String         @id @default(uuid()) @db.Uuid
+  channel       PaymentChannel
+  statementDate DateTime       @map("statement_date") @db.Date
+  fileName      String         @map("file_name")
+  storedPath    String         @map("stored_path")
+  lineCount     Int            @map("line_count")
+  importedById  String?        @map("imported_by_id") @db.Uuid
+  createdAt     DateTime       @default(now()) @map("created_at")
+
+  lines ChannelStatementLine[]
+  runs  ReconciliationRun[]
+
+  @@index([channel, statementDate])
+  @@map("channel_statement")
+}
+
+model ChannelStatementLine {
+  id            String   @id @default(uuid()) @db.Uuid
+  statementId   String   @map("statement_id") @db.Uuid
+  txnRef        String   @map("txn_ref")
+  date          DateTime
+  amount        Decimal  @db.Decimal(18, 2)
+  currency      Currency
+  controlNumber String   @map("control_number")
+  status        String
+
+  statement           ChannelStatement     @relation(fields: [statementId], references: [id], onDelete: Cascade)
+  reconciliationLines ReconciliationLine[]
+
+  @@index([statementId])
+  @@index([txnRef])
+  @@map("channel_statement_line")
+}
+
+model ReconciliationRun {
+  id               String                  @id @default(uuid()) @db.Uuid
+  channel          PaymentChannel
+  runDate          DateTime                @map("run_date") @db.Date
+  statementId      String?                 @map("statement_id") @db.Uuid
+  status           ReconciliationRunStatus @default(COMPLETED)
+  matched          Int                     @default(0)
+  missingInIrcub   Int                     @default(0) @map("missing_in_ircub")
+  missingInChannel Int                     @default(0) @map("missing_in_channel")
+  amountMismatch   Int                     @default(0) @map("amount_mismatch")
+  runById          String?                 @map("run_by_id") @db.Uuid
+  error            String?
+  createdAt        DateTime                @default(now()) @map("created_at")
+
+  statement ChannelStatement?    @relation(fields: [statementId], references: [id], onDelete: SetNull)
+  lines     ReconciliationLine[]
+
+  @@index([channel, runDate])
+  @@map("reconciliation_run")
+}
+
+model ReconciliationLine {
+  id              String                   @id @default(uuid()) @db.Uuid
+  runId           String                   @map("run_id") @db.Uuid
+  status          ReconciliationLineStatus
+  txnRef          String                   @map("txn_ref")
+  paymentId       String?                  @map("payment_id") @db.Uuid
+  statementLineId String?                  @map("statement_line_id") @db.Uuid
+  ircubAmount     Decimal?                 @map("ircub_amount") @db.Decimal(18, 2)
+  channelAmount   Decimal?                 @map("channel_amount") @db.Decimal(18, 2)
+  note            String?
+
+  run           ReconciliationRun     @relation(fields: [runId], references: [id], onDelete: Cascade)
+  payment       Payment?              @relation(fields: [paymentId], references: [id], onDelete: SetNull)
+  statementLine ChannelStatementLine? @relation(fields: [statementLineId], references: [id], onDelete: SetNull)
+
+  @@index([runId, status])
+  @@map("reconciliation_line")
+}
+
+/// Exchange-rate history (D9). Refreshed from the mock FX API every 15 minutes (phase 4).
 model FxRate {
   id     String   @id @default(uuid()) @db.Uuid
   base   Currency
