@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 
 import { FmisPosterService } from './fmis-poster.service';
+import { FmisReconciliationService } from './fmis-reconciliation.service';
 import { FMIS_CLIENT } from './fmis.constants';
 import { FmisController } from './fmis.controller';
 import { GlMappingsController } from './gl-mappings.controller';
@@ -15,6 +16,7 @@ import { JournalBatchService } from './journal-batch.service';
     GlMappingsService,
     JournalBatchService,
     FmisPosterService,
+    FmisReconciliationService,
   ],
   exports: [JournalBatchService, GlMappingsService],
 })
