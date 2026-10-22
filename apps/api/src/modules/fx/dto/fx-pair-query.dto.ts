@@ -1,14 +1,21 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsEnum } from 'class-validator';
+import { ApiPropertyOptional } from '@nestjs/swagger';
+import { IsEnum, IsOptional } from 'class-validator';
 
 import { Currency } from '@ircub/shared';
 
+/** Defaults to the foreign currency → local currency pair the platform converts (D9). */
 export class FxPairQueryDto {
-  @ApiProperty({ enum: Currency, example: Currency.USD })
+  @ApiPropertyOptional({ enum: Currency, example: Currency.USD, description: 'Defaults to USD' })
+  @IsOptional()
   @IsEnum(Currency)
-  base!: Currency;
+  base?: Currency;
 
-  @ApiProperty({ enum: Currency, example: Currency.SOS })
+  @ApiPropertyOptional({
+    enum: Currency,
+    example: Currency.SOS,
+    description: 'Defaults to the local currency',
+  })
+  @IsOptional()
   @IsEnum(Currency)
-  quote!: Currency;
+  quote?: Currency;
 }

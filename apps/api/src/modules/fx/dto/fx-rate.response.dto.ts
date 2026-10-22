@@ -1,8 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-import { Currency } from '@ircub/shared';
+import { Currency, type FxRateView } from '@ircub/shared';
 
-export class FxRateResponseDto {
+export class FxRateResponseDto implements FxRateView {
   @ApiProperty({ enum: Currency })
   base!: Currency;
 
@@ -17,4 +17,9 @@ export class FxRateResponseDto {
 
   @ApiProperty({ example: 'mock-fx-api' })
   source!: string;
+
+  @ApiProperty({
+    description: 'Provider unreachable and the stored rate is older than the stale window',
+  })
+  stale!: boolean;
 }

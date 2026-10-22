@@ -26,6 +26,9 @@ export enum SystemConfigKey {
 
   PAYMENT_STATUS_RETRY_LIMIT = 'PAYMENT_STATUS_RETRY_LIMIT',
   PAYMENT_STATUS_CHECK_DELAY_SECONDS = 'PAYMENT_STATUS_CHECK_DELAY_SECONDS',
+  PAYMENT_STATUS_RETRY_DELAY_SECONDS = 'PAYMENT_STATUS_RETRY_DELAY_SECONDS',
+  FX_REFRESH_MINUTES = 'FX_REFRESH_MINUTES',
+  FX_STALE_AFTER_MINUTES = 'FX_STALE_AFTER_MINUTES',
 
   CASH_GL_CODE = 'CASH_GL_CODE',
 
@@ -58,6 +61,9 @@ export interface SystemConfigValues {
 
   [SystemConfigKey.PAYMENT_STATUS_RETRY_LIMIT]: number;
   [SystemConfigKey.PAYMENT_STATUS_CHECK_DELAY_SECONDS]: number;
+  [SystemConfigKey.PAYMENT_STATUS_RETRY_DELAY_SECONDS]: number;
+  [SystemConfigKey.FX_REFRESH_MINUTES]: number;
+  [SystemConfigKey.FX_STALE_AFTER_MINUTES]: number;
 
   [SystemConfigKey.CASH_GL_CODE]: string;
 
@@ -90,6 +96,9 @@ export const SYSTEM_CONFIG_DEFAULTS: Readonly<SystemConfigValues> = {
 
   [SystemConfigKey.PAYMENT_STATUS_RETRY_LIMIT]: 3,
   [SystemConfigKey.PAYMENT_STATUS_CHECK_DELAY_SECONDS]: 60,
+  [SystemConfigKey.PAYMENT_STATUS_RETRY_DELAY_SECONDS]: 60,
+  [SystemConfigKey.FX_REFRESH_MINUTES]: 15,
+  [SystemConfigKey.FX_STALE_AFTER_MINUTES]: 60,
 
   [SystemConfigKey.CASH_GL_CODE]: '1010',
 
@@ -129,6 +138,11 @@ export const SYSTEM_CONFIG_DESCRIPTIONS: Readonly<Record<SystemConfigKey, string
     'Status-check attempts before a pending payment is marked permanently failed.',
   [SystemConfigKey.PAYMENT_STATUS_CHECK_DELAY_SECONDS]:
     'Seconds to wait for a channel callback before the first status check.',
+  [SystemConfigKey.PAYMENT_STATUS_RETRY_DELAY_SECONDS]:
+    'Base delay between status-check retries (exponential backoff).',
+  [SystemConfigKey.FX_REFRESH_MINUTES]: 'How often the FX rate is refreshed from the provider.',
+  [SystemConfigKey.FX_STALE_AFTER_MINUTES]:
+    'A stored rate older than this is reported as stale when the provider is down.',
 
   [SystemConfigKey.CASH_GL_CODE]: 'General ledger code debited for every collection.',
 
