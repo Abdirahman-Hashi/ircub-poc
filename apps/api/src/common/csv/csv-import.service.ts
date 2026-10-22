@@ -59,7 +59,7 @@ export class CsvImportService {
       );
     }
 
-    const context = await options.createContext();
+    const context = await options.createContext(records);
     const accepted: AcceptedRow<TRow>[] = [];
     const rejected: RejectedRow[] = [];
 

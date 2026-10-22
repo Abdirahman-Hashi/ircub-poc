@@ -42,7 +42,12 @@ import type {
 import type { BulkUploadFilterDto } from './dto/bulk-upload-filter.dto';
 import type { BulkUploadResponseDto } from './dto/bulk-upload.response.dto';
 import type { CsvSummaryResponseDto } from './dto/csv-summary.response.dto';
-import type { AcceptedRow, CsvImportSummary, RowOutcome } from '../../common/csv/csv.types';
+import type {
+  AcceptedRow,
+  CsvImportSummary,
+  CsvRecord,
+  RowOutcome,
+} from '../../common/csv/csv.types';
 import type { TransactionClient } from '../../prisma/prisma.types';
 import type { Prisma } from '@prisma/client';
 
@@ -88,7 +93,7 @@ export class BulkUploadsService {
       schema: revenueTransactionRowSchema,
       maxRows,
       dryRun,
-      createContext: () => this.buildContext(content, uploaderId, fileName, storedPath),
+      createContext: (records) => this.buildContext(records, uploaderId, fileName, storedPath),
       validateRow: (row, _rowNumber, context) => Promise.resolve(this.validateRow(row, context)),
       persist: (accepted, summary, context, tx) =>
         this.persist(uploadId, accepted, summary, context, tx),
@@ -126,21 +131,26 @@ export class BulkUploadsService {
     return toView(row, true);
   }
 
-  /** One pass over the file to prefetch every assessment, existing reference and capturer. */
+  /**
+   * One pass over the parsed records to prefetch every assessment, existing reference and
+   * capturer. Records are header-keyed, so column order and quoting in the file do not matter.
+   */
   private async buildContext(
-    content: Buffer,
+    records: readonly CsvRecord[],
     uploaderId: string,
     fileName: string,
     storedPath: string,
   ): Promise<RevenueImportContext> {
-    const text = content.toString(CSV_IMPORT.ENCODING);
     const controlNumbers = new Set<string>();
     const refs: { channel: PaymentChannel; ref: string }[] = [];
     const emails = new Set<string>();
     const currencies = new Set<Currency>();
-    for (const line of text.split(/\r?\n/).slice(1)) {
-      const cells = line.split(CSV_IMPORT.DELIMITER).map((cell) => cell.trim());
-      const [controlNumber, , currency, channel, ref, , email] = cells;
+    for (const record of records) {
+      const controlNumber = record[BULK_COLUMN.CONTROL_NUMBER];
+      const currency = record[BULK_COLUMN.CURRENCY];
+      const channel = record[BULK_COLUMN.CHANNEL];
+      const ref = record[BULK_COLUMN.CHANNEL_TXN_REF];
+      const email = record[BULK_COLUMN.CAPTURED_BY_EMAIL];
       if (controlNumber !== undefined && controlNumber.length > 0) {
         controlNumbers.add(normaliseControlNumber(controlNumber));
       }

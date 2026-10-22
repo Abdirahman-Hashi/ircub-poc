@@ -38,8 +38,11 @@ export interface CsvImportOptions<TRow, TContext> {
   readonly schema: ZodType<TRow>;
   readonly maxRows: number;
   readonly dryRun: boolean;
-  /** Built once before validation; shared across rows (lookups, running totals). */
-  readonly createContext: () => Promise<TContext>;
+  /**
+   * Built once before validation from the header-keyed records; shared across rows
+   * (lookups, running totals).
+   */
+  readonly createContext: (records: readonly CsvRecord[]) => Promise<TContext>;
   /** Business validation of one parsed row; may mutate the context (e.g. running totals). */
   readonly validateRow: (data: TRow, rowNumber: number, context: TContext) => Promise<RowOutcome>;
   /**
@@ -59,7 +62,10 @@ export interface CsvImportResult<TRow> {
   readonly acceptedRows: readonly AcceptedRow<TRow>[];
 }
 
+/** One parsed CSV line keyed by its lower-cased header. */
+export type CsvRecord = Record<string, string>;
+
 export interface ParsedCsv {
   readonly headers: readonly string[];
-  readonly records: readonly Record<string, string>[];
+  readonly records: readonly CsvRecord[];
 }

@@ -10,6 +10,8 @@
   payable → amount > 0 → reference required for non-cash → reference unique in file and in the
   database → capturer exists → FX rate available → amount ≤ outstanding _after earlier rows in
   the same file_. The first failure is reported with line, field and reason.
+- Lookups (assessments, existing references, capturers, FX rates) are prefetched once from the
+  header-keyed records the CSV pipeline parsed, so column order and quoting never matter.
 - Valid rows are persisted in one transaction through `PaymentsService.recordConfirmedPayment`
   (same path as manual capture); invalid rows are rejected individually. `?dryRun=true` runs
   everything but persists nothing (the UI's preview step).
