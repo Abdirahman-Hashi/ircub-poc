@@ -46,6 +46,27 @@ export const PATHS = {
   SMS: 'sms',
   EMAIL: 'email',
   OUTBOX: 'outbox',
+  BANK: 'bank',
+  MOMO: 'momo',
+  PAYMENTS: 'payments',
+  STATEMENTS: 'statements',
+  SEED_STATEMENT: '__seed-statement',
+} as const;
+
+/** Channel simulation (apps/mocks/CLAUDE.md). */
+export const CHANNEL_MOCK = {
+  /** Status checks for a `.77` payment report PENDING this many times before SUCCESS. */
+  PENDING_CHECKS_BEFORE_SUCCESS: 2,
+  /** How long a TIMEOUT scenario hangs a status check. */
+  TIMEOUT_HANG_MS: 10_000,
+  /** Perturbation: one line dropped, one extra, one amount nudged by this. */
+  PERTURB_AMOUNT_DELTA: '0.01',
+  /** Money strings carry two decimals. */
+  AMOUNT_DECIMALS: 2,
+  EXTRA_LINE_REF_SUFFIX: '-EXTRA',
+  EXTRA_LINE_CONTROL_NUMBER: '000000000000',
+  REF_RANDOM_LENGTH: 10,
+  CALLBACK_TIMEOUT_MS: 5_000,
 } as const;
 
 export const NOTIFICATION_CHANNEL = {

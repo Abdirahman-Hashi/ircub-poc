@@ -1,16 +1,8 @@
 import type { Currency } from '@ircub/shared';
 
-/** One simulated channel payment (bank or mobile money). Fleshed out in phase 4. */
-export interface StoredPayment {
-  readonly txnRef: string;
-  readonly amount: string;
-  readonly currency: Currency;
-  readonly controlNumber: string;
-  readonly callbackUrl: string;
-  status: string;
-  readonly createdAt: string;
-  paidAt?: string;
-}
+import type { MockPayment } from '../channels/channels.types';
+
+export type StoredPayment = MockPayment;
 
 /** One posted FMIS journal batch (phase 5). */
 export interface StoredJournal {
@@ -38,10 +30,10 @@ export interface StoredMessage {
   readonly sentAt: string;
 }
 
-/** Outcome forced for a txnRef via POST /__scenario (phase 4). */
+/** Outcome forced for a txnRef via POST /__scenario. */
 export interface ForcedScenario {
   readonly txnRef: string;
-  readonly outcome: string;
+  readonly outcome: import('@ircub/shared').ScenarioOutcome;
 }
 
 export interface StoreSnapshot {

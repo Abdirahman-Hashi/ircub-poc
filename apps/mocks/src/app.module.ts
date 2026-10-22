@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { LoggerModule } from 'nestjs-pino';
 
+import { ChannelsModule } from './channels/channels.module';
 import { MocksConfigModule } from './config/mocks-config.module';
 import { MocksConfigService } from './config/mocks-config.service';
 import { ControlModule } from './control/control.module';
@@ -31,6 +32,7 @@ import { StoreModule } from './store/store.module';
     ControlModule,
     RatesModule,
     NotificationsModule,
+    ChannelsModule,
   ],
 })
 export class AppModule {}

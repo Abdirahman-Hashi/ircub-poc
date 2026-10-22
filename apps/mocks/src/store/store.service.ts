@@ -17,14 +17,14 @@ import type {
 export class StoreService {
   private readonly logger = new Logger(StoreService.name);
 
-  readonly payments = new Map<string, StoredPayment>();
+  readonly channelPayments = new Map<string, StoredPayment>();
   readonly journals = new Map<string, StoredJournal>();
   readonly outbox: StoredMessage[] = [];
   readonly scenarios = new Map<string, ForcedScenario>();
 
   reset(): StoreSnapshot {
     const before = this.snapshot();
-    this.payments.clear();
+    this.channelPayments.clear();
     this.journals.clear();
     this.outbox.length = 0;
     this.scenarios.clear();
@@ -34,7 +34,7 @@ export class StoreService {
 
   snapshot(): StoreSnapshot {
     return {
-      payments: this.payments.size,
+      payments: this.channelPayments.size,
       journals: this.journals.size,
       outbox: this.outbox.length,
       scenarios: this.scenarios.size,
