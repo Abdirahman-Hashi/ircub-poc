@@ -2,7 +2,7 @@ import { HttpStatus, Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 
-import { ErrorCode, UserStatus } from '@ircub/shared';
+import { API, ErrorCode, UserStatus } from '@ircub/shared';
 
 import { AppConfigService } from '../../config/app-config.service';
 import { PrismaService } from '../../prisma/prisma.service';
@@ -25,7 +25,11 @@ export class JwtStrategy extends PassportStrategy(Strategy, JWT_STRATEGY_NAME) {
     private readonly prisma: PrismaService,
   ) {
     super({
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+      // EventSource cannot send headers, so the SSE stream accepts the token as a query param.
+      jwtFromRequest: ExtractJwt.fromExtractors([
+        ExtractJwt.fromAuthHeaderAsBearerToken(),
+        ExtractJwt.fromUrlQueryParameter(API.SSE_TOKEN_QUERY),
+      ]),
       ignoreExpiration: false,
       secretOrKey: config.jwtSecret,
     });
