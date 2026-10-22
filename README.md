@@ -150,6 +150,21 @@ Created by the phase 1 seed. Password for all: `Passw0rd!2026`.
 - `customer1@ircub.test` can pay their own assessments and bills under My account and only
   receives live updates for their own payer.
 
+## FMIS posting and reconciliation (phase 5)
+
+- FMIS → Journal batches: one batch per day is built at 00:30 from confirmed payments not yet
+  journaled (one line per payment: debit the cash control GL, credit the revenue GL) and
+  posted to the mock FMIS with the batch id as idempotency key; the FMIS reference is stored
+  on the batch. The seed leaves yesterday's batch PENDING (posted on boot) and the day before
+  FAILED so you can click Retry. "Build for date" with the demo checkbox shows the retry path.
+- Open a batch for its lines; each line opens the payment drawer, which shows the full chain
+  payment → line → batch → FMIS reference. A reversal approved under Reversals produces a
+  mirrored REVERSAL batch and flags the original line.
+- FMIS → Reconciliation: posted totals per day and GL against the FMIS ledger, with
+  MATCHED / MISMATCH / MISSING IN FMIS, a drill-down to the lines and CSV export.
+- FMIS → GL mappings: effective-dated revenue type → GL code rows; the latest row on or before
+  the batch date is used.
+
 ## Assumptions
 
 Recorded as they are made in `docs/ASSUMPTIONS.md` and copied here in phase 7.

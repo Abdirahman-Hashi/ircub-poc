@@ -96,6 +96,32 @@ Phase 7 copies this list into the README.
 - We assume a Taxpayer/Customer user is linked to exactly one Payer (`User.payerId`) and sees
   only that payer's data.
 
+- We assume the revenue type's `glCode` is only the default copied into the first GL mapping
+  (effective from 1970 so historical batches resolve) and that the mapping table is the sole
+  source of truth afterwards, because effective dating needs history the revenue type row
+  cannot hold; if a reviewer wants the type's code to override, `resolveMapping` would take it
+  as a fallback.
+- We assume one COLLECTIONS batch per day (partial unique index) and that a payment confirmed
+  after its day's batch was built waits for a manual build or is reported as
+  `DUPLICATE_POSTING`, because a second batch for the same day would blur the daily
+  reconciliation; if late payments must post the same day, the builder would append lines to
+  the existing PENDING batch instead.
+- We assume a reversal line swaps debit and credit with a positive amount (not a negative
+  amount), because most ledgers reject negative postings; the FMIS payload stays balanced either
+  way.
+- We assume a REVERSAL batch per approved reversal, dated the approval day, and that the
+  original batch is marked REVERSED only when all its lines are reversed; otherwise it stays
+  POSTED with per-line `reversed` flags.
+- We assume an approved reversal of a payment whose line is still PENDING or FAILED simply
+  removes the line before posting, since nothing reached the FMIS yet.
+- We assume reconciliation compares net credits (credits minus debits) per GL and day on both
+  sides, so revenue GLs read positive and the cash control GL negative, because one signed
+  figure is easier to compare than separate debit and credit columns; the drill-down shows the
+  lines either way.
+- We assume batches left PENDING without a job (seeded with the FMIS down, or a crash between
+  build and enqueue) should be re-enqueued when the API boots, because posting is idempotent at
+  both ends.
+
 ## Security (phase 4)
 - We assume the shared HMAC secret with the channels (`MOCK_SHARED_SECRET`) stands in for the
   per-channel credentials a real bank or mobile-money provider would issue; the callback is

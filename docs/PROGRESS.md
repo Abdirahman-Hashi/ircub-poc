@@ -476,7 +476,93 @@ statement perturbation (already in DECISIONS for the API).
   that the lines belong to that day.
 
 ## Phase 5 — FMIS posting & reconciliation
-_(pending)_
+
+**Built**
+- **Schema**: `GlMapping` (unique per revenue type and effective date), `JournalBatch`
+  (date, kind, status, counts, FMIS reference, attempts, last error, reversed-by link) and
+  `JournalLine` (unique `paymentId`, unique `reversalId`, GL pair, amount, reference,
+  reversed flag); a partial unique index keeps one COLLECTIONS batch per day
+  (migration `fmis_journals`). All three are audited.
+- **Mocks**: `POST /fmis/journals` (idempotent on `batchId` with a deterministic reference,
+  balance validation → 422, `?fail=1` or a date ending in `13` → 500) and
+  `GET /fmis/ledger?date=` (totals per GL). Unit tests for balance, triggers, reference and
+  ledger.
+- **GL mappings**: list / create / delete with `^\d{4,6}$` validation and effective dating;
+  `resolve(revenueTypeId, date)` picks the latest `effectiveFrom ≤ date`; the seed copies each
+  revenue type's `glCode` into a mapping effective from 1970.
+- **Batch builder**: `buildForDate` selects CONFIRMED payments of the UTC day with no journal
+  line (relation filter), resolves the revenue type (assessment → type; bill → `WATER`) and
+  GL, writes the PENDING batch and lines in one transaction and enqueues posting; a unique
+  violation (payment already journaled or a second batch for the day) is `DUPLICATE_POSTING`;
+  nothing eligible → no batch. `build-range` for backfill, cron 00:30 for yesterday.
+- **Poster job** (`fmis.post-batch`): no-op when already POSTED/REVERSED; posts a balanced
+  payload (debit + credit entry per line) with the batch id as idempotency key; stores
+  `fmisReference`/`postedAt`; failures count attempts, keep `lastError` and retry with backoff
+  from SystemConfig (`FMIS_POST_RETRY_LIMIT`, `FMIS_POST_RETRY_DELAY_SECONDS`), then FAILED;
+  `POST /fmis/batches/:id/retry`; PENDING batches are re-enqueued on boot; SSE
+  `fmis.batch.updated`.
+- **Reversals → FMIS**: approving a reversal of a posted payment creates a REVERSAL batch for
+  today with the mirrored line (debit/credit swapped, `reversalId` set), posts it and marks the
+  original batch REVERSED only when all its lines are reversed; unposted lines are dropped.
+- **Traceability**: `GET /fmis/batches` (date range, status, kind), `GET /fmis/batches/:id`
+  with lines (payment, payer, control number, revenue type, GL), `GET /fmis/lines?paymentId|
+  controlNumber`, and `GET /payments/:id` now carries `journalLine { batchId, batchStatus,
+  batchDate, fmisReference, reversed }`.
+- **Reconciliation**: `GET /fmis/reconciliation?from&to` → per (day, GL) net credit on both
+  sides, difference and MATCHED / MISMATCH / MISSING_IN_FMIS; drill-down
+  `GET /fmis/reconciliation/:date/:glCode`; CSV export; FMIS ledger cached 60 s; range capped
+  at 62 days.
+- **Seed**: mappings for all 6 revenue types; 31 days of batches built from confirmed
+  payments (and approved reversals of posted payments, which get REVERSAL batches); posted to
+  the mocks when reachable, yesterday left PENDING and the day before FAILED for the demo.
+- **Web**: FMIS tabs — batches list (status badges, counts, totals, reference, attempts with
+  the last error on hover, Build for date with the demo failure checkbox, Retry), batch detail
+  (cards, lines, payment drawer with the FMIS chain and "Open batch"), reconciliation matrix
+  (range, totals, highlighted differences, drill-down drawer → lines → payment drawer,
+  export), GL mappings admin (effective-dated rows, add/remove).
+
+**Tests:** 232 total — api unit 142 (+20: mapping resolution, line drafting, balanced payload,
+attempt limit, reversal status rule, net credits, reconciliation verdicts, day helpers; poster
+idempotent on POSTED, retry → FAILED with lastError; builder unique violation →
+DUPLICATE_POSTING, reversal batch creation, original status rule, dropped unposted line,
+retry guard), api e2e 53 (+5 in `fmis.e2e-spec.ts` with the in-process mocks: build → post →
+reference stored, rebuild adds nothing, late payment → DUPLICATE_POSTING, payment detail and
+lines traceability; reversal → mirrored batch and original REVERSED; `13` day fails after 3
+attempts, forced failure + retry succeeds; reconciliation MATCHED, drill-down and CSV; GL
+mapping CRUD with duplicate and format rejections), mocks 13 (+4), web 14. Lint/typecheck
+clean.
+
+**Verified manually (headless Chromium):** seeded batches list with a FAILED row → Retry →
+POSTED; Build for date; batch detail with reference and lines → payment drawer showing the
+FMIS chain; reconciliation matrix with MATCHED rows, drill-down drawer and CSV export; GL
+mapping add/remove. No page errors or 5xx.
+
+**Decisions and deviations (why)**
+- **Reversal lines carry `reversalId`, not `paymentId`**, because `paymentId` is unique (the
+  double-posting guard); the payment is reachable through the reversal and the lines endpoint
+  resolves both.
+- **One COLLECTIONS batch per day is a partial unique index** written by hand in the
+  migration (Prisma cannot express it); REVERSAL batches are one per approved reversal.
+- **The retry limit is decided by the handler from the stored attempt count**, as for payment
+  status checks, so it holds regardless of pg-boss retry semantics.
+- **Reconciliation totals are net credits** (ASSUMPTIONS.md) rather than separate debit and
+  credit columns.
+- **PENDING batches are re-enqueued on boot** so seeded or orphaned batches never stay stuck.
+- **The FMIS hook runs after the reversal transaction**, so a posting problem can never undo
+  an approved reversal.
+
+**Packages added** (rule 11): none.
+
+**Open items / limitations**
+- A payment confirmed after its day's batch exists is only journaled by a manual build and is
+  reported as `DUPLICATE_POSTING` until then (ASSUMPTIONS.md); phase 6 could add an alert.
+- The seeded REVERSAL batch depends on an approved reversal whose payment was posted: on a
+  database seeded before this phase the phase-2 reversals all fall on "today" (the earlier
+  date clamp), so no REVERSAL batch is seeded there; a fresh seed spreads those dates and
+  produces one, and approving a reversal in the UI always does.
+- The reconciliation matrix is computed per request (one ledger call per day, cached 60 s);
+  fine for the POC's 62-day cap.
+- Alert rows for FAILED batches arrive with phase 6.
 
 ## Phase 6 — dashboard, forecast, alerts
 _(pending)_
