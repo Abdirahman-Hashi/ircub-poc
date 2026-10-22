@@ -18,21 +18,21 @@ import { CsvImportService } from '../../common/csv/csv-import.service';
 import { CSV_IMPORT } from '../../common/csv/csv.constants';
 import { templateCsv } from '../../common/csv/csv.rules';
 import { AppException } from '../../common/errors/app.exception';
-import { isValidControlNumber, normaliseControlNumber } from '../../common/ids/ids.rules';
-import { convertToLocal, isPositive, toDecimal } from '../../common/money/money.rules';
+import { normaliseControlNumber } from '../../common/ids/ids.rules';
+import { toDecimal } from '../../common/money/money.rules';
 import { toPageSlice, toPaginated } from '../../common/pagination/pagination.rules';
 import { AppConfigService } from '../../config/app-config.service';
 import { PrismaService } from '../../prisma/prisma.service';
-import { isPayable, outstandingOf } from '../assessments/assessments.rules';
+import { outstandingOf } from '../assessments/assessments.rules';
 import { SummaryService } from '../dashboard/summary.service';
 import { FxService } from '../fx/fx.service';
 import { PaymentsService } from '../payments/payments.service';
 import { SystemConfigKey } from '../system-config/system-config.keys';
 import { SystemConfigService } from '../system-config/system-config.service';
 
-import { BULK_COLUMN, BULK_REASON, REVENUE_TRANSACTIONS_TEMPLATE } from './bulk-uploads.constants';
+import { BULK_COLUMN, REVENUE_TRANSACTIONS_TEMPLATE } from './bulk-uploads.constants';
 import { BULK_MESSAGES } from './bulk-uploads.messages';
-import { storedFileName, txnRefKey } from './bulk-uploads.rules';
+import { storedFileName, txnRefKey, validateRevenueRow } from './bulk-uploads.rules';
 import { type RevenueTransactionRow, revenueTransactionRowSchema } from './bulk-uploads.schema';
 
 import type {
@@ -43,12 +43,7 @@ import type {
 import type { BulkUploadFilterDto } from './dto/bulk-upload-filter.dto';
 import type { BulkUploadResponseDto } from './dto/bulk-upload.response.dto';
 import type { CsvSummaryResponseDto } from './dto/csv-summary.response.dto';
-import type {
-  AcceptedRow,
-  CsvImportSummary,
-  CsvRecord,
-  RowOutcome,
-} from '../../common/csv/csv.types';
+import type { AcceptedRow, CsvImportSummary, CsvRecord } from '../../common/csv/csv.types';
 import type { TransactionClient } from '../../prisma/prisma.types';
 import type { Prisma } from '@prisma/client';
 
@@ -96,7 +91,7 @@ export class BulkUploadsService {
       maxRows,
       dryRun,
       createContext: (records) => this.buildContext(records, uploaderId, fileName, storedPath),
-      validateRow: (row, _rowNumber, context) => Promise.resolve(this.validateRow(row, context)),
+      validateRow: (row, _rowNumber, context) => Promise.resolve(validateRevenueRow(row, context)),
       persist: (accepted, summary, context, tx) =>
         this.persist(uploadId, accepted, summary, context, tx),
     });
@@ -233,96 +228,6 @@ export class BulkUploadsService {
     };
   }
 
-  /** Business validation per row; the schema has already checked shapes. */
-  private validateRow(row: RevenueTransactionRow, context: RevenueImportContext): RowOutcome {
-    const controlNumber = normaliseControlNumber(row.control_number);
-    if (!isValidControlNumber(controlNumber)) {
-      return reject(
-        BULK_COLUMN.CONTROL_NUMBER,
-        BULK_REASON.INVALID_CONTROL_NUMBER,
-        BULK_MESSAGES.INVALID_CONTROL_NUMBER,
-      );
-    }
-    const assessment = context.assessments.get(controlNumber);
-    if (assessment === undefined) {
-      return reject(
-        BULK_COLUMN.CONTROL_NUMBER,
-        BULK_REASON.UNKNOWN_ASSESSMENT,
-        BULK_MESSAGES.UNKNOWN_ASSESSMENT,
-      );
-    }
-    if (!isPayable(assessment.status as Parameters<typeof isPayable>[0])) {
-      return reject(
-        BULK_COLUMN.CONTROL_NUMBER,
-        BULK_REASON.ASSESSMENT_NOT_PAYABLE,
-        BULK_MESSAGES.ASSESSMENT_NOT_PAYABLE,
-      );
-    }
-    const amount = toDecimal(row.amount);
-    if (!isPositive(amount)) {
-      return reject(
-        BULK_COLUMN.AMOUNT,
-        BULK_REASON.AMOUNT_NOT_POSITIVE,
-        BULK_MESSAGES.AMOUNT_NOT_POSITIVE,
-      );
-    }
-    if (row.channel !== PaymentChannel.CASH && row.channel_txn_ref === null) {
-      return reject(
-        BULK_COLUMN.CHANNEL_TXN_REF,
-        BULK_REASON.TXN_REF_REQUIRED,
-        BULK_MESSAGES.TXN_REF_REQUIRED,
-      );
-    }
-    if (row.channel_txn_ref !== null) {
-      const key = txnRefKey(row.channel, row.channel_txn_ref);
-      if (context.seenTxnRefs.has(key)) {
-        return reject(
-          BULK_COLUMN.CHANNEL_TXN_REF,
-          BULK_REASON.DUPLICATE_TXN_REF_IN_FILE,
-          BULK_MESSAGES.DUPLICATE_IN_FILE,
-        );
-      }
-      if (context.existingTxnRefs.has(key)) {
-        return reject(
-          BULK_COLUMN.CHANNEL_TXN_REF,
-          BULK_REASON.DUPLICATE_TXN_REF_IN_DB,
-          BULK_MESSAGES.DUPLICATE_IN_DB,
-        );
-      }
-    }
-    if (
-      row.captured_by_email !== null &&
-      !context.usersByEmail.has(row.captured_by_email.toLowerCase())
-    ) {
-      return reject(
-        BULK_COLUMN.CAPTURED_BY_EMAIL,
-        BULK_REASON.UNKNOWN_CAPTURER,
-        BULK_MESSAGES.UNKNOWN_CAPTURER,
-      );
-    }
-    let localAmount = amount;
-    if (row.currency !== context.localCurrency) {
-      const rate = context.rates.get(row.currency);
-      if (rate === undefined) {
-        return reject(
-          BULK_COLUMN.CURRENCY,
-          BULK_REASON.FX_RATE_UNAVAILABLE,
-          BULK_MESSAGES.FX_RATE_UNAVAILABLE,
-        );
-      }
-      localAmount = convertToLocal(amount, rate).localAmount;
-    }
-    if (localAmount.gt(assessment.outstanding)) {
-      return reject(BULK_COLUMN.AMOUNT, BULK_REASON.OVERPAYMENT, BULK_MESSAGES.OVERPAYMENT);
-    }
-    // Accepted: reserve the balance and the reference for later rows in the same file.
-    assessment.outstanding = assessment.outstanding.minus(localAmount);
-    if (row.channel_txn_ref !== null) {
-      context.seenTxnRefs.add(txnRefKey(row.channel, row.channel_txn_ref));
-    }
-    return { ok: true };
-  }
-
   private async persist(
     uploadId: string,
     accepted: readonly AcceptedRow<RevenueTransactionRow>[],
@@ -384,10 +289,6 @@ export class BulkUploadsService {
     await mkdir(join(this.config.storageDir, CSV_IMPORT.UPLOAD_DIR), { recursive: true });
     await writeFile(absolute, content);
   }
-}
-
-function reject(field: string, reason: string, message: string): RowOutcome {
-  return { ok: false, field, reason, message };
 }
 
 function toView(row: BulkUploadRow, withSummary: boolean): BulkUploadResponseDto {
