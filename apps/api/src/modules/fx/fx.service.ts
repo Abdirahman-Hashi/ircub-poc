@@ -1,5 +1,5 @@
-import { HttpStatus, Inject, Injectable, Logger } from '@nestjs/common';
-import { Cron } from '@nestjs/schedule';
+import { HttpStatus, Inject, Injectable, Logger, type OnModuleInit } from '@nestjs/common';
+import { SchedulerRegistry } from '@nestjs/schedule';
 
 import { Currency, ErrorCode } from '@ircub/shared';
 
@@ -22,17 +22,32 @@ import type { Decimal } from 'decimal.js';
  * Exchange rates (D9, D15): `getRate` asks the provider, stores the quote as history and
  * returns it; if the provider is down it falls back to the latest stored rate, logging a
  * warning and flagging `stale` when that rate is older than the configured window.
- * A cron refreshes USD→local every 15 minutes so captures rarely hit the fallback.
+ * A scheduled refresh every `FX_REFRESH_MINUTES` keeps a fresh USD→local quote so captures
+ * rarely hit the fallback (the interval is read at boot; a config change applies on restart).
  */
 @Injectable()
-export class FxService {
+export class FxService implements OnModuleInit {
   private readonly logger = new Logger(FxService.name);
 
   constructor(
     private readonly prisma: PrismaService,
     private readonly systemConfig: SystemConfigService,
     @Inject(FX_RATE_PROVIDER) private readonly provider: FxRateProvider,
+    private readonly scheduler: SchedulerRegistry,
   ) {}
+
+  async onModuleInit(): Promise<void> {
+    const minutes = await this.systemConfig.get(SystemConfigKey.FX_REFRESH_MINUTES);
+    const timer = setInterval(() => {
+      this.refresh().catch((error: unknown) => {
+        this.logger.error(
+          { msg: 'fx refresh failed' },
+          error instanceof Error ? error.stack : String(error),
+        );
+      });
+    }, minutes * FX_API.MS_PER_MINUTE);
+    this.scheduler.addInterval(FX_API.REFRESH_JOB, timer);
+  }
 
   async getRate(base: Currency, quote: Currency): Promise<StoredRate> {
     if (base === quote) {
@@ -128,7 +143,6 @@ export class FxService {
   }
 
   /** Scheduled refresh (D15): keeps a fresh USD→local quote in history. */
-  @Cron(FX_API.REFRESH_CRON)
   async refresh(): Promise<void> {
     const localCurrency = await this.systemConfig.get(SystemConfigKey.LOCAL_CURRENCY);
     for (const currency of Object.values(Currency)) {

@@ -12,7 +12,8 @@ time (D9, D15).
   nothing stored it raises `FX_RATE_UNAVAILABLE` (503) rather than guess.
 - `toLocal` converts at the rate retrieved _now_ (not the last cached one), rounding once
   HALF_EVEN to 2 dp; local-currency amounts store `fxRate = 1`.
-- A cron refreshes every non-local currency every 15 minutes.
+- A scheduler interval refreshes every non-local currency every `FX_REFRESH_MINUTES` (read at
+  boot from SystemConfig; a change applies on the next restart).
 
 **Endpoints** (`fx.view`): `GET /fx/latest`, `POST /fx/refresh`, `GET /fx/history`; `base`
 and `quote` default to USD → local currency.

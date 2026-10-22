@@ -9,8 +9,8 @@ export const FX_API = {
   /** Mock FX endpoint relative to MOCKS_BASE_URL. */
   PROVIDER_PATH: '/rates',
   PROVIDER_TIMEOUT_MS: 5_000,
-  /** Cron: every 15 minutes (the SystemConfig key documents the intent; cron strings are static). */
-  REFRESH_CRON: '*/15 * * * *',
+  /** Name of the refresh interval in the Nest scheduler registry (period from FX_REFRESH_MINUTES). */
+  REFRESH_JOB: 'fx.refresh',
   MS_PER_MINUTE: 60_000,
 } as const;
 

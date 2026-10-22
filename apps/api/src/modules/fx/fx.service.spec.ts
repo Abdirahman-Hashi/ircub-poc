@@ -58,7 +58,8 @@ function build(options: {
           }),
     ),
   };
-  return { service: new FxService(prisma, systemConfig, provider), created };
+  const scheduler = { addInterval: jest.fn() };
+  return { service: new FxService(prisma, systemConfig, provider, scheduler as never), created };
 }
 
 describe('FxService.getRate', () => {
