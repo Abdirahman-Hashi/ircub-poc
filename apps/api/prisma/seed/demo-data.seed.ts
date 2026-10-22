@@ -1,5 +1,5 @@
 import { faker } from '@faker-js/faker';
-import { subDays, subMonths } from 'date-fns';
+import { min as earliest, subDays, subMonths } from 'date-fns';
 import { Decimal } from 'decimal.js';
 
 import {
@@ -189,7 +189,11 @@ export async function seedDemoData(prisma: ExtendedPrismaClient): Promise<string
     const isUsd = faker.datatype.boolean({ probability: DEMO.USD_RATIO });
     const channel =
       channels[faker.number.int({ min: 0, max: channels.length - 1 })] ?? PaymentChannel.CASH;
-    const paidAt = subDays(assessment.createdAt, -faker.number.int({ min: 1, max: DEMO.DUE_DAYS }));
+    // Paid some days after assessment, but never in the future (lists sort by date desc).
+    const paidAt = earliest([
+      subDays(assessment.createdAt, -faker.number.int({ min: 1, max: DEMO.DUE_DAYS })),
+      new Date(),
+    ]);
     const amount = isUsd ? roundMoney(localAmount.div(SEED_FX_RATE)) : localAmount;
     const effectiveLocal = isUsd ? convertToLocal(amount, SEED_FX_RATE).localAmount : localAmount;
     const applied = applyPayment(
