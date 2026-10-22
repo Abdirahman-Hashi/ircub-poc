@@ -7,13 +7,19 @@ import { WaterModule } from '../water/water.module';
 import { PaymentCallbackController } from './payment-callback.controller';
 import { PaymentInitiationService } from './payment-initiation.service';
 import { PaymentSettlementService } from './payment-settlement.service';
+import { PaymentStatusCheckService } from './payment-status-check.service';
 import { PaymentsController } from './payments.controller';
 import { PaymentsService } from './payments.service';
 
 @Module({
   imports: [AssessmentsModule, PayersModule, WaterModule],
   controllers: [PaymentsController, PaymentCallbackController],
-  providers: [PaymentsService, PaymentInitiationService, PaymentSettlementService],
+  providers: [
+    PaymentsService,
+    PaymentInitiationService,
+    PaymentSettlementService,
+    PaymentStatusCheckService,
+  ],
   exports: [PaymentsService, PaymentInitiationService, PaymentSettlementService],
 })
 export class PaymentsModule {}

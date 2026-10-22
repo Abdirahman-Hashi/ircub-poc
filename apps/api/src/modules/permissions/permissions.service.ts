@@ -93,6 +93,16 @@ export class PermissionsService {
     return rows.map((row) => row.userId);
   }
 
+  /** Every user whose effective permissions include `code` (e.g. supervisors to notify). */
+  async userIdsHolding(code: PermissionCode): Promise<string[]> {
+    const memberships = await this.prisma.userRole.findMany({
+      select: { userId: true },
+      distinct: ['userId'],
+    });
+    const effective = await this.resolveForUsers(memberships.map((row) => row.userId));
+    return [...effective.entries()].filter(([, held]) => held.has(code)).map(([userId]) => userId);
+  }
+
   /** Permissions grouped in the order the admin matrix shows them. */
   async listGrouped(): Promise<PermissionGroupResponseDto[]> {
     const rows = await this.prisma.permission.findMany({ orderBy: { code: 'asc' } });
