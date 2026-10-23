@@ -9,7 +9,10 @@ export class AuditLogResponseDto {
   @ApiPropertyOptional({ format: 'uuid', nullable: true })
   actorId!: string | null;
 
-  @ApiProperty({ example: 'admin@ircub.test' })
+  @ApiProperty({
+    example: 'officer@example.com',
+    description: 'SYSTEM for jobs, crons and the seed',
+  })
   actorEmail!: string;
 
   @ApiProperty({ example: 'User' })

@@ -7900,11 +7900,13 @@
         "properties": {
           "email": {
             "type": "string",
-            "example": "admin@ircub.test"
+            "example": "user@example.com",
+            "description": "Seeded demo users are listed in the README"
           },
           "password": {
             "type": "string",
-            "example": "Passw0rd!2026"
+            "example": "correct-horse-battery-staple",
+            "description": "Policy: minimum length from SystemConfig, upper, lower, digit and symbol"
           }
         },
         "required": [
@@ -8667,7 +8669,7 @@
         "properties": {
           "email": {
             "type": "string",
-            "example": "clerk@ircub.test"
+            "example": "clerk@example.com"
           },
           "fullName": {
             "type": "string",
@@ -8793,7 +8795,8 @@
           },
           "actorEmail": {
             "type": "string",
-            "example": "admin@ircub.test"
+            "example": "officer@example.com",
+            "description": "SYSTEM for jobs, crons and the seed"
           },
           "entity": {
             "type": "string",
@@ -12527,6 +12530,7 @@
               "TARIFF_NOT_CONFIGURED",
               "TARIFF_TIERS_INVALID",
               "BILL_NOT_PAYABLE",
+              "BILL_SUPERSEDED",
               "BILL_NOT_FLAGGED",
               "METER_ALREADY_REPLACED",
               "ACCOUNT_NOT_ACTIVE",
