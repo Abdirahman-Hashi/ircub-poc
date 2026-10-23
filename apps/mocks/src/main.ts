@@ -7,6 +7,8 @@ import { AppModule } from './app.module';
 import { MocksConfigService } from './config/mocks-config.service';
 import { MOCKS_APP } from './mocks.constants';
 
+import type { Response } from 'express';
+
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule, { bufferLogs: true });
   app.useLogger(app.get(PinoLogger));
@@ -21,6 +23,9 @@ async function bootstrap(): Promise<void> {
     .setContact(MOCKS_APP.AUTHOR, '', '')
     .build();
   SwaggerModule.setup(MOCKS_APP.SWAGGER_PATH, app, SwaggerModule.createDocument(app, swagger));
+  app.getHttpAdapter().get(MOCKS_APP.ROOT_PATH, (_request, response: Response) => {
+    response.redirect(`/${MOCKS_APP.SWAGGER_PATH}`);
+  });
 
   const config = app.get(MocksConfigService);
   await app.listen(config.port);

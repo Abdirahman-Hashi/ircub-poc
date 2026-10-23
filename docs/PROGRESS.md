@@ -798,6 +798,11 @@ moved from dev to runtime dependencies so the container can seed.
 **Open items / limitations**
 - Render free tier: services sleep after 15 minutes idle (~1 min cold start) and the api's
   file storage is ephemeral; pg-boss on Neon verified (`/ready` reports jobs up).
+- Found after going live: the SPA built with an *empty* `VITE_API_URL` (Docker and Render
+  pass `''`) resolved the API base to `''` instead of `/api`, so the browser polled its own
+  `/health` and showed "API is waking up…" forever; curl checks through the rewrite had
+  passed because they named `/api/...` explicitly. Fixed in `lib/env.constants.ts`
+  (empty → proxy prefix) and the bare api/mocks hosts now redirect to `/docs`.
 - `docs/erd.svg` is a committed render; regenerate with `pnpm erd` + a Mermaid renderer after
   schema changes.
 - Screenshots were taken from the seeded dev database on 2026-10-22; dates in them move.

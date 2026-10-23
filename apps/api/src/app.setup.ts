@@ -11,6 +11,8 @@ import { requestIdMiddleware } from './common/context/request-id.middleware';
 import { ErrorResponseDto } from './common/dto/error-response.dto';
 import { AppConfigService } from './config/app-config.service';
 
+import type { Response } from 'express';
+
 /**
  * Everything `main.ts`, the OpenAPI export and the e2e tests must apply identically.
  * Keeping it in one function is what makes the e2e suite exercise the real middleware stack.
@@ -71,4 +73,8 @@ function withErrorEnvelope(document: OpenAPIObject): OpenAPIObject {
 
 export function mountSwagger(app: INestApplication): void {
   SwaggerModule.setup(SWAGGER.PATH, app, buildOpenApiDocument(app));
+  // The API has no landing page; someone opening the bare host should reach the docs.
+  app.getHttpAdapter().get(SWAGGER.ROOT_PATH, (_request, response: Response) => {
+    response.redirect(`/${SWAGGER.PATH}`);
+  });
 }

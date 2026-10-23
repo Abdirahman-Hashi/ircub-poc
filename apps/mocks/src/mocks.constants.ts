@@ -7,6 +7,8 @@ export const MOCKS_APP = {
     'Stand-ins for FX rates, bank, mobile money, FMIS and SMS/email. In-memory only; ' +
     'POST /__reset clears state.',
   SWAGGER_PATH: 'docs',
+  /** Bare host → redirect to the docs. */
+  ROOT_PATH: '/',
   VERSION: '0.1.0',
   PRETTY_LOG_TARGET: 'pino-pretty',
 } as const;

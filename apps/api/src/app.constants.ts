@@ -10,6 +10,8 @@ export const APP = {
 
 export const SWAGGER = {
   PATH: 'docs',
+  /** Bare host → redirect to the docs. */
+  ROOT_PATH: '/',
   BEARER_SCHEME: 'bearer',
   /** Relative to apps/api; the export script writes the committed spec here. */
   EXPORT_PATH: '../../docs/openapi.json',
