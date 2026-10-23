@@ -83,6 +83,8 @@ services:
     envVars:
       - key: VITE_API_URL
         value: '' # empty → the bundle calls same-origin /api, rewritten below
+      - key: VITE_MOCKS_URL
+        value: https://ircub-mocks.onrender.com # demo-helper links to the mock outbox
       - key: NODE_VERSION
         value: '22'
     routes:
