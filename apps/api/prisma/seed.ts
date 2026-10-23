@@ -12,7 +12,13 @@ import { seedFxRate } from './seed/fx.seed';
 import { seedPermissions } from './seed/permissions.seed';
 import { seedRevenueTypes } from './seed/revenue-types.seed';
 import { seedRoles } from './seed/roles.seed';
-import { FAKER_SEED, SEED_FLAGS, SEED_LOG_LEVELS } from './seed/seed.constants';
+import {
+  FAKER_SEED,
+  SEED_ENV,
+  SEED_FLAGS,
+  SEED_LOG_LEVELS,
+  SEED_PASSWORD,
+} from './seed/seed.constants';
 import { seedSodRules } from './seed/sod.seed';
 import { seedSystemConfig } from './seed/system-config.seed';
 import { seedUsers } from './seed/users.seed';
@@ -30,7 +36,18 @@ async function main(): Promise<void> {
   faker.seed(FAKER_SEED);
   const base = new PrismaClient();
   const prisma = applyAuditExtension(base);
+  const configuredPassword = process.env[SEED_ENV.PASSWORD]?.trim();
+  const password =
+    configuredPassword === undefined || configuredPassword.length === 0
+      ? SEED_PASSWORD
+      : configuredPassword;
+  const mocksBaseUrl = process.env[SEED_ENV.MOCKS_BASE_URL];
   try {
+    // Password rotation on a deployed instance: rewrite the six demo users only.
+    if (process.argv.includes(SEED_FLAGS.USERS_ONLY)) {
+      console.info(`seed: users ${await seedUsers(prisma, password)} (--users-only)`);
+      return;
+    }
     // Container first boot (SEED_ON_BOOT): the seeded users are the marker that the database
     // is already populated, so a restart never re-runs the demo data generation.
     if (process.argv.includes(SEED_FLAGS.IF_EMPTY) && (await base.user.count()) > 0) {
@@ -40,20 +57,16 @@ async function main(): Promise<void> {
     console.info(`seed: system_config ${await seedSystemConfig(prisma)} keys`);
     console.info(`seed: permissions ${await seedPermissions(prisma)}`);
     console.info(`seed: roles ${await seedRoles(prisma)}`);
-    console.info(`seed: users ${await seedUsers(prisma)}`);
+    console.info(`seed: users ${await seedUsers(prisma, password)}`);
     console.info(`seed: sod rules ${await seedSodRules(prisma)}`);
     console.info(`seed: revenue types ${await seedRevenueTypes(prisma)}`);
     console.info(`seed: fx rates ${await seedFxRate(prisma)}`);
     console.info(`seed: demo data ${await seedDemoData(prisma)}`);
     console.info(`seed: tariffs ${await seedTariffs(prisma)}`);
     console.info(`seed: water demo ${await seedWaterDemo(prisma)}`);
-    console.info(
-      `seed: channel payments ${await seedChannelPayments(prisma, process.env.MOCKS_BASE_URL)}`,
-    );
+    console.info(`seed: channel payments ${await seedChannelPayments(prisma, mocksBaseUrl)}`);
     console.info(`seed: gl mappings ${await seedGlMappings(prisma)}`);
-    console.info(
-      `seed: journal batches ${await seedJournalBatches(prisma, process.env.MOCKS_BASE_URL)}`,
-    );
+    console.info(`seed: journal batches ${await seedJournalBatches(prisma, mocksBaseUrl)}`);
     console.info(`seed: summaries ${await seedSummaries(prisma)}`);
     console.info(`seed: revenue targets ${await seedRevenueTargets(prisma)}`);
   } finally {

@@ -803,6 +803,10 @@ moved from dev to runtime dependencies so the container can seed.
   `/health` and showed "API is waking up…" forever; curl checks through the rewrite had
   passed because they named `/api/...` explicitly. Fixed in `lib/env.constants.ts`
   (empty → proxy prefix) and the bare api/mocks hosts now redirect to `/docs`.
+- Hardened after going live: Swagger examples no longer carry the seeded credentials, and
+  the hosted demo runs with a generated `SEED_PASSWORD` (the container rewrites the six demo
+  users' password on every boot), shared with the panel outside the repository; Compose and
+  local keep the documented default.
 - `docs/erd.svg` is a committed render; regenerate with `pnpm erd` + a Mermaid renderer after
   schema changes.
 - Screenshots were taken from the seeded dev database on 2026-10-22; dates in them move.

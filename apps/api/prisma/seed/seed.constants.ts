@@ -7,9 +7,18 @@ export const FAKER_SEED = 42;
 export const SEED_FLAGS = {
   /** Do nothing when users already exist (container boot). */
   IF_EMPTY: '--if-empty',
+  /** Only (re)write the six demo users, including their password (password rotation). */
+  USERS_ONLY: '--users-only',
 } as const;
 
-/** Password for every seeded demo user (CLAUDE.md). Demo only. */
+/** Environment variables the seed reads (deployment values; the Nest app never sees them). */
+export const SEED_ENV = {
+  /** Overrides the demo password, e.g. a generated value on the hosted demo. */
+  PASSWORD: 'SEED_PASSWORD',
+  MOCKS_BASE_URL: 'MOCKS_BASE_URL',
+} as const;
+
+/** Default password for every seeded demo user (CLAUDE.md) when SEED_PASSWORD is unset. */
 export const SEED_PASSWORD = 'Passw0rd!2026';
 
 export const SEED_EMAIL_DOMAIN = 'ircub.test';

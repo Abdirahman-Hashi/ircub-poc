@@ -2,7 +2,7 @@ import { argon2id, hash } from 'argon2';
 
 import { ROLES } from '@ircub/shared';
 
-import { SEED_EMAIL_DOMAIN, SEED_PASSWORD } from './seed.constants';
+import { SEED_EMAIL_DOMAIN } from './seed.constants';
 import { requireValue } from './seed.utils';
 
 import type { UserSeed } from './seed.types';
@@ -39,13 +39,14 @@ export const USER_SEEDS: readonly UserSeed[] = [
 ];
 
 /**
- * Idempotent: existing users keep their id and MFA state; the password is reset to the demo
- * value so a fresh checkout always matches the README.
+ * Idempotent: existing users keep their id and MFA state; the password is reset to the
+ * given value (the documented default, or SEED_PASSWORD on a hosted deployment) so every
+ * environment matches what its README or submission note says.
  */
-export async function seedUsers(prisma: ExtendedPrismaClient): Promise<number> {
+export async function seedUsers(prisma: ExtendedPrismaClient, password: string): Promise<number> {
   const roles = await prisma.role.findMany({ select: { id: true, code: true } });
   const roleIdByCode = new Map(roles.map((row) => [row.code, row.id]));
-  const passwordHash = await hash(SEED_PASSWORD, { type: argon2id });
+  const passwordHash = await hash(password, { type: argon2id });
 
   for (const seed of USER_SEEDS) {
     const user = await prisma.user.upsert({

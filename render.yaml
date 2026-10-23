@@ -52,6 +52,8 @@ services:
         value: /app/storage
       - key: SEED_ON_BOOT
         value: 'true'
+      - key: SEED_PASSWORD
+        generateValue: true # demo users' password on the hosted instance; read it in the dashboard to share it
 
   - type: web
     name: ircub-mocks

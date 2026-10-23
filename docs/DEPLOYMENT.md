@@ -75,7 +75,15 @@ Free-tier behaviour to tell the panel:
 - The api's storage (bill PDFs, uploaded CSVs) is ephemeral on Render; PDFs are re-rendered
   lazily when missing.
 
-### 2.3 Reseeding the hosted database
+### 2.3 Demo password on the hosted instance
+
+`render.yaml` gives `ircub-api` a generated `SEED_PASSWORD`. On every boot the container
+rewrites the six demo users' password to it (`seed.js --users-only`), so the hosted demo
+never accepts the password printed in the README. To read or rotate it: Render → `ircub-api`
+→ **Environment** → `SEED_PASSWORD` (reveal, or set a new value and redeploy). Share it with
+the panel in the submission note, not in the repository.
+
+### 2.4 Reseeding the hosted database
 
 Render shell on `ircub-api`:
 
