@@ -77,7 +77,6 @@ services:
   - type: web
     name: ircub-web
     runtime: static
-    plan: free
     buildCommand: corepack enable && pnpm install --frozen-lockfile --filter web... && pnpm --filter @ircub/shared build && pnpm --filter web build
     staticPublishPath: apps/web/dist
     autoDeploy: true
