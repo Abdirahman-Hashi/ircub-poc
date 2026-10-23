@@ -34,7 +34,9 @@ Reset everything: `docker compose down -v` (drops the database and the storage v
 
 ## 2. Hosted demo: Render + Neon
 
-The blueprint `render.yaml` declares three services. Click-path, in order:
+The blueprint `render.yaml` declares three services; the live instance is
+https://ircub-web.onrender.com (api https://ircub-api.onrender.com, mocks
+https://ircub-mocks.onrender.com). Click-path, in order:
 
 ### 2.1 Neon (database)
 

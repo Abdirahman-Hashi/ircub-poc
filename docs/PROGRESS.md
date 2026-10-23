@@ -770,7 +770,7 @@ failing when the chain-head row is missing, the README assumption headings and t
 | 6 | Post to mock FMIS, reference stored, never posted twice; reconciliation per GL/day with drill-down | done |
 | 7 | Trends by type and channel; collections vs targets; billed vs collected | done |
 | 7 | Next-quarter forecast (OLS + Holt, justified); real-time anomaly alerts; pre-aggregated; SSE | done |
-| — | Hosted demo link | partial: blueprint and guide ready; the candidate creates the Render/Neon accounts and applies `render.yaml` (free-tier accounts could not be created from this environment) |
+| — | Hosted demo link | done: https://ircub-web.onrender.com (Render blueprint + Neon), verified live on 2026-10-23: health, readiness (db + jobs), seeded login, a mobile-money payment confirmed by the mock's callback across services, audit verify ok |
 
 **Submission checklist (brief)**
 - [x] Source code in a Git repository with a meaningful commit history (Conventional Commits, phases visible, tag `v0.1.0-poc`)
@@ -778,7 +778,7 @@ failing when the chain-head row is missing, the README assumption headings and t
 - [x] ERD (`docs/erd.svg`, `docs/erd.md`) and seed/test data scripts (`apps/api/prisma/seed.ts`, `docs/samples/*.csv`)
 - [x] API documentation (`docs/openapi.json`, Swagger `/docs`) and a Postman collection (`docs/postman/`)
 - [x] Automated tests and instructions to run them (README "Running tests", CI)
-- [x] Deployment option: Docker Compose (verified) · hosted link: blueprint committed, deploy pending the candidate's accounts
+- [x] Deployment option: Docker Compose (verified) and hosted demo https://ircub-web.onrender.com (verified)
 - [x] AI assistance declared
 
 **Decisions and deviations (why)**
@@ -788,16 +788,16 @@ failing when the chain-head row is missing, the README assumption headings and t
   rendered once with a headless browser and committed.
 - **Seed on boot** uses "users exist" as the marker instead of a dedicated marker row: the
   seeders are already idempotent and the first seeded table is the natural sentinel.
-- **Hosted demo** is a blueprint plus click-path rather than a live URL: account creation
-  on Render and Neon needs the candidate's identity; everything else (images, env wiring,
-  rewrites, seeding) is committed and the same images passed the Compose verification.
+- **Hosted demo** went live on 2026-10-23 once the candidate created the Render and Neon
+  accounts and applied the blueprint; two blueprint fixes on the way (static sites take no
+  `plan`; the Neon string is used exactly as copied).
 
 **Packages added** (rule 11): `openapi-to-postmanv2` 6.4.1 (api dev, D22); `@faker-js/faker`
 moved from dev to runtime dependencies so the container can seed.
 
 **Open items / limitations**
-- The Render deployment itself (and therefore pg-boss on Neon) has not been exercised; the
-  guide marks it as the step the candidate performs.
+- Render free tier: services sleep after 15 minutes idle (~1 min cold start) and the api's
+  file storage is ephemeral; pg-boss on Neon verified (`/ready` reports jobs up).
 - `docs/erd.svg` is a committed render; regenerate with `pnpm erd` + a Mermaid renderer after
   schema changes.
 - Screenshots were taken from the seeded dev database on 2026-10-22; dates in them move.

@@ -14,14 +14,14 @@ rules the code is held to in `docs/ENGINEERING-STANDARDS.md`.
 
 ## Demo links
 
-| What                        | Where                                                                                                                  |
-| --------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| Docker Compose (primary)    | `docker compose up --build` → http://localhost:8080 (see [Getting started](#getting-started))                          |
-| Hosted demo (Render + Neon) | `https://ircub-web.onrender.com` once deployed from `render.yaml` (`docs/DEPLOYMENT.md`); free tier, ~1 min cold start |
-| Swagger UI                  | http://localhost:3000/docs (Compose/dev) · `https://ircub-api.onrender.com/docs`                                       |
-| Mock outbox (SMS/e-mail)    | http://localhost:3100/outbox · mock API docs at `/docs` on the mocks                                                   |
-| OpenAPI / Postman           | `docs/openapi.json` · `docs/postman/` (collection + environment, auto-login)                                           |
-| ERD and data model          | `docs/erd.svg` · `docs/erd.md` (Mermaid) · `docs/data-model.md`                                                        |
+| What                        | Where                                                                                             |
+| --------------------------- | ------------------------------------------------------------------------------------------------- |
+| Docker Compose (primary)    | `docker compose up --build` → http://localhost:8080 (see [Getting started](#getting-started))     |
+| Hosted demo (Render + Neon) | **https://ircub-web.onrender.com** (free tier: the first request after idle takes about a minute) |
+| Swagger UI                  | http://localhost:3000/docs (Compose/dev) · `https://ircub-api.onrender.com/docs`                  |
+| Mock outbox (SMS/e-mail)    | http://localhost:3100/outbox · mock API docs at `/docs` on the mocks                              |
+| OpenAPI / Postman           | `docs/openapi.json` · `docs/postman/` (collection + environment, auto-login)                      |
+| ERD and data model          | `docs/erd.svg` · `docs/erd.md` (Mermaid) · `docs/data-model.md`                                   |
 
 ## Screenshots
 

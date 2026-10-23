@@ -178,5 +178,6 @@ None.
 ## 7. Outcome
 
 Follow-up commits after this review (same day): P1 #1, #2 (README), #4 (billed totals),
-#5 (superseded bills), #6 (missing chain head) and P2 #4 (`.mailmap`). Still open: P1 #3
-(hosted deployment, needs the candidate's accounts) and the P2 list.
+#5 (superseded bills), #6 (missing chain head) and P2 #4 (`.mailmap`). P1 #3 closed on
+2026-10-23: https://ircub-web.onrender.com is live and verified (health, readiness,
+seeded login, cross-service callback, audit chain). Still open: the P2 list.
