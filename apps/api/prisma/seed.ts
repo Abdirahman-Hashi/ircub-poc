@@ -48,10 +48,11 @@ async function main(): Promise<void> {
       console.info(`seed: users ${await seedUsers(prisma, password)} (--users-only)`);
       return;
     }
-    // Container first boot (SEED_ON_BOOT): the seeded users are the marker that the database
-    // is already populated, so a restart never re-runs the demo data generation.
-    if (process.argv.includes(SEED_FLAGS.IF_EMPTY) && (await base.user.count()) > 0) {
-      console.info('seed: database already seeded, skipping (--if-empty)');
+    // Container boot (SEED_ON_BOOT): revenue targets are written by the last seeder, so their
+    // presence proves an earlier run completed. Checking users instead left a database whose
+    // first seed crashed halfway (users present, no water data) stuck that way for ever.
+    if (process.argv.includes(SEED_FLAGS.IF_INCOMPLETE) && (await seedCompleted(base))) {
+      console.info(`seed: already complete, skipping (${SEED_FLAGS.IF_INCOMPLETE})`);
       return;
     }
     console.info(`seed: system_config ${await seedSystemConfig(prisma)} keys`);
@@ -72,6 +73,10 @@ async function main(): Promise<void> {
   } finally {
     await base.$disconnect();
   }
+}
+
+async function seedCompleted(prisma: PrismaClient): Promise<boolean> {
+  return (await prisma.revenueTarget.count()) > 0;
 }
 
 main().catch((error: unknown) => {

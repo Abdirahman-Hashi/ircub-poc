@@ -718,8 +718,9 @@ idempotency).
   models, 41 relations), rendered to `docs/erd.svg`; `docs/data-model.md` explains the bounded
   contexts and the invariants the database enforces.
 - Seed on boot: the api image compiles the seed and starts through `docker-entrypoint.sh`
-  (`migrate deploy` → seed `--if-empty` when `SEED_ON_BOOT=true` → serve); existing users are
-  the marker, so restarts never reseed. Compose and the Render blueprint set the flag.
+  (`migrate deploy` → seed `--if-incomplete` when `SEED_ON_BOOT=true` → serve); the last
+  seeder's rows are the marker, so restarts never reseed a finished database and an
+  interrupted seed completes on the next boot. Compose and the Render blueprint set the flag.
 - README (final): demo links, eight Playwright screenshots in `docs/screenshots/`, stack table
   with justifications, Mermaid architecture diagram, getting started (Compose one-liner, local
   dev, seeded users, demo scenarios), tests, a requirement → implementation → test walkthrough,

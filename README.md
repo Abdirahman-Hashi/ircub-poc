@@ -95,8 +95,9 @@ docker compose up --build    # postgres, api (migrates + seeds on first boot), m
 ```
 
 Open http://localhost:8080 and log in with a user below. The api container runs
-`prisma migrate deploy`, then the seed once (`SEED_ON_BOOT=true`, guarded by "users already
-exist"), so a second `docker compose up` keeps your data. `docker compose down -v` resets.
+`prisma migrate deploy`, then the seed once (`SEED_ON_BOOT=true`, skipped once a previous
+seed has completed), so a second `docker compose up` keeps your data. `docker compose down -v`
+resets.
 
 ### Local development
 

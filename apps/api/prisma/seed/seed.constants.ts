@@ -5,8 +5,11 @@ export const FAKER_SEED = 42;
 
 /** Command-line flags understood by `prisma/seed.ts`. */
 export const SEED_FLAGS = {
-  /** Do nothing when users already exist (container boot). */
-  IF_EMPTY: '--if-empty',
+  /**
+   * Container boot: do nothing when a previous run reached its last step; otherwise run
+   * every seeder, each of which skips the data it finds, so an interrupted seed completes.
+   */
+  IF_INCOMPLETE: '--if-incomplete',
   /** Only (re)write the six demo users, including their password (password rotation). */
   USERS_ONLY: '--users-only',
 } as const;
